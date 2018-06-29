@@ -1,17 +1,16 @@
 <?php //strict
-namespace payever\Controllers;
+namespace Payever\Controllers;
 
 use Plenty\Plugin\ConfigRepository;
 use Plenty\Plugin\Controller;
 use Plenty\Plugin\Http\Request;
 use Plenty\Plugin\Http\Response;
-
-use payever\Helper\PayeverHelper;
-use payever\Api\PayeverApi;
+use Payever\Helper\PayeverHelper;
+use Payever\Api\PayeverApi;
 
 /**
  * Class SettingsController
- * @package payever\Controllers
+ * @package Payever\Controllers
  */
 class ConfigController extends Controller
 {
@@ -79,7 +78,7 @@ class ConfigController extends Controller
 
         $config = $this->config;
         $api = $this->payeverHelper->getPayeverApi();
-        $paymentOptions = $api->getListPaymentOptions($config->get('payever.slug'), 'other_shopsystem');
+        $paymentOptions = $api->getListPaymentOptions($config->get('Payever.slug'), 'plentymarkets');
         $updatedConfig = [];
 
         if ($paymentOptions) {
@@ -100,9 +99,7 @@ class ConfigController extends Controller
          */
         foreach ($this->payeverHelper->getMethodsMetaData() as $methodKey => $data) {
             $methodConfigKey = strtolower($methodKey) . ".active";
-            $updatedConfig[$methodConfigKey] = isset($updatedConfig[$methodConfigKey])
-                ? $updatedConfig[$methodConfigKey]
-                : 0;
+            $updatedConfig[$methodConfigKey] = $updatedConfig[$methodConfigKey] ?? 0;
         }
 
         return $this->response->json([

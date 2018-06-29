@@ -1,13 +1,13 @@
 <?php
 
-namespace payever\Providers;
+namespace Payever\Providers;
 
 use Plenty\Plugin\RouteServiceProvider;
 use Plenty\Plugin\Routing\Router;
 
 /**
  * Class payeverRouteServiceProvider
- * @package payever\Providers
+ * @package Payever\Providers
  */
 class PayeverRouteServiceProvider extends RouteServiceProvider
 {
@@ -17,13 +17,13 @@ class PayeverRouteServiceProvider extends RouteServiceProvider
     public function map(Router $router)
     {
         // Register payever success and cancellation URLs
-        $router->get('payment/payever/checkoutSuccess', 'payever\Controllers\PaymentController@checkoutSuccess');
-        $router->get('payment/payever/checkoutCancel', 'payever\Controllers\PaymentController@checkoutCancel');
-        $router->get('payment/payever/checkoutFailure', 'payever\Controllers\PaymentController@checkoutFailure');
-        $router->get('payment/payever/checkoutNotice', 'payever\Controllers\PaymentController@checkoutNotice');
-        $router->get('payment/payever/checkoutIframe', 'payever\Controllers\PaymentController@checkoutIframe');
+        $router->get('payment/payever/checkoutSuccess', 'Payever\Controllers\PaymentController@checkoutSuccess');
+        $router->get('payment/payever/checkoutCancel', 'Payever\Controllers\PaymentController@checkoutCancel');
+        $router->get('payment/payever/checkoutFailure', 'Payever\Controllers\PaymentController@checkoutFailure');
+        $router->get('payment/payever/checkoutNotice', 'Payever\Controllers\PaymentController@checkoutNotice');
+        $router->get('payment/payever/checkoutIframe', 'Payever\Controllers\PaymentController@checkoutIframe');
 
         // Register config routes
-        $router->get('payment/payever/synchronize', 'payever\Controllers\ConfigController@synchronize');
+        $router->get('payment/payever/synchronize', 'Payever\Controllers\ConfigController@synchronize');
     }
 }

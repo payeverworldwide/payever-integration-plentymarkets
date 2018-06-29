@@ -1,6 +1,6 @@
 {
   "defaultEntryPoint": "index.html",
-  "namespace": "payever",
+  "namespace": "Payever",
   "icon": "icon-flag_none",
   "menuEntries": [
     {

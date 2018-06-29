@@ -1,8 +1,15 @@
 # Release Informationen für payever
 
+## v1.0.2 (2018-06-29)
+
+### Änderungen
+- Erstattungen möglich
+- Update bezüglich der neuen Plugin-Architektur
+- kleinere Bugfixes
+
 ## v1.0.1 (2018-04-17)
 
-### Added
+### Veröffentlichung
 - Feste Routen
 - Migration für Zahlungsoptionen erstellt
 - Übersetzungsdateien für Protokolle hinzugefügt

@@ -1,6 +1,6 @@
 <?php //strict
 
-namespace payever\Providers;
+namespace Payever\Providers;
 
 use Plenty\Modules\Payment\Events\Checkout\ExecutePayment;
 use Plenty\Modules\Payment\Events\Checkout\GetPaymentMethodContent;
@@ -9,24 +9,25 @@ use Plenty\Modules\Basket\Contracts\BasketRepositoryContract;
 use Plenty\Modules\Payment\Method\Contracts\PaymentMethodContainer;
 use Plenty\Modules\Payment\Models\Payment;
 use Plenty\Plugin\Events\Dispatcher;
-
-use payever\Helper\PayeverHelper;
-
+use Payever\Helper\PayeverHelper;
 use Plenty\Modules\Basket\Events\Basket\AfterBasketChanged;
 use Plenty\Modules\Basket\Events\BasketItem\AfterBasketItemAdd;
 use Plenty\Modules\Basket\Events\Basket\AfterBasketCreate;
-
-use payever\Services\PayeverService;
+use Payever\Services\PayeverService;
+use Payever\Procedures\RefundEventProcedure;
+use Plenty\Modules\EventProcedures\Services\EventProceduresService;
+use Plenty\Modules\EventProcedures\Services\Entries\ProcedureEntry;
 
 /**
  * Class PayeverServiceProvider
- * @package payever\Providers
+ * @package Payever\Providers
  */
 class PayeverServiceProvider extends ServiceProvider
 {
     public function register()
     {
         $this->getApplication()->register(PayeverRouteServiceProvider::class);
+        $this->getApplication()->bind(RefundEventProcedure::class);
     }
 
     /**
@@ -41,7 +42,8 @@ class PayeverServiceProvider extends ServiceProvider
         PaymentMethodContainer $payContainer,
         Dispatcher $eventDispatcher,
         PayeverService $payeverService,
-        BasketRepositoryContract $basket
+        BasketRepositoryContract $basket,
+        EventProceduresService $eventProceduresService
     ) {
         /*
          * register the payment method in the payment method container
@@ -51,11 +53,17 @@ class PayeverServiceProvider extends ServiceProvider
 
         foreach ($methodsData as $methodKey => $methodData) {
             $payContainer->register(
-                $paymentHelper::PLUGIN_KEY . '::' . $methodKey,
+                PayeverHelper::PLUGIN_KEY . '::' . $methodKey,
                 $methodData['class'],
                 $rebuildEventClasses
             );
         }
+
+        // Register Refund Event Procedure
+        $eventProceduresService->registerProcedure(PayeverHelper::PLUGIN_KEY, ProcedureEntry::PROCEDURE_GROUP_ORDER, [
+            'de' => 'Rückzahlung der payever-Zahlung',
+            'en' => 'Refund the payever payment'
+        ], 'Payever\Procedures\RefundEventProcedure@run');
 
         $payeverMops = $paymentHelper->getMopKeyToIdMap();
 

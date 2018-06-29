@@ -1,6 +1,6 @@
 <?php // strict
 
-namespace payever\Services;
+namespace Payever\Services;
 
 use Plenty\Plugin\Log\Loggable;
 use Plenty\Modules\Payment\Contracts\PaymentRepositoryContract;
@@ -14,11 +14,11 @@ use Plenty\Modules\Account\Address\Models\Address;
 use Plenty\Modules\Account\Address\Contracts\AddressRepositoryContract;
 use Plenty\Modules\Account\Contact\Contracts\ContactRepositoryContract;
 use Plenty\Modules\Frontend\Session\Storage\Contracts\FrontendSessionStorageFactoryContract;
-use payever\Helper\PayeverHelper;
+use Payever\Helper\PayeverHelper;
 
 /**
  * Class PayeverService
- * @package payever\Services
+ * @package Payever\Services
  */
 class PayeverService
 {
@@ -66,19 +66,19 @@ class PayeverService
      * @param array $basketItems
      * @return array
      */
-    protected function getOrderProducts($basketItems)
+    protected function getOrderProducts(array $basketItems):array
     {
-        $products = array();
+        $products = [];
 
         foreach ($basketItems as $basketItem) {
-            $products[] = array(
+            $products[] = [
                 'name' => 'name' . $basketItem['name'],
                 'price' => $basketItem['price'],
                 'quantity' => $basketItem['quantity'],
                 'description' => "description",
                 'thumbnail' => "",
                 'url' => "",
-            );
+            ];
         }
 
         return $products;
@@ -115,8 +115,8 @@ class PayeverService
             $email = $address['email'];
         }
 
-        $paymentParameters = array(
-            "channel" => "other_shopsystem",
+        $paymentParameters = [
+            "channel" => "plentymarkets",
             "amount" => round(($basket->basketAmount - $feeAmount), 2), // basketAmount
             "fee" => round(($basket->shippingAmount - $feeAmount), 2),
             "order_id" => $basket->id,
@@ -135,23 +135,23 @@ class PayeverService
             "failure_url" => $this->payeverHelper->getFailureURL(),
             "cancel_url" => $this->payeverHelper->getCancelURL(),
             "notice_url" => $this->payeverHelper->getNoticeURL(),
-            'plugin_version' => '1.0.1',
-        );
+            'plugin_version' => '1.0.2',
+        ];
 
-        $this->getLogger(__METHOD__)->error('payever::paymentParameters', $paymentParameters);
+        $this->getLogger(__METHOD__)->error('Payever::paymentParameters', $paymentParameters);
 
         $paymentRequest = $payeverApi->createPaymentRequest($paymentParameters);
         $errors = $payeverApi->getErrors();
         $request = $payeverApi->getRequests();
-        $this->getLogger(__METHOD__)->error('payever::createPaymentRequest', $request['createPayment']);
+        $this->getLogger(__METHOD__)->error('Payever::createPaymentRequest', $request['createPayment']);
 
         if (!empty($errors) || !isset($paymentRequest->redirect_url)) {
             $this->returnType = 'errorCode';
-            $this->getLogger(__METHOD__)->error('payever::createPaymentResponse', $errors);
+            $this->getLogger(__METHOD__)->error('Payever::createPaymentResponse', $errors);
             $paymentContent = $errors[0];
         } else {
-            $this->getLogger(__METHOD__)->error('payever::createPaymentResponse', $paymentRequest);
-            $isRedirect = $this->config->get('payever.redirect_to_payever');
+            $this->getLogger(__METHOD__)->error('Payever::createPaymentResponse', $paymentRequest);
+            $isRedirect = $this->config->get('Payever.redirect_to_payever');
             switch ($isRedirect) {
                 case 0:
                     $this->returnType = 'htmlContent';
@@ -171,7 +171,7 @@ class PayeverService
 
         if (!strlen($paymentContent)) {
             $this->returnType = 'errorCode';
-            $this->getLogger(__METHOD__)->error('payever::createPaymentResponse', 'Unknown');
+            $this->getLogger(__METHOD__)->error('Payever::createPaymentResponse', 'Unknown');
             return 'An unknown error occured, please try again.';
         }
 
@@ -179,17 +179,17 @@ class PayeverService
     }
 
     /**
-     * @param int $total
+     * @param float $total
      * @param string $method
      * @return float
      */
-    public function getFeeAmount($total, $method)
+    public function getFeeAmount(float $total, string $method):float
     {
-        $acceptedFee = $this->config->get('payever.'.$method.'.accept_fee');
+        $acceptedFee = $this->config->get('Payever.'.$method.'.accept_fee');
         $feeAmount = 0;
         if (!$acceptedFee) {
-            $fixedFee = $this->config->get('payever.'.$method.'.fee');
-            $variableFee = $this->config->get('payever.'.$method.'.variable_fee');
+            $fixedFee = $this->config->get('Payever.'.$method.'.fee');
+            $variableFee = $this->config->get('Payever.'.$method.'.variable_fee');
             $feeAmount = $total - (($total - $fixedFee) / ($variableFee / 100 + 1));
         }
 
@@ -201,10 +201,9 @@ class PayeverService
      * @param Basket $basket
      * @return Address
      */
-    private function getBillingAddress(Basket $basket)
+    private function getBillingAddress(Basket $basket):Address
     {
         $addressId = $basket->customerInvoiceAddressId;
-
         return $this->addressRepo->findAddressById($addressId);
     }
 
@@ -213,7 +212,7 @@ class PayeverService
      * @param Address $address
      * @return array
      */
-    private function getAddress(Address $address)
+    private function getAddress(Address $address):array
     {
         return [
             'city' => $address->town,
@@ -230,7 +229,7 @@ class PayeverService
      * @param Basket $basket
      * @return string
      */
-    public function preparePayeverPayment(Basket $basket, $method)
+    public function preparePayeverPayment(Basket $basket, $method):string
     {
         return $this->getPaymentContent($basket, $method);
     }
@@ -249,10 +248,10 @@ class PayeverService
     {
         // Load the mandatory payever data from session
         $paymentId = $this->sessionStorage->getPlugin()->getValue("payever_payment_id");
-        $executeParams = array();
+        $executeParams = [];
         $executeParams['paymentId'] = $paymentId;
 
-        $executeResponse = array();
+        $executeResponse = [];
         $payeverApi = $this->payeverHelper->getPayeverApi();
         $errors = $payeverApi->getErrors();
 
@@ -265,14 +264,9 @@ class PayeverService
 
         if (!empty($paymentId)) {
             $retrievePayment = $payeverApi->retrievePayment($paymentId);
-            $this->getLogger(__METHOD__)->error('payever::executePaymentRetrieve', $retrievePayment);
+            $this->getLogger(__METHOD__)->error('Payever::executePaymentRetrieve', $retrievePayment);
             if ($retrievePayment) {
-                if (isset($retrievePayment->result->payment_details->specific_status)) {
-                    $response_status = $retrievePayment->result->payment_details->specific_status;
-                } else {
-                    $response_status = $retrievePayment->result->status;
-                }
-
+                $response_status = $retrievePayment->result->payment_details->specific_status ?? $retrievePayment->result->status;
                 $response_status = $payeverApi->getPayeverStatus($response_status);
                 if ($response_status == false) {
                     $response_status = $retrievePayment->result->status;
@@ -300,18 +294,18 @@ class PayeverService
         } else {
             $this->returnType = 'errorCode';
 
-            $this->getLogger(__METHOD__)->error('payever::executePaymentResponse', $executeResponse);
+            $this->getLogger(__METHOD__)->error('Payever::executePaymentResponse', $executeResponse);
             return "The payment ID is lost!";
         }
 
         // Check for errors
         if (is_array($executeResponse) && $executeResponse['error']) {
             $this->returnType = 'errorCode';
-            $this->getLogger(__METHOD__)->error('payever::executePaymentResponse', $executeResponse);
+            $this->getLogger(__METHOD__)->error('Payever::executePaymentResponse', $executeResponse);
             return $executeResponse['error'] . ': '.$executeResponse['error_msg'];
         }
 
-        $this->getLogger(__METHOD__)->error('payever::executePaymentResponse', $executeResponse);
+        $this->getLogger(__METHOD__)->error('Payever::executePaymentResponse', $executeResponse);
 
         return $executeResponse;
     }
@@ -322,9 +316,9 @@ class PayeverService
      * @param Basket $basket
      * @return array
      */
-    private function getPayeverParams(Basket $basket = null)
+    private function getPayeverParams(Basket $basket = null):array
     {
-        $payeverRequestParams = array();
+        $payeverRequestParams = [];
         $payeverRequestParams['basket'] = $basket;
         /** @var \Plenty\Modules\Item\Item\Contracts\ItemRepositoryContract $itemContract */
         $itemContract = pluginApp(\Plenty\Modules\Item\Item\Contracts\ItemRepositoryContract::class);
@@ -355,18 +349,16 @@ class PayeverService
      * @param $paymentId
      * @return \stdClass
      */
-    public function handlePayeverPayment($paymentId)
+    public function handlePayeverPayment(string $paymentId)
     {
-        $response = $this->getPaymentDetails($paymentId);
-
-        return $response;
+        return $this->getPaymentDetails($paymentId);
     }
 
     /**
      * @param $paymentId
      * @return \stdClass
      */
-    public function getPaymentDetails($paymentId)
+    public function getPaymentDetails(string$paymentId)
     {
         $response = $this->getRetrievePayment($paymentId);
         $this->getLogger(__METHOD__)->error('getPaymentDetails', $response);
@@ -380,7 +372,7 @@ class PayeverService
      * @param string $paymentId
      * @return \stdClass|bool
      */
-    public function getRetrievePayment($paymentId)
+    public function getRetrievePayment(string $paymentId)
     {
         $payeverApi = $this->payeverHelper->getPayeverApi();
         $errors = $payeverApi->getErrors();
@@ -395,5 +387,29 @@ class PayeverService
         $retrievePayment = $payeverApi->retrievePayment($paymentId);
 
         return $retrievePayment->result;
+    }
+
+    /**
+     * Refund the given payment
+     *
+     * @param string $transactionId
+     * @param float $amount
+     * @return bool|mixed
+     */
+    public function refundPayment(string $transactionId, float $amount)
+    {
+        $payeverApi = $this->payeverHelper->getPayeverApi();
+        $errors = $payeverApi->getErrors();
+
+        if (!empty($errors)) {
+            $errors = $payeverApi->getErrors();
+            $this->getLogger(__METHOD__)->error('authenticationRequest', $errors);
+
+            return false;
+        }
+
+        $refund = $payeverApi->refundPayment($transactionId, $amount);
+
+        return $refund;
     }
 }

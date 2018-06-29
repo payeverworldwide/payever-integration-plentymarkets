@@ -1,5 +1,12 @@
 # Release Notes for payever
 
+## v1.0.2 (2018-06-29)
+
+### Fixed
+- Implemented refund functionality
+- Updated plugin according with new Plenty architecture
+- Fixed bugs
+
 ## v1.0.1 (2018-04-17)
 
 ### Added

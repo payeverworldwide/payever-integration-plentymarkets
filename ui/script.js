@@ -93,7 +93,7 @@ function payeverUpdateConfig(updateSourceCallback) {
         $.getJSON('/rest/webstores'),
         updateSourceCallback,
         function (plugins, webstores) {
-            payeverPlugin = plugins.filter(function (plugin) { return plugin.name === 'payever'; }).shift();
+            payeverPlugin = plugins.filter(function (plugin) { return plugin.name === 'Payever'; }).shift();
             pluginSetId = webstores.slice().shift().pluginSetId;
             payeverConfigUri = '/rest/plugins/' + payeverPlugin.id + '/plugin_sets/' + pluginSetId + '/configurations';
 

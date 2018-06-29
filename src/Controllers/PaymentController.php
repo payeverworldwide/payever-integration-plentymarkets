@@ -1,5 +1,5 @@
 <?php //strict
-namespace payever\Controllers;
+namespace Payever\Controllers;
 
 use Plenty\Modules\Basket\Contracts\BasketRepositoryContract;
 use Plenty\Plugin\ConfigRepository;
@@ -8,15 +8,15 @@ use Plenty\Plugin\Http\Request;
 use Plenty\Plugin\Http\Response;
 use Plenty\Modules\Order\Contracts\OrderRepositoryContract;
 use Plenty\Modules\Frontend\Session\Storage\Contracts\FrontendSessionStorageFactoryContract;
-use payever\Services\PayeverService;
-use payever\Helper\PayeverHelper;
-use payever\Api\PayeverApi;
+use Payever\Services\PayeverService;
+use Payever\Helper\PayeverHelper;
+use Payever\Api\PayeverApi;
 use Plenty\Plugin\Templates\Twig;
 use Plenty\Plugin\Log\Loggable;
 
 /**
  * Class PaymentController
- * @package payever\Controllers
+ * @package Payever\Controllers
  */
 class PaymentController extends Controller
 {
@@ -96,7 +96,7 @@ class PaymentController extends Controller
     }
 
     /**
-     * payever redirects to this page if the payment could not be executed or other problems occurred
+     * Payever redirects to this page if the payment could not be executed or other problems occurred
      */
     public function checkoutCancel()
     {
@@ -104,7 +104,7 @@ class PaymentController extends Controller
     }
 
     /**
-     * payever redirects to this page if the payment could not be executed or other problems occurred
+     * Payever redirects to this page if the payment could not be executed or other problems occurred
      */
     public function checkoutFailure()
     {
@@ -112,7 +112,7 @@ class PaymentController extends Controller
     }
 
     /**
-     * payever redirects to this page if the payment was executed correctly
+     * Payever redirects to this page if the payment was executed correctly
      */
     public function checkoutSuccess()
     {
@@ -122,10 +122,10 @@ class PaymentController extends Controller
 
         $payment = $this->payeverService->handlePayeverPayment($paymentId);
         if ($payment) {
-            $this->getLogger(__METHOD__)->error('payever', $payment);
+            $this->getLogger(__METHOD__)->info('Payever', $payment);
             $this->sessionStorage->getPlugin()->setValue('payever_payment_id', $paymentId);
             $update = $this->payeverHelper->updatePlentyPayment($paymentId, $payment->status);
-            $this->getLogger(__METHOD__)->error('payever::successUpdatePlentyPayment', $update);
+            $this->getLogger(__METHOD__)->error('Payever::successUpdatePlentyPayment', $update);
         }
 
         if ($update) {
@@ -147,16 +147,15 @@ class PaymentController extends Controller
         $paymentId = $this->request->get('payment_id');
 
         $payment = $this->payeverService->handlePayeverPayment($paymentId);
-        $this->getLogger(__METHOD__)->error('payever::noticeRetrievePayment', $payment);
+        $this->getLogger(__METHOD__)->error('Payever::noticeRetrievePayment', $payment);
         $update = $this->payeverHelper->updatePlentyPayment($paymentId, $payment->status);
-        $this->getLogger(__METHOD__)->error('payever::noticeUpdatePlentyPayment', $update);
+        $this->getLogger(__METHOD__)->error('Payever::noticeUpdatePlentyPayment', $update);
     }
 
     public function checkoutIframe(Twig $twig):string
     {
         $iframeUrl = $this->sessionStorage->getPlugin()->getValue("payever_redirect_url");
-
-        return $twig->render('payever::checkout.iframe', ["iframe_url" => $iframeUrl]);
+        return $twig->render('Payever::checkout.iframe', ["iframe_url" => $iframeUrl]);
     }
 
     public function waitIfSessionIsset($paymentId)

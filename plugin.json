@@ -1,16 +1,16 @@
 {
-  "name"              : "payever",
+  "name"              : "Payever",
   "marketplaceName"   : {"de":"payever","en":"payever"},
-  "namespace"         : "payever",
+  "namespace"         : "Payever",
   "type"              : "payment",
-  "version"           : "1.0.1",
+  "version"           : "1.0.2",
   "license"           : "GNU AFFERO GENERAL PUBLIC LICENSE",
   "isClosedSource"    : false,
   "pluginIcon"        : "icon_plugin_xs.png",
   "price"             : 0.00,
   "description"       : "With payever you can easily add all preferred payment options to your checkout. More than 4000 merchants are using the innovative checkout for their daily payment needs.",
   "shortDescription"  : {
-    "de":"Mit payever kannst du deinem Checkout die gew&uuml;nschten Zahlungsarten kostenfrei und in Minuten hinzuf&uuml;gen. &Uuml;ber 4.000 H&auml;ndler nutzen unsere innovative Bezahll&ouml;sung bereits f&uuml;r den t&auml;glichen Zahlungsverkehr.",
+    "de":"Mit payever kannst du deinem Checkout die gewünschten Zahlungsarten kostenfrei und in Minuten hinzufügen. Über 4.000 Händler nutzen unsere innovative Bezahllösung bereits für den täglichen Zahlungsverkehr.",
     "en":"With payever you can easily add all preferred payment options to your checkout. More than 4000 merchants are using the innovative checkout for their daily payment needs."
   },
   "categories"        : ["3519"],
@@ -26,13 +26,13 @@
   "author"            : "payever GmbH",
   "authorIcon"        : "icon_author_xs.png",
   "email"             : "service@getpayever.com",
-  "serviceProvider"   : "payever\\Providers\\PayeverServiceProvider",
+  "serviceProvider"   : "Payever\\Providers\\PayeverServiceProvider",
   "containers"        : [],
   "dataProviders"     : [],
   "javaScriptFiles"   : [],
   "require"           : [],
   "dependencies"      : [],
   "runOnBuild"        : [
-    "payever\\Migrations\\CreatePayeverPaymentMethods"
+    "Payever\\Migrations\\CreatePayeverPaymentMethods"
   ]
 }

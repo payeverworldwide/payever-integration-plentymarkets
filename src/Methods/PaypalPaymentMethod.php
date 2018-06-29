@@ -1,12 +1,12 @@
 <?php //strict
 
-namespace payever\Methods;
+namespace Payever\Methods;
 
-use payever\Methods\AbstractPaymentMethod;
+use Payever\Methods\AbstractPaymentMethod;
 
 /**
  * Class PaypalPaymentMethod
- * @package payever\Methods
+ * @package Payever\Methods
  */
 class PaypalPaymentMethod extends AbstractPaymentMethod
 {

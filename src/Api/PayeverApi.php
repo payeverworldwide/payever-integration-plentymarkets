@@ -1,6 +1,6 @@
 <?php
 
-namespace payever\Api;
+namespace Payever\Api;
 
 class PayeverApi
 {
@@ -48,8 +48,8 @@ class PayeverApi
     const STATUS_SANTANDER_IN_PROCESS = 'STATUS_SANTANDER_IN_PROCESS';
     const STATUS_SANTANDER_SHOP_TEMPORARY_APPROVED = 'STATUS_SANTANDER_SHOP_TEMPORARY_APPROVED';
 
-    private static $statuses = array(
-        'STATUS_IN_PROCESS' => array(
+    private static $statuses = [
+        'STATUS_IN_PROCESS' => [
             'STATUS_SANTANDER_IN_PROGRESS',
             'STATUS_SANTANDER_IN_PROCESS',
             'STATUS_SANTANDER_DEFERRED',
@@ -58,30 +58,30 @@ class PayeverApi
             'STATUS_SANTANDER_SHOP_TEMPORARY_APPROVED',
             'STATUS_SANTANDER_APPROVED_WITH_REQUIREMENTS',
             'PENDING',
-        ),
-        'STATUS_ACCEPTED' => array(
+        ],
+        'STATUS_ACCEPTED' => [
             'STATUS_SANTANDER_APPROVED',
             'STATUS_SANTANDER_ACCOUNT_OPENED',
             'STATUS_INVOICE_INCOLLECTION',
             'STATUS_INVOICE_LATEPAYMENT',
             'STATUS_INVOICE_REMINDER',
-        ),
+        ],
         'STATUS_PAID' => '',
-        'STATUS_DECLINED' => array(
+        'STATUS_DECLINED' => [
             'STATUS_SANTANDER_DECLINED',
             'STATUS_SANTANDER_AUTOMATIC_DECLINE',
-        ),
+        ],
         'STATUS_REFUNDED' => '',
-        'STATUS_FAILED' => array(
+        'STATUS_FAILED' => [
             'STATUS_SANTANDER_CANCELLED',
             'STATUS_SANTANDER_CANCELLED_ANOTHER',
             'STATUS_SANTANDER_IN_CANCELLATION',
-        ),
-        'STATUS_CANCELLED' => array(
+        ],
+        'STATUS_CANCELLED' => [
             'STATUS_INVOICE_CANCELLATION',
-        ),
+        ],
         'STATUS_NEW' => '',
-    );
+    ];
 
     /**
      * @param $client_id
@@ -174,12 +174,12 @@ class PayeverApi
     {
         $url = $this->getAuthenticationURL();
 
-        $postData = array(
+        $postData = [
             'client_id' => $this->_client_id,
             'client_secret' => $this->_client_secret,
             'grant_type' => "http://www.payever.de/api/payment",
             'scope' => $scope,
-        );
+        ];
 
         $this->addRequest($postData, 'authentication');
 
@@ -277,7 +277,7 @@ class PayeverApi
             $ch = curl_init();
 
             curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization: Bearer '.$accessToken));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer '.$accessToken]);
             curl_setopt($ch, CURLOPT_HEADER, 0);
             curl_setopt($ch, CURLOPT_POST, count($orderData));
             curl_setopt($ch, CURLOPT_POSTFIELDS, $orderData);
@@ -317,7 +317,7 @@ class PayeverApi
         if (!empty($this->_lastAuthenticationResponse) && $accessToken = $this->_lastAuthenticationResponse->access_token) {
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization: Bearer '.$accessToken));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer '.$accessToken]);
             curl_setopt($ch, CURLOPT_HEADER, 0);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -357,7 +357,7 @@ class PayeverApi
         if (!empty($this->_lastAuthenticationResponse) && $accessToken = $this->_lastAuthenticationResponse->access_token) {
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization: Bearer '.$accessToken));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer '.$accessToken]);
             curl_setopt($ch, CURLOPT_HEADER, 0);
             curl_setopt($ch, CURLOPT_POST, count($amountArray));
             curl_setopt($ch, CURLOPT_POSTFIELDS, $amountArray);

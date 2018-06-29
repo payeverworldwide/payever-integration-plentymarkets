@@ -1,20 +1,24 @@
 <?php //strict
 
-namespace payever\Helper;
+namespace Payever\Helper;
 
-use payever\Methods\PaymillcreditcardPaymentMethod;
-use payever\Methods\PaymilldirectdebitPaymentMethod;
-use payever\Methods\PaypalPaymentMethod;
-use payever\Methods\SantanderinstdkPaymentMethod;
-use payever\Methods\SantanderinstnoPaymentMethod;
-use payever\Methods\SantanderinstsePaymentMethod;
-use payever\Methods\SantanderinvoicedePaymentMethod;
-use payever\Methods\SantanderinvoicenoPaymentMethod;
-use payever\Methods\SantanderPaymentMethod;
-use payever\Methods\SofortPaymentMethod;
-use payever\Methods\StripePaymentMethod;
-use payever\Api\PayeverApi;
-
+use Payever\Methods\PaymillcreditcardPaymentMethod;
+use Payever\Methods\PaymilldirectdebitPaymentMethod;
+use Payever\Methods\PaypalPaymentMethod;
+use Payever\Methods\SantanderinstdkPaymentMethod;
+use Payever\Methods\SantanderinstnoPaymentMethod;
+use Payever\Methods\SantanderinstsePaymentMethod;
+use Payever\Methods\SantanderinvoicedePaymentMethod;
+use Payever\Methods\SantanderinvoicenoPaymentMethod;
+use Payever\Methods\SantanderPaymentMethod;
+use Payever\Methods\SofortPaymentMethod;
+use Payever\Methods\StripePaymentMethod;
+use Payever\Methods\PayexfakturaPaymentMethod;
+use Payever\Methods\PayexcreditcardPaymentMethod;
+use Payever\Api\PayeverApi;
+use Plenty\Modules\Account\Address\Contracts\AddressRepositoryContract;
+use Plenty\Modules\Account\Address\Models\Address;
+use Plenty\Modules\Basket\Models\Basket;
 use Plenty\Plugin\Application;
 use Plenty\Plugin\ConfigRepository;
 use Plenty\Modules\Payment\Method\Contracts\PaymentMethodRepositoryContract;
@@ -30,7 +34,7 @@ use Plenty\Modules\Frontend\Contracts\Checkout;
 /**
  * Class PayeverHelper
  *
- * @package payever\Helper
+ * @package Payever\Helper
  */
 class PayeverHelper
 {
@@ -47,6 +51,7 @@ class PayeverHelper
     private $orderRepo;
     private $statusMap;
     private $payeverApi;
+    private $addressRepo;
 
     /** @var  Checkout */
     private $checkout;
@@ -96,6 +101,14 @@ class PayeverHelper
             'class' => SantanderinvoicedePaymentMethod::class,
             'name' => 'Santander Invoice Germany',
         ],
+        'PAYEX_FAKTURA' => [
+            'class' => PayexfakturaPaymentMethod::class,
+            'name' => 'PayEx Invoice',
+        ],
+        'PAYEX_CREDITCARD' => [
+            'class' => PayexcreditcardPaymentMethod::class,
+            'name' => 'PayEx Credit Card',
+        ],
     ];
 
     private $urlMap = [
@@ -107,6 +120,15 @@ class PayeverHelper
         'iframe' => '/payment/payever/checkoutIframe',
     ];
 
+    /**
+     * Methods we should hide if shipping and billing addresses is different
+     *
+     * @var array
+     */
+    private $hideOnDifferentAddressMethods = [
+        'santander_invoice_de',
+        'payex_faktura',
+    ];
 
     /**
      * PaymentHelper constructor.
@@ -121,6 +143,7 @@ class PayeverHelper
      * @param OrderRepositoryContract $orderRepo,
      * @param Checkout $checkout
      * @param PayeverApi $payeverApi
+     * @param AddressRepositoryContract $addressRepo
      */
     public function __construct(
         Application $app,
@@ -133,7 +156,8 @@ class PayeverHelper
         OrderRepositoryContract $orderRepo,
         WebstoreHelper $webstoreHelper,
         Checkout $checkout,
-        PayeverApi $payeverApi
+        PayeverApi $payeverApi,
+        AddressRepositoryContract $addressRepo
     ) {
         $this->app = $app;
         $this->webstoreHelper = $webstoreHelper;
@@ -144,15 +168,16 @@ class PayeverHelper
         $this->paymentProperty = $paymentProperty;
         $this->orderRepo = $orderRepo;
         $this->payment = $payment;
-        $this->statusMap = array();
+        $this->statusMap = [];
         $this->checkout = $checkout;
         $this->payeverApi = $payeverApi;
+        $this->addressRepo = $addressRepo;
     }
 
     /**
      * @return array
      */
-    public function getMethodsMetaData()
+    public function getMethodsMetaData():array
     {
         return $this->methodsMetaData;
     }
@@ -160,7 +185,7 @@ class PayeverHelper
     /**
      * @return array
      */
-    public function getMopKeyToIdMap()
+    public function getMopKeyToIdMap():array
     {
         $result = [];
 
@@ -174,7 +199,11 @@ class PayeverHelper
         return $result;
     }
 
-    private function getUrl($type)
+    /**
+     * @param $type
+     * @return string
+     */
+    private function getUrl(string $type):string
     {
         $webstoreConfig = $this->webstoreHelper->getCurrentWebstoreConfiguration();
         if (is_null($webstoreConfig)) {
@@ -188,11 +217,11 @@ class PayeverHelper
     /**
      * @return string
      */
-    public function getProcessURL($method):string
+    public function getProcessURL(string $method):string
     {
         $result = $this->getUrl('process');
 
-        return $result. ($result != 'error' ? $method : '');
+        return $result . ($result != 'error' ? $method : '');
     }
 
     /**
@@ -239,11 +268,11 @@ class PayeverHelper
     /**
      * @return PayeverApi
      */
-    public function getPayeverApi()
+    public function getPayeverApi():PayeverApi
     {
-        $client_id = $this->config->get('payever.clientId');
-        $client_secret = $this->config->get('payever.clientSecret');
-        $environment = $this->config->get('payever.environment');
+        $client_id = $this->config->get('Payever.clientId');
+        $client_secret = $this->config->get('Payever.clientSecret');
+        $environment = $this->config->get('Payever.environment');
 
         $payeverApi = $this->payeverApi->set($client_id, $client_secret, $environment);
 
@@ -251,11 +280,30 @@ class PayeverHelper
     }
 
     /**
+     * Returns the payever payment method's id.
+     *
+     * @param number $paymentMethodId
+     * @return string
+     */
+    public function isPayeverPaymentMopId(int $mopId): bool
+    {
+        $paymentMethods = $this->paymentMethodRepository->allForPlugin('plenty_payever');
+        if (! is_null($paymentMethods)) {
+            foreach ($paymentMethods as $paymentMethod) {
+                if ($paymentMethod->id == $mopId) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * @param array $payeverPayment
      * @param int $mopId
      * @return Payment
      */
-    public function createPlentyPayment($payeverPayment, $mopId)
+    public function createPlentyPayment(array $payeverPayment, int $mopId):Payment
     {
         /** @var Payment $payment */
         $payment = pluginApp(Payment::class);
@@ -287,7 +335,7 @@ class PayeverHelper
      * @param $status
      * @return bool|Payment
      */
-    public function updatePlentyPayment($transactionId, $status)
+    public function updatePlentyPayment(string $transactionId, string $status)
     {
         $updated = false;
         $payments = $this->paymentRepo->getPaymentsByPropertyTypeAndValue(
@@ -315,7 +363,7 @@ class PayeverHelper
      * @param $value
      * @return PaymentProperty
      */
-    private function getPaymentProperty($typeId, $value)
+    private function getPaymentProperty($typeId, $value):PaymentProperty
     {
         /** @var PaymentProperty $paymentProperty */
         $paymentProperty = pluginApp(PaymentProperty::class);
@@ -338,6 +386,67 @@ class PayeverHelper
             // Assign the given payment to the given order
             $this->paymentOrderRelationRepo->createOrderRelation($payment, $order);
         }
+    }
+
+    /**
+     *
+     * @param Payment $payment
+     * @param int $propertyType
+     * @return null|string
+     */
+    public function getPaymentPropertyValue($payment, $propertyType)
+    {
+        $properties = $payment->properties;
+        if (($properties->count() > 0) || (is_array($properties) && count($properties) > 0)) {
+            /** @var PaymentProperty $property */
+            foreach ($properties as $property) {
+                if ($property instanceof PaymentProperty) {
+                    if ($property->typeId == $propertyType) {
+                        return $property->value;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param string $methodCode
+     * @param Basket $bakset
+     *
+     * @return bool
+     */
+    public function isPaymentMethodHidden($methodCode, Basket $bakset)
+    {
+        return $this->isBasketAddressesDifferent($bakset)
+            ? in_array($methodCode, $this->hideOnDifferentAddressMethods)
+            : false;
+    }
+
+    /**
+     * @param Basket $basket
+     *
+     * @return bool
+     */
+    public function isBasketAddressesDifferent(Basket $basket)
+    {
+        static $result = null;
+
+        if ($result === null) {
+            $result = false;
+
+            if (
+                !$basket->customerShippingAddressId
+                || !$basket->customerInvoiceAddressId
+            ) {
+                return $result;
+            }
+
+            $result = $basket->customerInvoiceAddressId !== $basket->customerShippingAddressId;
+        }
+
+        return $result;
     }
 
     /**

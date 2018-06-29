@@ -1,9 +1,9 @@
 <?php
 
-namespace payever\Migrations;
+namespace Payever\Migrations;
 
 use Plenty\Modules\Payment\Method\Contracts\PaymentMethodRepositoryContract;
-use payever\Helper\PayeverHelper;
+use Payever\Helper\PayeverHelper;
 
 class CreatePayeverPaymentMethods
 {
@@ -14,14 +14,14 @@ class CreatePayeverPaymentMethods
     private $paymentMethodRepositoryContract;
     /**
      *
-     * @var PaymentHelper
+     * @var PayeverHelper
      */
     private $paymentHelper;
     /**
      * Constructor.
      *
      * @param PaymentMethodRepositoryContract $paymentMethodRepositoryContract
-     * @param PaymentHelper $paymentHelper
+     * @param PayeverHelper $paymentHelper
      */
     public function __construct(PaymentMethodRepositoryContract $paymentMethodRepositoryContract, PayeverHelper $paymentHelper)
     {
@@ -29,7 +29,7 @@ class CreatePayeverPaymentMethods
         $this->paymentHelper = $paymentHelper;
     }
     /**
-     * Creates the payment methods for the Wallee plugin.
+     * Creates the payment methods for the payever plugin.
      */
     public function run()
     {
