@@ -1,0 +1,53 @@
+{% extends getPartial('page-design') %}
+
+    {% block PageBody %}
+        <div class="page-content container-max">
+            <div class="row">
+                <div class="col-xs-12">
+                    <h1>payever checkout</h1>
+                    <hr class="m-y-3">
+                    <iframe id="payever_iframe" style="width: 100%;" src="{{ iframe_url }}" frameborder="0"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            function sendCheckoutNewScrollOffset() {
+                var iframe = document.getElementById('payever_iframe');
+                if (iframe.length) {
+                    var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    var offsetTop = iframe.offset().top;
+                    iframe[0].contentWindow.postMessage({
+                        'event': 'sendPayeverCheckoutScrollOffset',
+                        'scrollTop':    scrollTop,
+                        'offsetTop':    offsetTop,
+                        'windowHeight': window.innerHeight,
+                    }, "*");
+                }
+            }
+
+            if (window.addEventListener) {
+                window.addEventListener("message", onMessagePayever, false);
+                window.addEventListener('scroll', sendCheckoutNewScrollOffset, false);
+                window.addEventListener('resize', sendCheckoutNewScrollOffset, false);
+            }
+            else if (window.attachEvent) {
+                window.attachEvent("onmessage", onMessagePayever, false);
+                window.attachEvent('onscroll', sendCheckoutNewScrollOffset, false);
+                window.attachEvent('onresize', sendCheckoutNewScrollOffset, false);
+            }
+
+            function onMessagePayever(event) {
+                if (event && event.data) {
+                    switch (event.data.event) {
+                        case 'payeverCheckoutHeightChanged':
+                            var value = Math.max(0, parseInt(event.data.value));
+                            document.getElementById('payever_iframe').style.height = value+"px";
+                            break;
+                        case 'payeverCheckoutScrollOffsetRequested':
+                            sendCheckoutNewScrollOffset();
+                    }
+                }
+            }
+        </script>
+    {% endblock %}

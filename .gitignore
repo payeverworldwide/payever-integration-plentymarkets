@@ -1,0 +1,9 @@
+### OS cache
+Thumbs.db
+.DS_Store
+
+.env
+.idea/
+plugin*.zip
+srv/
+www/

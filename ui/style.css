@@ -1,0 +1,29 @@
+.payever-logo__wrap {
+    margin-bottom: 20px
+}
+.payever-logo {
+    height: 50px
+}
+.payever-btn {
+    width: 200px!important;
+    vertical-align: middle;
+}
+.payever-btn span {
+    font-size: 18px;
+    color: #fff;
+    padding-left:  15px;
+    vertical-align: top;
+}
+.payever-btn.in-progress {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.payever-message {
+    padding: 5px;
+}
+.payever-message.is-success {
+    color: green;
+}
+.payever-message.is-error {
+    color: darkred;
+}

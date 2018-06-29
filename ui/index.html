@@ -1,0 +1,30 @@
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="/tpl/global/plenty_admin_59.css"/>
+    <link rel="stylesheet" type="text/css" href="/tpl/global/terra7.css"/>
+    <link rel="stylesheet" type="text/css" href="style.css"/>
+
+    <script language="JavaScript" src="/tpl/global/jquery/jquery-1.7.1.min.js" type="text/javascript"></script>
+    <script language="JavaScript" src="script.js" type="text/javascript"></script>
+</head>
+<body>
+    <div class="payever-logo__wrap">
+        <a href="https://getpayever.com/" target="_blank"><img class="payever-logo" src="logo_400.png"></a>
+    </div>
+    <div class="PlentyGuiPane">
+        <div class="PlentyGuiPane">
+            <form class="PlentyGuiConfigForm" onsubmit="return false;" action="" enctype="multipart/form-data" method="post">
+                <div class="PlentyGuiFormSave save">
+                    <div onclick="return payeverSynchronize();" class="PlentyGuiFormIcon payever-btn formblanc terraIcon reload" title="Synchronize">
+                        <span>Synchronize</span>
+                    </div>
+                    <div onclick="return payeverSetupSandbox();" class="PlentyGuiFormIcon payever-btn formblanc terraIcon" title="Synchronize">
+                        <span>Setup Sandbox Keys</span>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="payever-message"></div>
+    </div>
+</body>
+</html>
