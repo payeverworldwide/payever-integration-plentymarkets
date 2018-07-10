@@ -121,24 +121,6 @@
               }
             ]
           }
-        },
-        "debug_log": {
-          "type": "selectBox",
-          "required": false,
-          "label": "Config.debugLogLabel",
-          "options": {
-            "defaultValue": "0",
-            "selectBoxValues": [
-              {
-                "value": "0",
-                "caption": "Config.debugLogPossibleValue0"
-              },
-              {
-                "value": "1",
-                "caption": "Config.debugLogPossibleValue1"
-              }
-            ]
-          }
         }
       }
     },

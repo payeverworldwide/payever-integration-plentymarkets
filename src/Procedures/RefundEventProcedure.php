@@ -54,17 +54,17 @@ class RefundEventProcedure
             if ($paymentHelper->isPayeverPaymentMopId($payment->mopId)) {
                 $transactionId = $paymentHelper->getPaymentPropertyValue($payment, PaymentProperty::TYPE_TRANSACTION_ID);
                 $amount = $payment->amount;
-                $this->getLogger(__METHOD__)->error('Payever::RefundData', 'TransactionId: '. $transactionId .', amount: '. $amount);
+                $this->getLogger(__METHOD__)->debug('Payever::debug.refundData', 'TransactionId: '. $transactionId .', amount: '. $amount);
                 if ($transactionId > 0) {
                     // refund the payment
                     $refundResult = $paymentService->refundPayment($transactionId, $amount);
                     if ($refundResult) {
-                        $this->getLogger(__METHOD__)->error('Payever::RefundRefundResponse', $refundResult);
+                        $this->getLogger(__METHOD__)->debug('Payever::debug.refundResponse', $refundResult);
                         $payment->status = $paymentHelper->mapStatus($refundResult->result->status);
                         // update the refunded payment
                         $paymentContract->updatePayment($payment);
                     } else {
-                        $this->getLogger(__METHOD__)->error('Payever::RefundRefundResponse', 'Refund payever payment is not allowed!');
+                        $this->getLogger(__METHOD__)->debug('Payever::debug.refundResponse', 'Refund payever payment is not allowed!');
                         throw new \Exception('Refund payever payment is not allowed!');
                     }
                 }

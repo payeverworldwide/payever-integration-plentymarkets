@@ -1,5 +1,11 @@
 # Release Notes for payever
 
+## v1.0.3 (2018-07-10)
+
+### Fixed
+- Debug logging
+- Translation for logs
+
 ## v1.0.2 (2018-06-29)
 
 ### Fixed

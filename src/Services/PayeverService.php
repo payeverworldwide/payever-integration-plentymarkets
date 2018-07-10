@@ -135,22 +135,22 @@ class PayeverService
             "failure_url" => $this->payeverHelper->getFailureURL(),
             "cancel_url" => $this->payeverHelper->getCancelURL(),
             "notice_url" => $this->payeverHelper->getNoticeURL(),
-            'plugin_version' => '1.0.2',
+            'plugin_version' => '1.0.3',
         ];
 
-        $this->getLogger(__METHOD__)->error('Payever::paymentParameters', $paymentParameters);
+        $this->getLogger(__METHOD__)->debug('Payever::debug.paymentParameters', $paymentParameters);
 
         $paymentRequest = $payeverApi->createPaymentRequest($paymentParameters);
         $errors = $payeverApi->getErrors();
         $request = $payeverApi->getRequests();
-        $this->getLogger(__METHOD__)->error('Payever::createPaymentRequest', $request['createPayment']);
+        $this->getLogger(__METHOD__)->debug('Payever::debug.createPaymentRequest', $request['createPayment']);
 
         if (!empty($errors) || !isset($paymentRequest->redirect_url)) {
             $this->returnType = 'errorCode';
-            $this->getLogger(__METHOD__)->error('Payever::createPaymentResponse', $errors);
+            $this->getLogger(__METHOD__)->debug('Payever::debug.createPaymentResponse', $errors);
             $paymentContent = $errors[0];
         } else {
-            $this->getLogger(__METHOD__)->error('Payever::createPaymentResponse', $paymentRequest);
+            $this->getLogger(__METHOD__)->debug('Payever::debug.createPaymentResponse', $paymentRequest);
             $isRedirect = $this->config->get('Payever.redirect_to_payever');
             switch ($isRedirect) {
                 case 0:
@@ -171,7 +171,7 @@ class PayeverService
 
         if (!strlen($paymentContent)) {
             $this->returnType = 'errorCode';
-            $this->getLogger(__METHOD__)->error('Payever::createPaymentResponse', 'Unknown');
+            $this->getLogger(__METHOD__)->debug('Payever::debug.createPaymentResponse', 'Unknown');
             return 'An unknown error occured, please try again.';
         }
 
@@ -264,7 +264,7 @@ class PayeverService
 
         if (!empty($paymentId)) {
             $retrievePayment = $payeverApi->retrievePayment($paymentId);
-            $this->getLogger(__METHOD__)->error('Payever::executePaymentRetrieve', $retrievePayment);
+            $this->getLogger(__METHOD__)->debug('Payever::debug.executePaymentRetrieve', $retrievePayment);
             if ($retrievePayment) {
                 $response_status = $retrievePayment->result->payment_details->specific_status ?? $retrievePayment->result->status;
                 $response_status = $payeverApi->getPayeverStatus($response_status);
@@ -294,18 +294,18 @@ class PayeverService
         } else {
             $this->returnType = 'errorCode';
 
-            $this->getLogger(__METHOD__)->error('Payever::executePaymentResponse', $executeResponse);
+            $this->getLogger(__METHOD__)->debug('Payever::debug.executePaymentResponse', $executeResponse);
             return "The payment ID is lost!";
         }
 
         // Check for errors
         if (is_array($executeResponse) && $executeResponse['error']) {
             $this->returnType = 'errorCode';
-            $this->getLogger(__METHOD__)->error('Payever::executePaymentResponse', $executeResponse);
+            $this->getLogger(__METHOD__)->debug('Payever::debug.executePaymentResponse', $executeResponse);
             return $executeResponse['error'] . ': '.$executeResponse['error_msg'];
         }
 
-        $this->getLogger(__METHOD__)->error('Payever::executePaymentResponse', $executeResponse);
+        $this->getLogger(__METHOD__)->debug('Payever::debug.executePaymentResponse', $executeResponse);
 
         return $executeResponse;
     }
@@ -361,7 +361,7 @@ class PayeverService
     public function getPaymentDetails(string$paymentId)
     {
         $response = $this->getRetrievePayment($paymentId);
-        $this->getLogger(__METHOD__)->error('getPaymentDetails', $response);
+        $this->getLogger(__METHOD__)->debug('Payever::debug.getPaymentDetails', $response);
 
         return $response;
     }
@@ -379,7 +379,7 @@ class PayeverService
 
         if (!empty($errors)) {
             $errors = $payeverApi->getErrors();
-            $this->getLogger(__METHOD__)->error('authenticationRequest', $errors);
+            $this->getLogger(__METHOD__)->debug('Payever::debug.authenticationRequest', $errors);
 
             return false;
         }
@@ -403,7 +403,7 @@ class PayeverService
 
         if (!empty($errors)) {
             $errors = $payeverApi->getErrors();
-            $this->getLogger(__METHOD__)->error('authenticationRequest', $errors);
+            $this->getLogger(__METHOD__)->debug('Payever::debug.authenticationRequest', $errors);
 
             return false;
         }

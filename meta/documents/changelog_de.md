@@ -1,11 +1,17 @@
 # Release Informationen für payever
 
+## v1.0.3 (2018-07-10)
+
+### Änderungen
+- Debug
+- Übersetzungen für log
+
 ## v1.0.2 (2018-06-29)
 
 ### Änderungen
 - Erstattungen möglich
 - Update bezüglich der neuen Plugin-Architektur
-- kleinere Bugfixes
+- kleinere Bugfixes 
 
 ## v1.0.1 (2018-04-17)
 

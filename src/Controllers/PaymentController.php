@@ -122,10 +122,9 @@ class PaymentController extends Controller
 
         $payment = $this->payeverService->handlePayeverPayment($paymentId);
         if ($payment) {
-            $this->getLogger(__METHOD__)->info('Payever', $payment);
             $this->sessionStorage->getPlugin()->setValue('payever_payment_id', $paymentId);
             $update = $this->payeverHelper->updatePlentyPayment($paymentId, $payment->status);
-            $this->getLogger(__METHOD__)->error('Payever::successUpdatePlentyPayment', $update);
+            $this->getLogger(__METHOD__)->debug('Payever::debug.successfulUpdatingPlentyPayment', $update);
         }
 
         if ($update) {
@@ -147,9 +146,9 @@ class PaymentController extends Controller
         $paymentId = $this->request->get('payment_id');
 
         $payment = $this->payeverService->handlePayeverPayment($paymentId);
-        $this->getLogger(__METHOD__)->error('Payever::noticeRetrievePayment', $payment);
+        $this->getLogger(__METHOD__)->debug('Payever::debug.retrievingPaymentForNotifications', $payment);
         $update = $this->payeverHelper->updatePlentyPayment($paymentId, $payment->status);
-        $this->getLogger(__METHOD__)->error('Payever::noticeUpdatePlentyPayment', $update);
+        $this->getLogger(__METHOD__)->debug('Payever::debug.updatingPlentyPaymentForNotifications', $update);
     }
 
     public function checkoutIframe(Twig $twig):string
