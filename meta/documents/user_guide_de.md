@@ -9,7 +9,7 @@ Das Modul fügt alle gewünschten Zahlarten aus Ihrem payever Konto zu Ihrem Ple
 ## So einfach starten Sie mit payever
 
     - Installiere kostenfrei das payever Plentymarkets-Plugin
-    - <a href="https://mein.payever.de/register">Registrieren</a> Sie sich innerhalb von Minuten bei payever
+    - Registrieren Sie sich innerhalb von Minuten bei payever
     - Aktivieren Sie die gewünschten Zahlungsarten. Fertig.
 
 ## Eine Lösung, die Sie glücklich macht

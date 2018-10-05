@@ -5,7 +5,7 @@ namespace Payever\Migrations;
 use Plenty\Modules\Payment\Method\Contracts\PaymentMethodRepositoryContract;
 use Payever\Helper\PayeverHelper;
 
-class CreatePayeverPaymentMethods
+class CreatePayeverPaymentMethods2
 {
     /**
      *

@@ -10,7 +10,7 @@ use Plenty\Modules\Order\Contracts\OrderRepositoryContract;
 use Plenty\Modules\Frontend\Session\Storage\Contracts\FrontendSessionStorageFactoryContract;
 use Payever\Services\PayeverService;
 use Payever\Helper\PayeverHelper;
-use Payever\Api\PayeverApi;
+use Payever\Services\PayeverSdkService;
 use Plenty\Plugin\Templates\Twig;
 use Plenty\Plugin\Log\Loggable;
 
@@ -52,9 +52,9 @@ class PaymentController extends Controller
      */
     private $sessionStorage;
     /**
-     * @var payeverApi
+     * @var PayeverSdkService
      */
-    private $payeverApi;
+    private $sdkService;
     /**
      * @var OrderRepositoryContract
      */
@@ -71,7 +71,7 @@ class PaymentController extends Controller
      * @param BasketRepositoryContract $basketContract
      * @param OrderRepositoryContract $orderContract
      * @param FrontendSessionStorageFactoryContract $sessionStorage
-     * @param PayeverApi $payeverApi
+     * @param PayeverSdkService $sdkService
      */
     public function __construct(
         Request $request,
@@ -82,7 +82,7 @@ class PaymentController extends Controller
         BasketRepositoryContract $basketContract,
         OrderRepositoryContract $orderContract,
         FrontendSessionStorageFactoryContract $sessionStorage,
-        PayeverApi $payeverApi
+        PayeverSdkService $sdkService
     ) {
         $this->request = $request;
         $this->response = $response;
@@ -92,7 +92,7 @@ class PaymentController extends Controller
         $this->basketContract = $basketContract;
         $this->orderContract = $orderContract;
         $this->sessionStorage = $sessionStorage;
-        $this->payeverApi = $payeverApi;
+        $this->sdkService = $sdkService;
     }
 
     /**
@@ -123,16 +123,16 @@ class PaymentController extends Controller
         $payment = $this->payeverService->handlePayeverPayment($paymentId);
         if ($payment) {
             $this->sessionStorage->getPlugin()->setValue('payever_payment_id', $paymentId);
-            $update = $this->payeverHelper->updatePlentyPayment($paymentId, $payment->status);
+            $update = $this->payeverHelper->updatePlentyPayment($paymentId, $payment["status"]);
             $this->getLogger(__METHOD__)->debug('Payever::debug.successfulUpdatingPlentyPayment', $update);
         }
 
         if ($update) {
             return $this->response->redirectTo('confirmation');
         } else {
-            if ($payment->status == 'STATUS_PAID'
-                || $payment->status == 'STATUS_ACCEPTED'
-                || $payment->status == 'STATUS_IN_PROCESS'
+            if ($payment["status"] == 'STATUS_PAID'
+                || $payment["status"] == 'STATUS_ACCEPTED'
+                || $payment["status"] == 'STATUS_IN_PROCESS'
             ) {
                 return $this->response->redirectTo('place-order');
             } else {
@@ -147,7 +147,7 @@ class PaymentController extends Controller
 
         $payment = $this->payeverService->handlePayeverPayment($paymentId);
         $this->getLogger(__METHOD__)->debug('Payever::debug.retrievingPaymentForNotifications', $payment);
-        $update = $this->payeverHelper->updatePlentyPayment($paymentId, $payment->status);
+        $update = $this->payeverHelper->updatePlentyPayment($paymentId, $payment["status"]);
         $this->getLogger(__METHOD__)->debug('Payever::debug.updatingPlentyPaymentForNotifications', $update);
     }
 

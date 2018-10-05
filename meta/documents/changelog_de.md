@@ -1,9 +1,15 @@
 # Release Informationen für payever
 
+## v1.1.0 (2018-10-05)
+
+### Veröffentlichung
+- implementierte API SDK
+- neue zahlungsoption Santander Ratenkauf
+
 ## v1.0.3 (2018-07-10)
 
 ### Änderungen
-- Debug
+- Debug-modus hinzugefügt
 - Übersetzungen für log
 
 ## v1.0.2 (2018-06-29)

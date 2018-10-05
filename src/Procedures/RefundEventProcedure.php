@@ -60,7 +60,7 @@ class RefundEventProcedure
                     $refundResult = $paymentService->refundPayment($transactionId, $amount);
                     if ($refundResult) {
                         $this->getLogger(__METHOD__)->debug('Payever::debug.refundResponse', $refundResult);
-                        $payment->status = $paymentHelper->mapStatus($refundResult->result->status);
+                        $payment->status = $paymentHelper->mapStatus($refundResult["result"]["status"]);
                         // update the refunded payment
                         $paymentContract->updatePayment($payment);
                     } else {

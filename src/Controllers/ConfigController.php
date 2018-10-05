@@ -6,7 +6,8 @@ use Plenty\Plugin\Controller;
 use Plenty\Plugin\Http\Request;
 use Plenty\Plugin\Http\Response;
 use Payever\Helper\PayeverHelper;
-use Payever\Api\PayeverApi;
+use Payever\Services\PayeverSdkService;
+use Plenty\Plugin\Log\Loggable;
 
 /**
  * Class SettingsController
@@ -14,6 +15,7 @@ use Payever\Api\PayeverApi;
  */
 class ConfigController extends Controller
 {
+    use Loggable;
     /**
      * @var Request
      */
@@ -31,9 +33,9 @@ class ConfigController extends Controller
      */
     private $payeverHelper;
     /**
-     * @var payeverApi
+     * @var PayeverSdkService
      */
-    private $payeverApi;
+    private $sdkService;
 
     /**
      * SettingsController constructor.
@@ -42,20 +44,20 @@ class ConfigController extends Controller
      * @param Response $response
      * @param ConfigRepository $config
      * @param PayeverHelper $payeverHelper
-     * @param PayeverApi $payeverApi
+     * @param PayeverSdkService $sdkService
      */
     public function __construct(
         Request $request,
         Response $response,
         ConfigRepository $config,
         PayeverHelper $payeverHelper,
-        PayeverApi $payeverApi
+        PayeverSdkService $sdkService
     ) {
         $this->request = $request;
         $this->response = $response;
         $this->config = $config;
         $this->payeverHelper = $payeverHelper;
-        $this->payeverApi = $payeverApi;
+        $this->sdkService = $sdkService;
     }
 
     /**
@@ -76,16 +78,15 @@ class ConfigController extends Controller
             'max_order_total' => 'max',
         ];
 
-        $config = $this->config;
-        $api = $this->payeverHelper->getPayeverApi();
-        $paymentOptions = $api->getListPaymentOptions($config->get('Payever.slug'), 'plentymarkets');
+        $paymentOptions = $this->sdkService->call('listPaymentOptionsRequest', []);
+        $this->getLogger(__METHOD__)->debug('Payever::debug.listPaymentOptionsRequest', $paymentOptions);
         $updatedConfig = [];
 
-        if ($paymentOptions) {
-            foreach ($paymentOptions->result as $optionData) {
+        if ($paymentOptions['result']) {
+            foreach ($paymentOptions['result'] as $optionData) {
                 $optionData = (array) $optionData;
                 $methodKey = $optionData['payment_method'];
-                $updatedConfig["{$methodKey}.active"] = $optionData['status'] == 'active' ? 1 : 0;
+                $updatedConfig["{$methodKey}.active"] = $optionData['status'];
 
                 foreach ($fieldsMap as $pluginKey => $apiKey) {
                     $updatedConfig["{$methodKey}.{$pluginKey}"] = strip_tags($optionData[$apiKey]);
@@ -104,7 +105,7 @@ class ConfigController extends Controller
 
         return $this->response->json([
             'result' => $updatedConfig,
-            'errors' => $api->getErrors(),
+            'errors' => $paymentOptions["error_description"]
         ]);
     }
 }

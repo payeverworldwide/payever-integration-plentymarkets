@@ -35,6 +35,10 @@ class PayeverService
      * @var FrontendSessionStorageFactoryContract
      */
     private $sessionStorage;
+    /**
+     * @var PayeverSdkService
+     */
+    private $sdkService;
 
     /**
      * PayeverService constructor.
@@ -51,7 +55,8 @@ class PayeverService
         PayeverHelper $payeverHelper,
         AddressRepositoryContract $addressRepo,
         ContactRepositoryContract $contactRepository,
-        FrontendSessionStorageFactoryContract $sessionStorage
+        FrontendSessionStorageFactoryContract $sessionStorage,
+        PayeverSdkService $sdkService
     ) {
         $this->paymentMethodRepository = $paymentMethodRepository;
         $this->paymentRepository = $paymentRepository;
@@ -60,6 +65,7 @@ class PayeverService
         $this->config = $config;
         $this->sessionStorage = $sessionStorage;
         $this->contactRepository = $contactRepository;
+        $this->sdkService = $sdkService;
     }
 
     /**
@@ -97,14 +103,6 @@ class PayeverService
         $contactId = $accountService->getAccountContactId();
 
         $payeverRequestParams = $this->getPayeverParams($basket);
-        $payeverApi = $this->payeverHelper->getPayeverApi();
-
-        if ($payeverApi->authenticationRequest() === false) {
-            $errors = $payeverApi->getErrors();
-            $this->returnType = 'errorCode';
-
-            return $errors[0];
-        }
 
         $feeAmount = $this->getFeeAmount($basket->basketAmount, $method);
         $address = $this->getAddress($this->getBillingAddress($basket));
@@ -135,34 +133,29 @@ class PayeverService
             "failure_url" => $this->payeverHelper->getFailureURL(),
             "cancel_url" => $this->payeverHelper->getCancelURL(),
             "notice_url" => $this->payeverHelper->getNoticeURL(),
-            'plugin_version' => '1.0.3',
+            'plugin_version' => '1.1.0',
         ];
 
         $this->getLogger(__METHOD__)->debug('Payever::debug.paymentParameters', $paymentParameters);
+        $paymentRequest = $this->sdkService->call('createPaymentRequest', ["payment_parameters" => $paymentParameters]);
+        $this->getLogger(__METHOD__)->debug('Payever::debug.createPaymentRequest', $paymentRequest);
 
-        $paymentRequest = $payeverApi->createPaymentRequest($paymentParameters);
-        $errors = $payeverApi->getErrors();
-        $request = $payeverApi->getRequests();
-        $this->getLogger(__METHOD__)->debug('Payever::debug.createPaymentRequest', $request['createPayment']);
-
-        if (!empty($errors) || !isset($paymentRequest->redirect_url)) {
+        if ($paymentRequest['error']) {
             $this->returnType = 'errorCode';
-            $this->getLogger(__METHOD__)->debug('Payever::debug.createPaymentResponse', $errors);
-            $paymentContent = $errors[0];
+            $paymentContent = $paymentRequest['error_description'];
         } else {
-            $this->getLogger(__METHOD__)->debug('Payever::debug.createPaymentResponse', $paymentRequest);
             $isRedirect = $this->config->get('Payever.redirect_to_payever');
             switch ($isRedirect) {
                 case 0:
                     $this->returnType = 'htmlContent';
-                    $paymentContent = '<iframe style="width: 100%; height: 700px" frameborder="0" src="'.$paymentRequest->redirect_url.'"></iframe>';
+                    $paymentContent = '<iframe style="width: 100%; height: 700px" frameborder="0" src="'. $paymentRequest['redirect_url'] .'"></iframe>';
                     break;
                 case 1:
                     $this->returnType = 'redirectUrl';
-                    $paymentContent = $paymentRequest->redirect_url;
+                    $paymentContent = $paymentRequest['redirect_url'];
                     break;
                 case 2:
-                    $this->sessionStorage->getPlugin()->setValue("payever_redirect_url", $paymentRequest->redirect_url);
+                    $this->sessionStorage->getPlugin()->setValue("payever_redirect_url", $paymentRequest['redirect_url']);
                     $this->returnType = 'redirectUrl';
                     $paymentContent = $this->payeverHelper->getIframeURL();
                     break;
@@ -252,44 +245,29 @@ class PayeverService
         $executeParams['paymentId'] = $paymentId;
 
         $executeResponse = [];
-        $payeverApi = $this->payeverHelper->getPayeverApi();
-        $errors = $payeverApi->getErrors();
-
-        if (!empty($errors)) {
-            $errors = $payeverApi->getErrors();
-            $this->returnType = 'errorCode';
-
-            return $errors[0];
-        }
 
         if (!empty($paymentId)) {
-            $retrievePayment = $payeverApi->retrievePayment($paymentId);
+            $retrievePayment = $this->sdkService->call('retrievePaymentRequest', ["payment_id" => $paymentId]);
             $this->getLogger(__METHOD__)->debug('Payever::debug.executePaymentRetrieve', $retrievePayment);
-            if ($retrievePayment) {
-                $response_status = $retrievePayment->result->payment_details->specific_status ?? $retrievePayment->result->status;
-                $response_status = $payeverApi->getPayeverStatus($response_status);
-                if ($response_status == false) {
-                    $response_status = $retrievePayment->result->status;
-                }
+            if($retrievePayment["error"]){
+                $this->returnType = 'errorCode';
+                return $retrievePayment["error_description"];
+            } else {
+                $retrieveResponse = $retrievePayment["result"];
 
-                $total = $retrievePayment->result->total;
-                $method = $retrievePayment->result->payment_type;
+                $total = $retrieveResponse["total"];
+                $method = $retrieveResponse["payment_type"];
                 $feeAmount = $this->getFeeAmount($total, $method);
                 $total = round(($total - $feeAmount), 2);
 
-                $executeResponse['status'] = $response_status;
-                $executeResponse['currency'] = $retrievePayment->result->currency;
+                $executeResponse['status'] = $retrieveResponse["status"];
+                $executeResponse['currency'] = $retrieveResponse["currency"];
                 $executeResponse['amount'] = $total;
-                $executeResponse['entryDate'] = $retrievePayment->result->created_at;
-                $executeResponse['transactionId'] = $retrievePayment->result->id;
-                $executeResponse['email'] = $retrievePayment->result->customer_email;
-                $executeResponse['nameOfSender'] = $retrievePayment->result->customer_name;
-                $executeResponse['reference'] = $retrievePayment->result->reference;
-            } else {
-                $errors = $payeverApi->getErrors();
-                $this->returnType = 'errorCode';
-
-                return $errors[0];
+                $executeResponse['entryDate'] = $retrieveResponse["created_at"];
+                $executeResponse['transactionId'] = $retrieveResponse["id"];
+                $executeResponse['email'] = $retrieveResponse["customer_email"];
+                $executeResponse['nameOfSender'] = $retrieveResponse["customer_name"];
+                $executeResponse['reference'] = $retrieveResponse["reference"];
             }
         } else {
             $this->returnType = 'errorCode';
@@ -302,7 +280,7 @@ class PayeverService
         if (is_array($executeResponse) && $executeResponse['error']) {
             $this->returnType = 'errorCode';
             $this->getLogger(__METHOD__)->debug('Payever::debug.executePaymentResponse', $executeResponse);
-            return $executeResponse['error'] . ': '.$executeResponse['error_msg'];
+            return $executeResponse['error'] . ': '. $executeResponse['error_msg'];
         }
 
         $this->getLogger(__METHOD__)->debug('Payever::debug.executePaymentResponse', $executeResponse);
@@ -374,19 +352,8 @@ class PayeverService
      */
     public function getRetrievePayment(string $paymentId)
     {
-        $payeverApi = $this->payeverHelper->getPayeverApi();
-        $errors = $payeverApi->getErrors();
-
-        if (!empty($errors)) {
-            $errors = $payeverApi->getErrors();
-            $this->getLogger(__METHOD__)->debug('Payever::debug.authenticationRequest', $errors);
-
-            return false;
-        }
-
-        $retrievePayment = $payeverApi->retrievePayment($paymentId);
-
-        return $retrievePayment->result;
+        $retrievePayment = $this->sdkService->call('retrievePaymentRequest', ["payment_id" => $paymentId]);
+        return $retrievePayment["result"];
     }
 
     /**
@@ -398,18 +365,6 @@ class PayeverService
      */
     public function refundPayment(string $transactionId, float $amount)
     {
-        $payeverApi = $this->payeverHelper->getPayeverApi();
-        $errors = $payeverApi->getErrors();
-
-        if (!empty($errors)) {
-            $errors = $payeverApi->getErrors();
-            $this->getLogger(__METHOD__)->debug('Payever::debug.authenticationRequest', $errors);
-
-            return false;
-        }
-
-        $refund = $payeverApi->refundPayment($transactionId, $amount);
-
-        return $refund;
+        return $this->sdkService->call('refundPaymentRequest', ["transaction_id" => $transactionId, "amount" => $amount]);
     }
 }

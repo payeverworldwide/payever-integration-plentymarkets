@@ -131,7 +131,6 @@ class AbstractPaymentMethod extends PaymentMethodService
         ConfigRepository $configRepository,
         BasketRepositoryContract $basketRepositoryContract
     ):string {
-    
         $basket = $basketRepositoryContract->load();
         $titleKey = 'Payever.'.$this->getMethodCode().'.title';
         $name = $configRepository->get($titleKey);
@@ -251,6 +250,10 @@ class AbstractPaymentMethod extends PaymentMethodService
                 'countries' => ['NO'],
             ],
             'santander_invoice_de' => [
+                'currency' => ['EUR'],
+                'countries' => ['DE'],
+            ],
+            'santander_factoring_de' => [
                 'currency' => ['EUR'],
                 'countries' => ['DE'],
             ],

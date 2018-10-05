@@ -577,7 +577,7 @@
           "required": false,
           "label": "Config.santanderInvoiceDeActiveLabel",
           "options": {
-            "defaultValue": "1",
+            "defaultValue": "0",
             "selectBoxValues": [
               {
                 "value": "0",
@@ -654,6 +654,95 @@
           "label": "Config.santanderInvoiceDeMaxOrderTotalLabel",
           "options": {
             "defaultValue": "20000"
+          }
+        }
+      }
+    },
+    "Config.SantanderFactoringDETab": {
+      "label": "Config.SantanderFactoringDETab",
+      "formFields": {
+        "santander_factoring_de.active": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.santanderFactoringDeActiveLabel",
+          "options": {
+            "defaultValue": "0",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.santanderFactoringDeActivePossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.santanderFactoringDeActivePossibleValue1"
+              }
+            ]
+          }
+        },
+        "santander_factoring_de.title": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.santanderFactoringDeTitleLabel",
+          "options": {
+            "defaultValue": "Santander Factoring"
+          }
+        },
+        "santander_factoring_de.description": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.santanderFactoringDeDescriptionLabel",
+          "options": {
+            "defaultValue": "Santander Factoring description."
+          }
+        },
+        "santander_factoring_de.accept_fee": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.santanderFactoringDeAcceptFeeLabel",
+          "options": {
+            "defaultValue": "1",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.santanderFactoringDeAcceptFeePossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.santanderFactoringDeAcceptFeePossibleValue1"
+              }
+            ]
+          }
+        },
+        "santander_factoring_de.fee": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.santanderFactoringDeFeeLabel",
+          "options": {
+            "defaultValue": "0"
+          }
+        },
+        "santander_factoring_de.variable_fee": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.santanderFactoringDeVariableFeeLabel",
+          "options": {
+            "defaultValue": "0"
+          }
+        },
+        "santander_factoring_de.min_order_total": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.santanderFactoringDeMinOrderTotalLabel",
+          "options": {
+            "defaultValue": "20"
+          }
+        },
+        "santander_factoring_de.max_order_total": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.santanderFactoringDeMaxOrderTotalLabel",
+          "options": {
+            "defaultValue": "1000"
           }
         }
       }

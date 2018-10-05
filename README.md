@@ -1,32 +1,48 @@
-![plentymarkets Logo](http://www.plentymarkets.eu/layout/pm/images/logo/plentymarkets-logo.jpg)
+![payever Logo](https://getpayever.com/wp-content/themes/payever/library/images/press/payever-logo-full.png)
 
-# Pay upon pickup plugin for plentymarkets 7.x
+# payever plugin for plentymarkets 7.x
 
-This is the official **payever** plugin developed by plentymarkets. Integrate the payment method **payever** in your plentymarkets 7 online store.
+This is the official **payever** plugin developed by payever GmbH. Integrate the payment method **payever** in your plentymarkets 7 online store.
 
 ## Requirements
 
-This is a plugin for [plentymarkets 7](https://www.plentymarkets.com). A layout plugin is required in order to integrate this payment method in your online store. We recommend using the plentymarkets plugin [Callisto 4](https://github.com/plentymarkets/callisto-4).
+This is a plugin for [plentymarkets 7](https://www.plentymarkets.com). A layout plugin is required in order to integrate this payment method in your online store. We recommend using the plentymarkets plugin [Ceres](https://github.com/plentymarkets/plugin-ceres).
 
-## Installing
+# Overview
 
-For detailed information about plugin provisioning refer to [plentymarkets developers](https://developers.plentymarkets.com/dev-doc/basics#plugin-provisioning).
+**[payever](https://getpayever.com)** is a commerce platform that allows you to connect your business to many payment providers and other relevant services for your online business. With payever you can easily add all your preferred payment options to your checkout. Within minutes! More than 4000 merchants are using the innovative checkout for their daily payment needs. Find more about us: [www.getpayever.com](http://www.getpayever.com)
 
-## Plugin documentation
+**A payever account is required to use this extension. [Register for a payever account here](https://mein.payever.de/register), Additional fees apply. [Fees for the transactions](https://getpayever.com/article/what-are-the-transaction-fees/) vary depending on the payment provider.**
 
-- Learn how to create your [first plentymarkets plugin](https://developers.plentymarkets.com/tutorials/helloworld)
-- Installing a [template](https://developers.plentymarkets.com/tutorials/design)
-- Developing a [payment plugin](https://developers.plentymarkets.com/tutorials/payment)
-- Overview of plentymarkets [plugin interfaces](https://developers.plentymarkets.com/dev-doc/basics#guide-interface)
-- The plentymarkets [REST API](https://developers.plentymarkets.com/rest-doc/introduction)
+The gateway will add all payment options that are enabled in the payever account to your Plentymarkets store. You can choose if the customer will see the checkout in an iframe in the store or should be redirected to an external payever page. After the transaction, the customer will be redirected to your store every time.
 
-## Join our community
+## It's easy to start!
 
-Sign up today and become a member of our [forum](https://forum.plentymarkets.com/c/plugin-entwicklung/plugin-payment). Discuss the latest trends in plugin development and share your ideas with our community.
+    - Install the plugin via marketplace
+    - Sign-up to payever within seconds
+    - Choose your preferred payment methods
 
-## Versioning
+## Checkout at a glance!
 
-Visit our forum and find the latest news and updates in our [Changelog](https://forum.plentymarkets.com/c/changelog?order=created).
+    - free and ready within minutes
+    - Manage all payments directly from your store
+    - All payment options
+    - No setup fee, no monthly fee and no contract term
+    - No hosting
+    - No coding
+    - Mobile optimized for Android and iOS
+
+## We offer all payment options!
+
+    - payever Invoice
+    - Santander Installments
+    - Direct Debit
+    - Credit Card
+    - SOFORT Banking
+    - PayPal
+    - PayEx
+
+[Start for free with payever!](https://mein.payever.de/register)
 
 ## License
 

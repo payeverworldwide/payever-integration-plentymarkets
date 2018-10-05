@@ -1,5 +1,13 @@
 # Release Notes for payever
 
+## v1.1.0 (2018-10-05)
+
+### Implemented
+- payever API sdk
+
+### Added
+- new payment option Santander Factoring
+
 ## v1.0.3 (2018-07-10)
 
 ### Fixed

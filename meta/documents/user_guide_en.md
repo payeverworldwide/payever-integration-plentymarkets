@@ -9,7 +9,7 @@ The gateway will add all payment options that are enabled in the payever account
 ## It's easy to start!
 
     - Install the plugin via marketplace
-    - <a href="https://mein.payever.de/register">Sign-up</a> to payever within seconds
+    - Sign-up to payever within seconds
     - Choose your preferred payment methods
 
 ## Checkout at a glance!

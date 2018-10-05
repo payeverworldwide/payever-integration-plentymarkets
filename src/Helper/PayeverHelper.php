@@ -10,12 +10,13 @@ use Payever\Methods\SantanderinstnoPaymentMethod;
 use Payever\Methods\SantanderinstsePaymentMethod;
 use Payever\Methods\SantanderinvoicedePaymentMethod;
 use Payever\Methods\SantanderinvoicenoPaymentMethod;
+use Payever\Methods\SantanderfactoringdePaymentMethod;
 use Payever\Methods\SantanderPaymentMethod;
 use Payever\Methods\SofortPaymentMethod;
 use Payever\Methods\StripePaymentMethod;
 use Payever\Methods\PayexfakturaPaymentMethod;
 use Payever\Methods\PayexcreditcardPaymentMethod;
-use Payever\Api\PayeverApi;
+use Payever\Services\PayeverSdkService;
 use Plenty\Modules\Account\Address\Contracts\AddressRepositoryContract;
 use Plenty\Modules\Account\Address\Models\Address;
 use Plenty\Modules\Basket\Models\Basket;
@@ -50,7 +51,7 @@ class PayeverHelper
     private $payment;
     private $orderRepo;
     private $statusMap;
-    private $payeverApi;
+    private $sdkService;
     private $addressRepo;
 
     /** @var  Checkout */
@@ -101,6 +102,10 @@ class PayeverHelper
             'class' => SantanderinvoicedePaymentMethod::class,
             'name' => 'Santander Invoice Germany',
         ],
+        'SANTANDER_FACTORING_DE' => [
+            'class' => SantanderfactoringdePaymentMethod::class,
+            'name' => 'Santander Factoring',
+        ],
         'PAYEX_FAKTURA' => [
             'class' => PayexfakturaPaymentMethod::class,
             'name' => 'PayEx Invoice',
@@ -127,6 +132,7 @@ class PayeverHelper
      */
     private $hideOnDifferentAddressMethods = [
         'santander_invoice_de',
+        'santander_factoring_de',
         'payex_faktura',
     ];
 
@@ -142,7 +148,7 @@ class PayeverHelper
      * @param PaymentProperty $paymentProperty
      * @param OrderRepositoryContract $orderRepo,
      * @param Checkout $checkout
-     * @param PayeverApi $payeverApi
+     * @param PayeverSdkService $sdkService
      * @param AddressRepositoryContract $addressRepo
      */
     public function __construct(
@@ -156,7 +162,7 @@ class PayeverHelper
         OrderRepositoryContract $orderRepo,
         WebstoreHelper $webstoreHelper,
         Checkout $checkout,
-        PayeverApi $payeverApi,
+        PayeverSdkService $sdkService,
         AddressRepositoryContract $addressRepo
     ) {
         $this->app = $app;
@@ -170,7 +176,7 @@ class PayeverHelper
         $this->payment = $payment;
         $this->statusMap = [];
         $this->checkout = $checkout;
-        $this->payeverApi = $payeverApi;
+        $this->sdkService = $sdkService;
         $this->addressRepo = $addressRepo;
     }
 
@@ -262,21 +268,6 @@ class PayeverHelper
     public function getIframeURL():string
     {
         return $this->getUrl('iframe');
-    }
-
-
-    /**
-     * @return PayeverApi
-     */
-    public function getPayeverApi():PayeverApi
-    {
-        $client_id = $this->config->get('Payever.clientId');
-        $client_secret = $this->config->get('Payever.clientSecret');
-        $environment = $this->config->get('Payever.environment');
-
-        $payeverApi = $this->payeverApi->set($client_id, $client_secret, $environment);
-
-        return $payeverApi;
     }
 
     /**
