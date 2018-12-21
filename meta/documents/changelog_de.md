@@ -1,5 +1,13 @@
 # Release Informationen für payever
 
+## v1.1.1 (2018-12-21)
+
+### Veröffentlichung
+- shipping_goods/cancel funktionalität
+
+### Änderungen
+- bestellungen duplizieren
+
 ## v1.1.0 (2018-10-05)
 
 ### Veröffentlichung

@@ -10,16 +10,16 @@ use Payever\Services\PayeverService;
 use Payever\Helper\PayeverHelper;
 use Plenty\Plugin\Log\Loggable;
 
-class RefundEventProcedure
+class ShippingEventProcedure
 {
     use Loggable;
-    
+
     public function run(EventProceduresTriggered $eventTriggered, PayeverService $paymentService, PaymentRepositoryContract $paymentContract, PayeverHelper $paymentHelper)
     {
         $orderId = $paymentHelper->getOrderIdByEvent($eventTriggered);
 
         if (empty($orderId)) {
-            throw new \Exception('Refund payever payment failed! The given order is invalid!');
+            throw new \Exception('Shipping goods payever payment action is failed! The given order is invalid!');
         }
         /** @var Payment[] $payment */
         $payments = $paymentContract->getPaymentsByOrderId($orderId);
@@ -27,20 +27,19 @@ class RefundEventProcedure
         foreach ($payments as $payment) {
             if ($paymentHelper->isPayeverPaymentMopId($payment->mopId)) {
                 $transactionId = $paymentHelper->getPaymentPropertyValue($payment, PaymentProperty::TYPE_TRANSACTION_ID);
-                $amount = $payment->amount;
-                $this->getLogger(__METHOD__)->debug('Payever::debug.refundData', 'TransactionId: '. $transactionId .', amount: '. $amount);
-                if ($transactionId > 0) {
-                    // refund the payment
-                    $refundResult = $paymentService->refundPayment($transactionId, $amount);
-                    if ($refundResult) {
-                        $this->getLogger(__METHOD__)->debug('Payever::debug.refundResponse', $refundResult);
-                        $payment->status = $paymentHelper->mapStatus($refundResult["result"]["status"]);
-                        // update the refunded payment
-                        $paymentContract->updatePayment($payment);
+                $this->getLogger(__METHOD__)->debug('Payever::debug.shippingData', 'TransactionId: '. $transactionId );
+                if (!empty($transactionId)) {
+                    $transaction = $paymentService->getTransaction($transactionId);
+                    $this->getLogger(__METHOD__)->debug('Payever::debug.transactionData', $transaction);
+                    if ($paymentHelper->isAllowedTransaction($transaction, 'shipping_goods')) {
+                        // shipping the payment
+                        $shippingResult = $paymentService->shippingGoodsPayment($transactionId, array());
+                        $this->getLogger(__METHOD__)->debug('Payever::debug.shippingResponse', $shippingResult);
                     } else {
-                        $this->getLogger(__METHOD__)->debug('Payever::debug.refundResponse', 'Refund payever payment is not allowed!');
-                        throw new \Exception('Refund payever payment is not allowed!');
+                        $this->getLogger(__METHOD__)->debug('Payever::debug.shippingResponse', 'Shipping goods payever payment action is not allowed!');
+                        throw new \Exception('Shipping goods payever payment action is not allowed!');
                     }
+
                 }
             }
         }

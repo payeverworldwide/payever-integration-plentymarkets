@@ -23,8 +23,7 @@ class PayeverSdkHelper
             ->setClientSecret($clientSecret)
             ->setSlug($slug)
             ->setApiMode($apiMode)
-            ->load()
-        ;
+            ->load();
 
         return PayeverApi::getInstance();
     }

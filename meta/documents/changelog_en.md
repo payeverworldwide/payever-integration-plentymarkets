@@ -1,5 +1,13 @@
 # Release Notes for payever
 
+## v1.1.1 (2018-12-21)
+
+### Implemented
+- shipping_goods/cancel functionality
+
+### Fixed
+- duplicating orders
+
 ## v1.1.0 (2018-10-05)
 
 ### Implemented

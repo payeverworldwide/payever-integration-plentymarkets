@@ -166,6 +166,7 @@ class AbstractPaymentMethod extends PaymentMethodService
         if ($configRepository->get('Payever.display_payment_icon') == 1) {
             $app = pluginApp(Application::class);
             $icon = $app->getUrlPath('Payever').'/images/logos/'.$this->getMethodCode().'.png';
+
             return $icon;
         }
 

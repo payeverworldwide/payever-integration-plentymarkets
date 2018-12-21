@@ -31,6 +31,9 @@ use Plenty\Modules\Payment\Models\Payment;
 use Plenty\Modules\Order\Models\Order;
 use Plenty\Modules\Helper\Services\WebstoreHelper;
 use Plenty\Modules\Frontend\Contracts\Checkout;
+use Plenty\Modules\Plugin\Storage\Contracts\StorageRepositoryContract;
+use Plenty\Plugin\Log\Loggable;
+use Plenty\Modules\Order\Models\OrderType;
 
 /**
  * Class PayeverHelper
@@ -39,7 +42,13 @@ use Plenty\Modules\Frontend\Contracts\Checkout;
  */
 class PayeverHelper
 {
+    use Loggable;
+
     const PLUGIN_KEY = 'plenty_payever';
+
+    const LOCKFILE_TIME_LOCK  = 60; //sec
+    const LOCKFILE_TIME_SLEEP = 1; //sec
+    const LOCKFILE_MAX_LIFETIME = 120; //sec
 
     private $app;
     private $webstoreHelper;
@@ -56,6 +65,11 @@ class PayeverHelper
 
     /** @var  Checkout */
     private $checkout;
+
+    /**
+     * @var StorageRepositoryContract $storageRepository
+     */
+    private $storageRepository;
 
     private $methodsMetaData = [
         'STRIPE' => [
@@ -150,6 +164,7 @@ class PayeverHelper
      * @param Checkout $checkout
      * @param PayeverSdkService $sdkService
      * @param AddressRepositoryContract $addressRepo
+     * @param StorageRepositoryContract $storageRepository
      */
     public function __construct(
         Application $app,
@@ -163,7 +178,8 @@ class PayeverHelper
         WebstoreHelper $webstoreHelper,
         Checkout $checkout,
         PayeverSdkService $sdkService,
-        AddressRepositoryContract $addressRepo
+        AddressRepositoryContract $addressRepo,
+        StorageRepositoryContract $storageRepository
     ) {
         $this->app = $app;
         $this->webstoreHelper = $webstoreHelper;
@@ -178,6 +194,7 @@ class PayeverHelper
         $this->checkout = $checkout;
         $this->sdkService = $sdkService;
         $this->addressRepo = $addressRepo;
+        $this->storageRepository = $storageRepository;
     }
 
     /**
@@ -278,15 +295,7 @@ class PayeverHelper
      */
     public function isPayeverPaymentMopId(int $mopId): bool
     {
-        $paymentMethods = $this->paymentMethodRepository->allForPlugin('plenty_payever');
-        if (! is_null($paymentMethods)) {
-            foreach ($paymentMethods as $paymentMethod) {
-                if ($paymentMethod->id == $mopId) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return in_array($mopId, $this->getMopKeyToIdMap());
     }
 
     /**
@@ -313,7 +322,13 @@ class PayeverHelper
             PaymentProperty::TYPE_TRANSACTION_ID,
             $payeverPayment['transactionId']
         );
+        $paymentProperty[] = $this->getPaymentProperty(
+            PaymentProperty::TYPE_REFERENCE_ID,
+            $payeverPayment['reference']
+        );
+
         $paymentProperty[] = $this->getPaymentProperty(PaymentProperty::TYPE_ORIGIN, Payment::ORIGIN_PLUGIN);
+        $paymentProperty[] = $this->getPaymentProperty(PaymentProperty::TYPE_PAYMENT_TEXT, $payeverPayment['reference']);
         $payment->properties = $paymentProperty;
         //$payment->regenerateHash = true;
         $payment = $this->paymentRepo->createPayment($payment);
@@ -377,29 +392,33 @@ class PayeverHelper
             // Assign the given payment to the given order
             $this->paymentOrderRelationRepo->createOrderRelation($payment, $order);
         }
+
+        $transactionId = $this->getPaymentPropertyValue($payment, PaymentProperty::TYPE_TRANSACTION_ID);
+        $this->getLogger(__METHOD__)->debug('Payever::debug.assignPlentyPaymentToPlentyOrder', 'Transaction ' . $transactionId . ' was assigned to the order #' . $orderId);
     }
 
     /**
-     *
      * @param Payment $payment
-     * @param int $propertyType
-     * @return null|string
+     * @param int $propertyTypeConstant
+     *
+     * @return string
      */
-    public function getPaymentPropertyValue($payment, $propertyType)
+    public function getPaymentPropertyValue($payment, $propertyTypeConstant)
     {
         $properties = $payment->properties;
-        if (($properties->count() > 0) || (is_array($properties) && count($properties) > 0)) {
-            /** @var PaymentProperty $property */
-            foreach ($properties as $property) {
-                if ($property instanceof PaymentProperty) {
-                    if ($property->typeId == $propertyType) {
-                        return $property->value;
-                    }
-                }
+        if (!$properties) {
+            return '';
+        }
+        /* @var $property PaymentProperty */
+        foreach ($properties as $property) {
+            if (!($property instanceof PaymentProperty)) {
+                continue;
+            }
+            if ($property->typeId == $propertyTypeConstant) {
+                return (string) $property->value;
             }
         }
-
-        return null;
+        return '';
     }
 
     /**
@@ -466,5 +485,116 @@ class PayeverHelper
             case 'STATUS_NEW':
                 return Payment::STATUS_AWAITING_RENEWAL;
         }
+    }
+
+    public function isSuccessfulPaymentStatus(string $status): bool
+    {
+        return in_array($status, [
+            'STATUS_PAID',
+            'STATUS_ACCEPTED',
+            'STATUS_IN_PROCESS',
+        ]);
+    }
+
+    protected function getLockFileName($paymentId)
+    {
+        return $paymentId . '.lock';
+    }
+
+    public function lockAndBlock($paymentId)
+    {
+        $fileName = $this->getLockFileName($paymentId);
+        $this->storageRepository->uploadObject('Payever', $fileName, '');
+        $this->getLogger(__METHOD__)->debug('Payever::debug.lockAndBlock', $paymentId);
+    }
+
+    public function isLocked($paymentId)
+    {
+        $fileName = $this->getLockFileName($paymentId);
+
+        return $this->storageRepository->doesObjectExist('Payever', $fileName);
+    }
+
+    public function unlock($paymentId)
+    {
+        $fileName = $this->getLockFileName($paymentId);
+        $this->storageRepository->deleteObject('Payever', $fileName);
+        $this->getLogger(__METHOD__)->debug('Payever::debug.unlock', $paymentId);
+    }
+
+    public function waitForUnlock($paymentId)
+    {
+        $this->getLogger(__METHOD__)->debug('Payever::debug.waitForUnlock', "start $paymentId");
+
+        $waitingTime = 0;
+        while ($this->isLocked($paymentId) && $waitingTime <= self::LOCKFILE_TIME_LOCK) {
+            $waitingTime += self::LOCKFILE_TIME_SLEEP;
+            sleep(self::LOCKFILE_TIME_SLEEP);
+        }
+
+        $this->getLogger(__METHOD__)->debug('Payever::debug.waitForUnlock', "finish $paymentId");
+    }
+
+    /**
+     * @param $eventTriggered
+     * @return bool
+     */
+    public function getOrderIdByEvent($eventTriggered)
+    {
+        $orderId = false;
+        /** @var Order $order */
+        $order = $eventTriggered->getOrder();
+        // only sales orders and credit notes are allowed order types to ship
+        switch ($order->typeId) {
+            case OrderType::TYPE_SALES_ORDER:
+                $orderId = $order->id;
+                break;
+            case OrderType::TYPE_CREDIT_NOTE:
+                $originOrders = $order->originOrders;
+                if (! $originOrders->isEmpty() && $originOrders->count() > 0) {
+                    $originOrder = $originOrders->first();
+                    if ($originOrder instanceof Order) {
+                        if ($originOrder->typeId == 1) {
+                            $orderId = $originOrder->id;
+                        } else {
+                            $originOriginOrders = $originOrder->originOrders;
+                            if (is_array($originOriginOrders) && count($originOriginOrders) > 0) {
+                                $originOriginOrder = $originOriginOrders->first();
+                                if ($originOriginOrder instanceof Order) {
+                                    $orderId = $originOriginOrder->id;
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+        }
+
+        return $orderId;
+    }
+
+    /**
+     * @param $transaction
+     * @param string $typeTransaction
+     * @return bool|mixed
+     */
+    public function isAllowedTransaction($transaction, $typeTransaction = 'cancel')
+    {
+        $result = isset($transaction['result']) ? $transaction['result'] : [];
+
+        if (!empty($result['actions']) && is_object($result['actions'])) {
+            $result['actions'] = (array) $result['actions'];
+        }
+
+        if (!empty($result['actions']) && is_array($result['actions'])) {
+            foreach ($result['actions'] as $action) {
+                $action = (array) $action;
+                if ($action['action'] == $typeTransaction) {
+                    return $action['enabled'];
+                }
+            }
+        }
+
+        return false;
     }
 }

@@ -113,11 +113,13 @@ class PayeverService
             $email = $address['email'];
         }
 
+        $reference = md5($basket->id . $method . time());
+
         $paymentParameters = [
             "channel" => "plentymarkets",
             "amount" => round(($basket->basketAmount - $feeAmount), 2), // basketAmount
             "fee" => round(($basket->shippingAmount - $feeAmount), 2),
-            "order_id" => $basket->id,
+            "order_id" => $reference,
             "currency" => $basket->currency,
             "cart" => $this->getOrderProducts($payeverRequestParams['basketItems']),
             "payment_method" => $method,
@@ -133,7 +135,7 @@ class PayeverService
             "failure_url" => $this->payeverHelper->getFailureURL(),
             "cancel_url" => $this->payeverHelper->getCancelURL(),
             "notice_url" => $this->payeverHelper->getNoticeURL(),
-            'plugin_version' => '1.1.0',
+            'plugin_version' => '1.1.1',
         ];
 
         $this->getLogger(__METHOD__)->debug('Payever::debug.paymentParameters', $paymentParameters);
@@ -268,17 +270,21 @@ class PayeverService
                 $executeResponse['email'] = $retrieveResponse["customer_email"];
                 $executeResponse['nameOfSender'] = $retrieveResponse["customer_name"];
                 $executeResponse['reference'] = $retrieveResponse["reference"];
+
+                $this->sessionStorage->getPlugin()->unsetKey('payever_payment_id');
             }
         } else {
             $this->returnType = 'errorCode';
 
             $this->getLogger(__METHOD__)->debug('Payever::debug.executePaymentResponse', $executeResponse);
+            $this->getLogger(__METHOD__)->error('Payever::debug.Error', "The payment ID is lost!");
             return "The payment ID is lost!";
         }
 
         // Check for errors
         if (is_array($executeResponse) && $executeResponse['error']) {
             $this->returnType = 'errorCode';
+            $this->getLogger(__METHOD__)->error('Payever::debug.Error', $executeResponse['error'] . ': '. $executeResponse['error_msg']);
             $this->getLogger(__METHOD__)->debug('Payever::debug.executePaymentResponse', $executeResponse);
             return $executeResponse['error'] . ': '. $executeResponse['error_msg'];
         }
@@ -303,6 +309,7 @@ class PayeverService
         /** declarce the variable as array */
         $payeverRequestParams['basketItems'] = [];
         /** @var \Plenty\Modules\Basket\Models\BasketItem $basketItem */
+
         foreach ($basket->basketItems as $basketItem) {
             /** @var \Plenty\Modules\Item\Item\Models\Item $item */
             $item = $itemContract->show($basketItem->itemId);
@@ -336,7 +343,7 @@ class PayeverService
      * @param $paymentId
      * @return \stdClass
      */
-    public function getPaymentDetails(string$paymentId)
+    public function getPaymentDetails(string $paymentId)
     {
         $response = $this->getRetrievePayment($paymentId);
         $this->getLogger(__METHOD__)->debug('Payever::debug.getPaymentDetails', $response);
@@ -366,5 +373,38 @@ class PayeverService
     public function refundPayment(string $transactionId, float $amount)
     {
         return $this->sdkService->call('refundPaymentRequest', ["transaction_id" => $transactionId, "amount" => $amount]);
+    }
+
+    /**
+     * Returns transaction data
+     *
+     * @param string $transactionId
+     * @return bool|mixed
+     */
+    public function getTransaction(string $transactionId)
+    {
+        return $this->sdkService->call('getTransactionRequest', ["transaction_id" => $transactionId]);
+    }
+
+    /**
+     * Cancel the given payment
+     *
+     * @param string $transactionId
+     * @return bool|mixed
+     */
+    public function cancelPayment(string $transactionId)
+    {
+        return $this->sdkService->call('cancelPaymentRequest', ["transaction_id" => $transactionId]);
+    }
+
+    /**
+     * Cancel the given payment
+     *
+     * @param string $transactionId
+     * @return bool|mixed
+     */
+    public function shippingGoodsPayment(string $transactionId, array $data = [])
+    {
+        return $this->sdkService->call('shippingPaymentRequest', ["transaction_id" => $transactionId]);
     }
 }

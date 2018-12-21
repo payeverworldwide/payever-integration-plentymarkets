@@ -15,8 +15,11 @@ use Plenty\Modules\Basket\Events\BasketItem\AfterBasketItemAdd;
 use Plenty\Modules\Basket\Events\Basket\AfterBasketCreate;
 use Payever\Services\PayeverService;
 use Payever\Procedures\RefundEventProcedure;
+use Payever\Procedures\CancelEventProcedure;
+use Payever\Procedures\ShippingEventProcedure;
 use Plenty\Modules\EventProcedures\Services\EventProceduresService;
 use Plenty\Modules\EventProcedures\Services\Entries\ProcedureEntry;
+use Plenty\Plugin\Log\Loggable;
 
 /**
  * Class PayeverServiceProvider
@@ -24,10 +27,14 @@ use Plenty\Modules\EventProcedures\Services\Entries\ProcedureEntry;
  */
 class PayeverServiceProvider extends ServiceProvider
 {
+    use Loggable;
+
     public function register()
     {
         $this->getApplication()->register(PayeverRouteServiceProvider::class);
         $this->getApplication()->bind(RefundEventProcedure::class);
+        $this->getApplication()->bind(CancelEventProcedure::class);
+        $this->getApplication()->bind(ShippingEventProcedure::class);
     }
 
     /**
@@ -65,6 +72,18 @@ class PayeverServiceProvider extends ServiceProvider
             'en' => 'Refund the payever payment'
         ], 'Payever\Procedures\RefundEventProcedure@run');
 
+        // Register Cancel Event Procedure
+        $eventProceduresService->registerProcedure(PayeverHelper::PLUGIN_KEY, ProcedureEntry::PROCEDURE_GROUP_ORDER, [
+            'de' => 'Stornieren sie die auszahlung',
+            'en' => 'Cancel the payever payment'
+        ], 'Payever\Procedures\CancelEventProcedure@run');
+
+        // Register Shipping Event Procedure
+        $eventProceduresService->registerProcedure(PayeverHelper::PLUGIN_KEY, ProcedureEntry::PROCEDURE_GROUP_ORDER, [
+            'de' => 'Versand der Auszahlung',
+            'en' => 'Shipping the payever payment'
+        ], 'Payever\Procedures\ShippingEventProcedure@run');
+
         $payeverMops = $paymentHelper->getMopKeyToIdMap();
 
         // Listen for the event that gets the payment method content
@@ -85,23 +104,34 @@ class PayeverServiceProvider extends ServiceProvider
         $eventDispatcher->listen(
             ExecutePayment::class,
             function (ExecutePayment $event) use ($paymentHelper, $payeverMops, $payeverService) {
-                if (in_array($event->getMop(), $payeverMops)) {
-                    // Execute the payment
-                    $payeverPaymentData = $payeverService->executePayment();
-                    // Check whether the payever payment has been executed successfully
-                    if ($payeverService->getReturnType() != 'errorCode') {
-                        // Create a plentymarkets payment from the payever execution params
-                        $plentyPayment = $paymentHelper->createPlentyPayment($payeverPaymentData, $event->getMop());
-                        if ($plentyPayment instanceof Payment) {
-                            // Assign the payment to an order in plentymarkets
-                            $paymentHelper->assignPlentyPaymentToPlentyOrder($plentyPayment, $event->getOrderId());
-                            $event->setType('success');
-                            $event->setValue('The Payment has been executed successfully!');
-                        }
-                    } else {
-                        $event->setType('error');
-                        $event->setValue('The payever-Payment could not be executed!');
-                    }
+                $this->getLogger(__METHOD__)->debug('Payever::debug.ExecutePayment', $payeverService);
+
+                if (!in_array($event->getMop(), $payeverMops)) {
+                    return;
+                }
+
+                // Execute the payment
+                $payeverPaymentData = $payeverService->executePayment();
+
+                $this->getLogger(__METHOD__)->debug('Payever::debug.payeverExecutePayment', $payeverPaymentData);
+
+                // Check whether the payever payment has been executed successfully
+                if ($payeverService->getReturnType() == 'errorCode') {
+                    $event->setType('error');
+                    $event->setValue('The payever-Payment could not be executed!');
+
+                    return;
+                }
+
+                // Create a plentymarkets payment from the payever execution params
+                $plentyPayment = $paymentHelper->createPlentyPayment($payeverPaymentData, $event->getMop());
+                $this->getLogger(__METHOD__)->debug('Payever::debug.createPlentyPayment', $plentyPayment);
+
+                if ($plentyPayment instanceof Payment) {
+                    // Assign the payment to an order in plentymarkets
+                    $paymentHelper->assignPlentyPaymentToPlentyOrder($plentyPayment, $event->getOrderId());
+                    $event->setType('success');
+                    $event->setValue('The Payment has been executed successfully!');
                 }
             }
         );
