@@ -1,5 +1,14 @@
 # Release Informationen für payever
 
+## v1.2.1 (2019-04-01)
+
+### Verbesserungen
+- vereinfachtes Notification handling
+
+### Behoben
+- Bug, der in Zusammenhang mit einigen Android Endgeräten aufgetreten ist
+- Business Slug umbenannt zu Business UUID
+
 ## v1.1.1 (2018-12-21)
 
 ### Veröffentlichung

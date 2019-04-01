@@ -135,7 +135,7 @@ class PayeverService
             "failure_url" => $this->payeverHelper->getFailureURL(),
             "cancel_url" => $this->payeverHelper->getCancelURL(),
             "notice_url" => $this->payeverHelper->getNoticeURL(),
-            'plugin_version' => '1.2.0',
+            'plugin_version' => '1.2.1'
         ];
 
         $this->getLogger(__METHOD__)->debug('Payever::debug.paymentParameters', $paymentParameters);
@@ -150,7 +150,7 @@ class PayeverService
             switch ($isRedirect) {
                 case 0:
                     $this->returnType = 'htmlContent';
-                    $paymentContent = '<iframe sandbox="allow-same-origin allow-forms allow-top-navigation allow-scripts" style="width: 100%; height: 700px" frameborder="0" src="'. $paymentRequest['redirect_url'] .'"></iframe>';
+                    $paymentContent = '<iframe sandbox="allow-same-origin allow-forms allow-top-navigation allow-scripts allow-modals allow-popups" style="width: 100%; height: 700px" frameborder="0" src="'. $paymentRequest['redirect_url'] .'"></iframe>';
                     break;
                 case 1:
                     $this->returnType = 'redirectUrl';
