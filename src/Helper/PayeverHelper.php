@@ -312,7 +312,7 @@ class PayeverHelper
         $payment->status = $this->mapStatus($payeverPayment['status']);
         $payment->currency = $payeverPayment['currency'];
         $payment->amount = $payeverPayment['amount'];
-        $payment->receivedAt = $payeverPayment['entryDate'];
+        $payment->receivedAt = date("Y-m-d H:i:s", strtotime($payeverPayment['entryDate']));
         $paymentProperty = [];
         $paymentProperty[] = $this->getPaymentProperty(
             PaymentProperty::TYPE_BOOKING_TEXT,
@@ -337,13 +337,13 @@ class PayeverHelper
     }
 
     /**
-     * @param $transactionId
-     * @param $status
+     * @param string $transactionId
+     * @param string $status
+     * @param bool|Date $notificationTime
      * @return bool|Payment
      */
-    public function updatePlentyPayment(string $transactionId, string $status)
+    public function updatePlentyPayment(string $transactionId, string $status, $notificationTime = false)
     {
-        $updated = false;
         $payments = $this->paymentRepo->getPaymentsByPropertyTypeAndValue(
             PaymentProperty::TYPE_TRANSACTION_ID,
             $transactionId
@@ -351,15 +351,25 @@ class PayeverHelper
 
         $state = $this->mapStatus($status);
         foreach ($payments as $payment) {
+            if ($notificationTime) {
+                if (strtotime($notificationTime) > strtotime($payment->receivedAt)) {
+                    $payment->receivedAt = $notificationTime;
+                } else {
+                    return false;
+                }
+            }
+
             /* @var Payment $payment */
             if ($payment->status != $state) {
                 $payment->status = $state;
-                $this->paymentRepo->updatePayment($payment);
             }
-            $updated = $payment;
+
+            $this->paymentRepo->updatePayment($payment);
+
+            return $payment;
         }
 
-        return $updated;
+        return false;
     }
 
     /**

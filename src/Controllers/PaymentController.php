@@ -196,12 +196,15 @@ class PaymentController extends Controller
 
     public function checkoutNotice()
     {
-        $this->getLogger(__METHOD__)->debug('Payever::debug.noticeUrlWasCalled', "notice url was called");
+        $requestContent = json_decode($this->request->getContent(), true);
+        $notificationTime = array_key_exists('created_at', $requestContent) ? date("Y-m-d H:i:s", strtotime($requestContent['created_at'])) : false;
+
+        $this->getLogger(__METHOD__)->debug('Payever::debug.noticeUrlWasCalled', $requestContent);
         $paymentId = $this->request->get('payment_id');
 
         $payment = $this->payeverService->handlePayeverPayment($paymentId);
         $this->getLogger(__METHOD__)->debug('Payever::debug.retrievingPaymentForNotifications', $payment);
-        $update = $this->payeverHelper->updatePlentyPayment($paymentId, $payment["status"]);
+        $update = $this->payeverHelper->updatePlentyPayment($paymentId, $payment["status"], $notificationTime);
         $this->getLogger(__METHOD__)->debug('Payever::debug.updatingPlentyPaymentForNotifications', $update);
     }
 
