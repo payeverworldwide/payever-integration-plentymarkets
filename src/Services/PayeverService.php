@@ -135,7 +135,7 @@ class PayeverService
             "failure_url" => $this->payeverHelper->getFailureURL(),
             "cancel_url" => $this->payeverHelper->getCancelURL(),
             "notice_url" => $this->payeverHelper->getNoticeURL(),
-            'plugin_version' => '1.2.1'
+            'plugin_version' => '1.2.2'
         ];
 
         $this->getLogger(__METHOD__)->debug('Payever::debug.paymentParameters', $paymentParameters);
@@ -251,7 +251,7 @@ class PayeverService
         if (!empty($paymentId)) {
             $retrievePayment = $this->sdkService->call('retrievePaymentRequest', ["payment_id" => $paymentId]);
             $this->getLogger(__METHOD__)->debug('Payever::debug.executePaymentRetrieve', $retrievePayment);
-            if($retrievePayment["error"]){
+            if($retrievePayment["error"]) {
                 $this->returnType = 'errorCode';
                 return $retrievePayment["error_description"];
             } else {
@@ -270,6 +270,7 @@ class PayeverService
                 $executeResponse['email'] = $retrieveResponse["customer_email"];
                 $executeResponse['nameOfSender'] = $retrieveResponse["customer_name"];
                 $executeResponse['reference'] = $retrieveResponse["reference"];
+                $executeResponse['usage_text'] = $retrieveResponse["payment_details"]["usage_text"];
 
                 $this->sessionStorage->getPlugin()->unsetKey('payever_payment_id');
             }
@@ -336,30 +337,9 @@ class PayeverService
      */
     public function handlePayeverPayment(string $paymentId)
     {
-        return $this->getPaymentDetails($paymentId);
-    }
-
-    /**
-     * @param $paymentId
-     * @return \stdClass
-     */
-    public function getPaymentDetails(string $paymentId)
-    {
-        $response = $this->getRetrievePayment($paymentId);
-        $this->getLogger(__METHOD__)->debug('Payever::debug.getPaymentDetails', $response);
-
-        return $response;
-    }
-
-    /**
-     * Retrieve the payever payment
-     *
-     * @param string $paymentId
-     * @return \stdClass|bool
-     */
-    public function getRetrievePayment(string $paymentId)
-    {
         $retrievePayment = $this->sdkService->call('retrievePaymentRequest', ["payment_id" => $paymentId]);
+        $this->getLogger(__METHOD__)->debug('Payever::debug.getPaymentDetails', $retrievePayment);
+
         return $retrievePayment["result"];
     }
 

@@ -314,9 +314,11 @@ class PayeverHelper
         $payment->amount = $payeverPayment['amount'];
         $payment->receivedAt = date("Y-m-d H:i:s", strtotime($payeverPayment['entryDate']));
         $paymentProperty = [];
+        $bookingText = !empty($payeverPayment['usage_text']) ? 'Payment reference: '. $payeverPayment['usage_text'] : '';
+        $bookingText .= 'TransactionID: '.(string)$payeverPayment['transactionId'];
         $paymentProperty[] = $this->getPaymentProperty(
             PaymentProperty::TYPE_BOOKING_TEXT,
-            'TransactionID: '.(string)$payeverPayment['transactionId']
+            $bookingText
         );
         $paymentProperty[] = $this->getPaymentProperty(
             PaymentProperty::TYPE_TRANSACTION_ID,
@@ -328,7 +330,7 @@ class PayeverHelper
         );
 
         $paymentProperty[] = $this->getPaymentProperty(PaymentProperty::TYPE_ORIGIN, Payment::ORIGIN_PLUGIN);
-        $paymentProperty[] = $this->getPaymentProperty(PaymentProperty::TYPE_PAYMENT_TEXT, $payeverPayment['reference']);
+        $paymentProperty[] = $this->getPaymentProperty(PaymentProperty::TYPE_PAYMENT_TEXT, $payeverPayment['usage_text']);
         $payment->properties = $paymentProperty;
         //$payment->regenerateHash = true;
         $payment = $this->paymentRepo->createPayment($payment);

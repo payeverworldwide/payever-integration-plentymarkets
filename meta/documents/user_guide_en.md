@@ -1,4 +1,8 @@
-# Overview
+<div class="alert alert-warning" role="alert">
+    <strong><i>Note:</i></strong> The payever plugin has been developed for use with the online store Ceres and only works with its structure or other template plugins.
+</div>
+ 
+# Overview 
  
 **<a href="https://getpayever.com">payever</a>** is a commerce platform that allows you to connect your business to many payment providers and other relevant services for your online business. With payever you can easily add all your preferred payment options to your checkout. Within minutes! More than 4000 merchants are using the innovative checkout for their daily payment needs. Find more about us: <a href="http://www.getpayever.com">www.getpayever.com</a>
 

@@ -1,13 +1,15 @@
 # Release Notes for payever
 
-## v1.2.1 (2019-04-01)
+## v1.2.2 (2019-04-12)
 
 ### Improved
 - notification handling
+- translation for payment options
 
 ### Fixed
 - Android bug
 - Business Slug renamed to Business UUID
+- PAN ID for payment
 
 ## v1.1.1 (2018-12-21)
 

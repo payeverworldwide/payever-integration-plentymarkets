@@ -1,4 +1,8 @@
-# Überblick
+<div class="alert alert-warning" role="alert">
+    <strong><i>Hinweis:</i></strong> Das payever Plugin ist für die Nutzung mit dem Webshop Ceres entwickelt und funktioniert nur mit dessen Logikstruktur oder anderen Template-Plugins.
+</div>
+
+# Überblicks
  
 **<a href="https://payever.de">payever</a>** ist eine Commerce-Lösung die Ihnen erlaubt, Ihren Shop mit Zahlungsanbietern und anderen Lösungen zu verbinden. Mit payever können Sie einfach alle gewünschten Zahlarten zu Ihrem Checkout hinzufügen und das in nur wenigen Minuten. Mehr als 4000 Händler verwenden unseren Checkout für Ihre Zahlungsabwicklung. Mehr unter: <a href="http://www.payever.de">www.payever.de</a>
 
