@@ -1,5 +1,10 @@
 # Release Notes for payever
 
+## v1.3.0 (2018-14-06)
+
+### Added
+- new payment option Stripe Direct Debit
+
 ## v1.2.2 (2019-04-12)
 
 ### Improved

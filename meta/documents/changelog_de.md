@@ -1,5 +1,10 @@
 # Release Informationen für payever
 
+## v1.3.0 (2018-14-06)
+
+### Veröffentlichung
+- neue zahlungsoption Stripe Lastschrift
+
 ## v1.2.2 (2019-04-12)
 
 ### Verbesserungen

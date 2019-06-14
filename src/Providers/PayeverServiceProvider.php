@@ -129,7 +129,7 @@ class PayeverServiceProvider extends ServiceProvider
 
                 if ($plentyPayment instanceof Payment) {
                     // Assign the payment to an order in plentymarkets
-                    $paymentHelper->assignPlentyPaymentToPlentyOrder($plentyPayment, $event->getOrderId());
+                    $paymentHelper->assignPlentyPaymentToPlentyOrder($plentyPayment, $event->getOrderId(), $payeverPaymentData['status']);
                     $event->setType('success');
                     $event->setValue('The Payment has been executed successfully!');
                 }

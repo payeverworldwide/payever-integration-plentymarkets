@@ -196,16 +196,23 @@ class PaymentController extends Controller
 
     public function checkoutNotice()
     {
-        $requestContent = json_decode($this->request->getContent(), true);
-        $notificationTime = array_key_exists('created_at', $requestContent) ? date("Y-m-d H:i:s", strtotime($requestContent['created_at'])) : false;
+	    try {
+		    $requestContent = json_decode($this->request->getContent(), true);
+		    $notificationTime = array_key_exists('created_at', $requestContent) ? date("Y-m-d H:i:s", strtotime($requestContent['created_at'])) : false;
 
-        $this->getLogger(__METHOD__)->debug('Payever::debug.noticeUrlWasCalled', $requestContent);
-        $paymentId = $this->request->get('payment_id');
+		    $this->getLogger(__METHOD__)->debug('Payever::debug.noticeUrlWasCalled', $requestContent);
+		    $paymentId = $this->request->get('payment_id');
 
-        $payment = $this->payeverService->handlePayeverPayment($paymentId);
-        $this->getLogger(__METHOD__)->debug('Payever::debug.retrievingPaymentForNotifications', $payment);
-        $update = $this->payeverHelper->updatePlentyPayment($paymentId, $payment["status"], $notificationTime);
-        $this->getLogger(__METHOD__)->debug('Payever::debug.updatingPlentyPaymentForNotifications', $update);
+		    $payment = $this->payeverService->handlePayeverPayment($paymentId);
+		    $this->getLogger(__METHOD__)->debug('Payever::debug.retrievingPaymentForNotifications', $payment);
+		    $update = $this->payeverHelper->updatePlentyPayment($paymentId, $payment["status"], $notificationTime);
+		    $this->getLogger(__METHOD__)->debug('Payever::debug.updatingPlentyPaymentForNotifications', $update);
+
+		    die(json_encode([ 'result' => 'success', 'message' => 'Order was updated' ]));
+	    } catch (\Exception $exception) {
+		    $this->getLogger(__METHOD__)->error('Payever::notification_error', $exception);
+		    die(json_encode([ 'result' => 'eroor', 'message' => $exception->getMessage() ]));
+	    }
     }
 
     public function checkoutIframe(Twig $twig):string

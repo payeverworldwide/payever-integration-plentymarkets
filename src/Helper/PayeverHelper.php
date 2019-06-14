@@ -14,6 +14,7 @@ use Payever\Methods\SantanderfactoringdePaymentMethod;
 use Payever\Methods\SantanderPaymentMethod;
 use Payever\Methods\SofortPaymentMethod;
 use Payever\Methods\StripePaymentMethod;
+use Payever\Methods\StripeDirectDebitPaymentMethod;
 use Payever\Methods\PayexfakturaPaymentMethod;
 use Payever\Methods\PayexcreditcardPaymentMethod;
 use Payever\Services\PayeverSdkService;
@@ -34,6 +35,7 @@ use Plenty\Modules\Frontend\Contracts\Checkout;
 use Plenty\Modules\Plugin\Storage\Contracts\StorageRepositoryContract;
 use Plenty\Plugin\Log\Loggable;
 use Plenty\Modules\Order\Models\OrderType;
+use Plenty\Modules\Authorization\Services\AuthHelper;
 
 /**
  * Class PayeverHelper
@@ -49,6 +51,11 @@ class PayeverHelper
     const LOCKFILE_TIME_LOCK  = 60; //sec
     const LOCKFILE_TIME_SLEEP = 1; //sec
     const LOCKFILE_MAX_LIFETIME = 120; //sec
+
+	const PLENTY_ORDER_SUCCESS = 5;
+	const PLENTY_ORDER_PROCESSING = 3;
+	const PLENTY_ORDER_CANCELLED = 8;
+	const PLENTY_ORDER_RETURN = 9;
 
     private $app;
     private $webstoreHelper;
@@ -74,11 +81,15 @@ class PayeverHelper
     private $methodsMetaData = [
         'STRIPE' => [
             'class' => StripePaymentMethod::class,
-            'name' => 'Stripe',
+            'name' => 'Stripe Credit Card',
+        ],
+        'STRIPE_DIRECTDEBIT' => [
+            'class' => StripeDirectDebitPaymentMethod::class,
+            'name' => 'Stripe Direct Debit',
         ],
         'PAYMILL_DIRECTDEBIT' => [
             'class' => PaymilldirectdebitPaymentMethod::class,
-            'name' => 'Direct Debit',
+            'name' => 'Paymill Direct Debit',
         ],
         'PAYPAL' => [
             'class' => PaypalPaymentMethod::class,
@@ -361,6 +372,9 @@ class PayeverHelper
                 }
             }
 
+	        $orderId = $payment->order->orderId;
+	        $this->updateOrderStatus($orderId, $status);
+
             /* @var Payment $payment */
             if ($payment->status != $state) {
                 $payment->status = $state;
@@ -395,10 +409,11 @@ class PayeverHelper
      * @param Payment $payment
      * @param int $orderId
      */
-    public function assignPlentyPaymentToPlentyOrder(Payment $payment, int $orderId)
+    public function assignPlentyPaymentToPlentyOrder(Payment $payment, int $orderId, $paymentStatus)
     {
         // Get the order by the given order ID
         $order = $this->orderRepo->findOrderById($orderId);
+
         // Check whether the order truly exists in plentymarkets
         if (!is_null($order) && $order instanceof Order) {
             // Assign the given payment to the given order
@@ -407,7 +422,37 @@ class PayeverHelper
 
         $transactionId = $this->getPaymentPropertyValue($payment, PaymentProperty::TYPE_TRANSACTION_ID);
         $this->getLogger(__METHOD__)->debug('Payever::debug.assignPlentyPaymentToPlentyOrder', 'Transaction ' . $transactionId . ' was assigned to the order #' . $orderId);
+
+        $this->updateOrderStatus($orderId, $paymentStatus);
     }
+
+	/**
+	 * Update order status by order id
+	 *
+	 * @param int $orderId
+	 * @param float $statusId
+	 */
+	public function updateOrderStatus(int $orderId, string $paymentStatus)
+	{
+		try {
+			/** @var \Plenty\Modules\Authorization\Services\AuthHelper $authHelper */
+			$authHelper = pluginApp(AuthHelper::class);
+			$statusId = $this->mapOrderStatus($paymentStatus);
+			$authHelper->processUnguarded(
+				function () use ($orderId, $statusId) {
+					//unguarded
+					$order = $this->orderRepo->findOrderById($orderId);
+					if (!is_null($order) && $order instanceof Order) {
+						$status['statusId'] = (float) $statusId;
+						$this->orderRepo->updateOrder($status, $orderId);
+						$this->getLogger(__METHOD__)->debug('Payever::debug.updateOrderStatus', 'Status of order ' . $orderId . ' was changed to ' . $statusId);
+					}
+				}
+			);
+		} catch (\Exception $exception) {
+			$this->getLogger(__METHOD__)->error('Payever::updateOrderStatus', $exception);
+		}
+	}
 
     /**
      * @param Payment $payment
@@ -498,6 +543,35 @@ class PayeverHelper
                 return Payment::STATUS_AWAITING_RENEWAL;
         }
     }
+
+	/**
+	 * Returns the plentymarkets order status
+	 *
+	 * @param string $status
+	 *
+	 * @return int
+	 */
+	private function mapOrderStatus(string $status)
+	{
+		switch ($status) {
+			case 'STATUS_PAID':
+				return self::PLENTY_ORDER_SUCCESS;
+			case 'STATUS_ACCEPTED':
+				return self::PLENTY_ORDER_SUCCESS;
+			case 'STATUS_IN_PROCESS':
+				return self::PLENTY_ORDER_PROCESSING;
+			case 'STATUS_FAILED':
+				return self::PLENTY_ORDER_CANCELLED;
+			case 'STATUS_CANCELLED':
+				return self::PLENTY_ORDER_CANCELLED;
+			case 'STATUS_REFUNDED':
+				return self::PLENTY_ORDER_RETURN;
+			case 'STATUS_DECLINED':
+				return self::PLENTY_ORDER_CANCELLED;
+			case 'STATUS_NEW':
+				return self::PLENTY_ORDER_PROCESSING;
+		}
+	}
 
     public function isSuccessfulPaymentStatus(string $status): bool
     {

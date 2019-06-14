@@ -266,6 +266,10 @@ class AbstractPaymentMethod extends PaymentMethodService
                 'currency' => ['all'],
                 'countries' => ['all'],
             ],
+            'stripe_directdebit' => [
+                'currency' => ['all'],
+                'countries' => ['all'],
+            ],
             'payex_faktura' => [
                 'currency' => ['SEK', 'NOK'],
                 'countries' => ['SE', 'NO'],
