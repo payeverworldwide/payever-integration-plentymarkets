@@ -89,17 +89,15 @@ function payeverUpdateConfig(updateSourceCallback) {
      * Collect all necessary data for proper config update
      */
     $.waterfall(
-        $.getJSON('/rest/plugins'),
+        $.getJSON('/rest/plugins/search?name=Payever'),
         $.getJSON('/rest/webstores'),
         updateSourceCallback,
-        function (plugins, webstores) {
-            payeverPlugin = plugins.filter(function (plugin) { return plugin.name === 'Payever'; }).shift();
+        function (payeverPlugin, webstores) {
             pluginSetId = webstores.slice().shift().pluginSetId;
-            payeverConfigUri = '/rest/plugins/' + payeverPlugin.id + '/plugin_sets/' + pluginSetId + '/configurations';
-
+            payeverConfigUri = '/rest/plugins/' + payeverPlugin.entries.shift().id + '/plugin_sets/' + pluginSetId + '/configurations';
             return $.getJSON(payeverConfigUri);
         }
-    ).done(function (plugins, webstores, syncData, payeverConfig) {
+    ).done(function (payeverPlugin, webstores, syncData, payeverConfig) {
 
         /**
          * Update existing config and save it via REST endpoint
@@ -139,7 +137,7 @@ function payeverUpdateConfig(updateSourceCallback) {
         }
 
         console.debug('Payever process finished.', {
-            plugins: plugins, webstores: webstores, syncData: syncData, payeverConfig: payeverConfig
+            payeverPlugin: payeverPlugin, webstores: webstores, syncData: syncData, payeverConfig: payeverConfig
         });
 
     }).fail(function () {

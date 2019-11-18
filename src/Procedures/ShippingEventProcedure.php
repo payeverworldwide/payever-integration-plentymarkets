@@ -39,7 +39,6 @@ class ShippingEventProcedure
                         $this->getLogger(__METHOD__)->debug('Payever::debug.shippingResponse', 'Shipping goods payever payment action is not allowed!');
                         throw new \Exception('Shipping goods payever payment action is not allowed!');
                     }
-
                 }
             }
         }

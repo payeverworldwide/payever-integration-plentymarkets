@@ -91,6 +91,9 @@ class ConfigController extends Controller
                 foreach ($fieldsMap as $pluginKey => $apiKey) {
                     $updatedConfig["{$methodKey}.{$pluginKey}"] = strip_tags($optionData[$apiKey]);
                 }
+
+                $updatedConfig["{$methodKey}.allowed_countries"] = implode(",", $optionData['options']['countries']);
+                $updatedConfig["{$methodKey}.allowed_currencies"] = implode(",", $optionData['options']['currencies']);
             }
         }
 

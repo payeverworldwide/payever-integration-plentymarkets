@@ -3,7 +3,7 @@
   "marketplaceName"   : {"de":"payever","en":"payever"},
   "namespace"         : "Payever",
   "type"              : "payment",
-  "version"           : "1.3.0",
+  "version"           : "1.4.0",
   "license"           : "GNU AFFERO GENERAL PUBLIC LICENSE",
   "isClosedSource"    : false,
   "pluginIcon"        : "icon_plugin_xs.png",
@@ -32,7 +32,7 @@
   "javaScriptFiles"   : [],
   "require"           : ["IO"],
   "dependencies":{
-    "payever/sdk-php":"1.4.0"
+    "payever/sdk-php":"2.2.3"
   },
   "runOnBuild"        : [
     "Payever\\Migrations\\CreatePayeverPaymentMethods3"

@@ -12,11 +12,13 @@ class PayeverSdkService
      * @var LibraryCallContract
      */
     private $libCall;
+
     /**
      *
      * @var ConfigRepository
      */
     private $config;
+
     /**
      *
      * @param LibraryCallContract $libCall
@@ -27,6 +29,7 @@ class PayeverSdkService
         $this->libCall = $libCall;
         $this->config = $config;
     }
+
     /**
      *
      * @param string $method
@@ -35,10 +38,12 @@ class PayeverSdkService
      */
     public function call(string $method, array $parameters)
     {
-        $parameters['clientId'] = $this->config->get('Payever.clientId');
-        $parameters['clientSecret'] = $this->config->get('Payever.clientSecret');
-        $parameters['slug'] = $this->config->get('Payever.slug');
-        $parameters['environment'] = $this->config->get('Payever.environment');
+        $parameters['apiKeys'] = [
+            'clientId' => $this->config->get('Payever.clientId'),
+            'clientSecret' => $this->config->get('Payever.clientSecret'),
+            'slug' => $this->config->get('Payever.slug'),
+            'environment' => $this->config->get('Payever.environment')
+        ];
 
         return $this->libCall->call('Payever::' . $method, $parameters);
     }

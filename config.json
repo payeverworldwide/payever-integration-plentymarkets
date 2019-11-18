@@ -210,6 +210,22 @@
           "options": {
             "defaultValue": "100000"
           }
+        },
+        "stripe.allowed_countries": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCountries",
+          "options": {
+            "defaultValue": "all"
+          }
+        },
+        "stripe.allowed_currencies": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCurrencies",
+          "options": {
+            "defaultValue": "all"
+          }
         }
       }
     },
@@ -298,6 +314,22 @@
           "label": "Config.payeverMaxOrderTotalLabel",
           "options": {
             "defaultValue": "100000"
+          }
+        },
+        "stripe_directdebit.allowed_countries": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCountries",
+          "options": {
+            "defaultValue": "all"
+          }
+        },
+        "stripe_directdebit.allowed_currencies": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCurrencies",
+          "options": {
+            "defaultValue": "all"
           }
         }
       }
@@ -388,6 +420,22 @@
           "options": {
             "defaultValue": "10000"
           }
+        },
+        "paymill_directdebit.allowed_countries": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCountries",
+          "options": {
+            "defaultValue": "DE"
+          }
+        },
+        "paymill_directdebit.allowed_currencies": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCurrencies",
+          "options": {
+            "defaultValue": "all"
+          }
         }
       }
     },
@@ -476,6 +524,22 @@
           "label": "Config.payeverMaxOrderTotalLabel",
           "options": {
             "defaultValue": "10000"
+          }
+        },
+        "paymill_creditcard.allowed_countries": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCountries",
+          "options": {
+            "defaultValue": "all"
+          }
+        },
+        "paymill_creditcard.allowed_currencies": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCurrencies",
+          "options": {
+            "defaultValue": "all"
           }
         }
       }
@@ -566,6 +630,22 @@
           "options": {
             "defaultValue": "10000"
           }
+        },
+        "paypal.allowed_countries": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCountries",
+          "options": {
+            "defaultValue": "all"
+          }
+        },
+        "paypal.allowed_currencies": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCurrencies",
+          "options": {
+            "defaultValue": "AUD,CAD,CZK,DKK,EUR,GBP,HKD,HUF,ILS,JPY,MYR,MXN,NOK,NZD,PHP,PLN,SGD,SEK,CHF,TWD,THB,TRY,USD"
+          }
         }
       }
     },
@@ -654,6 +734,22 @@
           "label": "Config.payeverMaxOrderTotalLabel",
           "options": {
             "defaultValue": "20000"
+          }
+        },
+        "santander_invoice_no.allowed_countries": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCountries",
+          "options": {
+            "defaultValue": "NO"
+          }
+        },
+        "santander_invoice_no.allowed_currencies": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCurrencies",
+          "options": {
+            "defaultValue": "NOK"
           }
         }
       }
@@ -744,6 +840,22 @@
           "options": {
             "defaultValue": "20000"
           }
+        },
+        "santander_invoice_de.allowed_countries": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCountries",
+          "options": {
+            "defaultValue": "DE"
+          }
+        },
+        "santander_invoice_de.allowed_currencies": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCurrencies",
+          "options": {
+            "defaultValue": "EUR"
+          }
         }
       }
     },
@@ -832,6 +944,22 @@
           "label": "Config.payeverMaxOrderTotalLabel",
           "options": {
             "defaultValue": "1000"
+          }
+        },
+        "santander_factoring_de.allowed_countries": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCountries",
+          "options": {
+            "defaultValue": "DE"
+          }
+        },
+        "santander_factoring_de.allowed_currencies": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCurrencies",
+          "options": {
+            "defaultValue": "EUR"
           }
         }
       }
@@ -922,6 +1050,22 @@
           "options": {
             "defaultValue": "100000"
           }
+        },
+        "santander_installment.allowed_countries": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCountries",
+          "options": {
+            "defaultValue": "DE"
+          }
+        },
+        "santander_installment.allowed_currencies": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCurrencies",
+          "options": {
+            "defaultValue": "EUR"
+          }
         }
       }
     },
@@ -1010,6 +1154,22 @@
           "label": "Config.payeverMaxOrderTotalLabel",
           "options": {
             "defaultValue": "100000"
+          }
+        },
+        "santander_installment_dk.allowed_countries": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCountries",
+          "options": {
+            "defaultValue": "DK"
+          }
+        },
+        "santander_installment_dk.allowed_currencies": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCurrencies",
+          "options": {
+            "defaultValue": "DKK"
           }
         }
       }
@@ -1100,6 +1260,22 @@
           "options": {
             "defaultValue": "80000"
           }
+        },
+        "santander_installment_no.allowed_countries": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCountries",
+          "options": {
+            "defaultValue": "NO"
+          }
+        },
+        "santander_installment_no.allowed_currencies": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCurrencies",
+          "options": {
+            "defaultValue": "NOK"
+          }
         }
       }
     },
@@ -1189,6 +1365,22 @@
           "options": {
             "defaultValue": "100000"
           }
+        },
+        "santander_installment_se.allowed_countries": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCountries",
+          "options": {
+            "defaultValue": "SE"
+          }
+        },
+        "santander_installment_se.allowed_currencies": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCurrencies",
+          "options": {
+            "defaultValue": "SEK"
+          }
         }
       }
     },
@@ -1277,6 +1469,220 @@
           "label": "Config.payeverMaxOrderTotalLabel",
           "options": {
             "defaultValue": "100000"
+          }
+        },
+        "sofort.allowed_countries": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCountries",
+          "options": {
+            "defaultValue": "BE,NL,CH,HU,DE,AT,SK,GB,IT,PL,ES"
+          }
+        },
+        "sofort.allowed_currencies": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCurrencies",
+          "options": {
+            "defaultValue": "EUR"
+          }
+        }
+      }
+    },
+    "Config.PayExFakturaTab": {
+      "label": "Config.PayExFakturaTab",
+      "formFields": {
+        "payex_faktura.active": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverActiveLabel",
+          "options": {
+            "defaultValue": "0",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "payex_faktura.title": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverTitleLabel"
+        },
+        "payex_faktura.description": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverDescriptionLabel"
+        },
+        "payex_faktura.accept_fee": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverAcceptFeeLabel",
+          "options": {
+            "defaultValue": "1",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "payex_faktura.fee": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverFeeLabel",
+          "options": {
+            "defaultValue": "0.35"
+          }
+        },
+        "payex_faktura.variable_fee": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverVariableFeeLabel",
+          "options": {
+            "defaultValue": "1.9"
+          }
+        },
+        "payex_faktura.min_order_total": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverMinOrderTotalLabel",
+          "options": {
+            "defaultValue": "0.02"
+          }
+        },
+        "payex_faktura.max_order_total": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverMaxOrderTotalLabel",
+          "options": {
+            "defaultValue": "10000"
+          }
+        },
+        "payex_faktura.allowed_countries": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCountries",
+          "options": {
+            "defaultValue": "SE,NO"
+          }
+        },
+        "payex_faktura.allowed_currencies": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCurrencies",
+          "options": {
+            "defaultValue": "SEK,NOK"
+          }
+        }
+      }
+    },
+    "Config.PayExCreditcardTab": {
+      "label": "Config.PayExCreditcardTab",
+      "formFields": {
+        "payex_creditcard.active": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverActiveLabel",
+          "options": {
+            "defaultValue": "0",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "payex_creditcard.title": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverTitleLabel"
+        },
+        "payex_creditcard.description": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverDescriptionLabel"
+        },
+        "payex_creditcard.accept_fee": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverAcceptFeeLabel",
+          "options": {
+            "defaultValue": "1",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "payex_creditcard.fee": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverFeeLabel",
+          "options": {
+            "defaultValue": "0.35"
+          }
+        },
+        "payex_creditcard.variable_fee": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverVariableFeeLabel",
+          "options": {
+            "defaultValue": "1.9"
+          }
+        },
+        "payex_creditcard.min_order_total": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverMinOrderTotalLabel",
+          "options": {
+            "defaultValue": "0.02"
+          }
+        },
+        "payex_creditcard.max_order_total": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverMaxOrderTotalLabel",
+          "options": {
+            "defaultValue": "10000"
+          }
+        },
+        "payex_creditcard.allowed_countries": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCountries",
+          "options": {
+            "defaultValue": "all"
+          }
+        },
+        "payex_creditcard.allowed_currencies": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCurrencies",
+          "options": {
+            "defaultValue": "all"
           }
         }
       }

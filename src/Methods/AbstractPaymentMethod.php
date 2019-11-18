@@ -58,12 +58,12 @@ class AbstractPaymentMethod extends PaymentMethodService
         /**
          * Check currency
          */
-        $paymentDetails = $this->getPayeverPaymentDetails();
-        $allowed_currency = $paymentDetails[$this->getMethodCode()]['currency'];
+        $allowedCurrenciesKey = 'Payever.'.$this->getMethodCode().'.allowed_currencies';
+        $allowedCurrencies = explode(",", $configRepository->get($allowedCurrenciesKey));
 
         if (
-            !in_array($basket->currency, $allowed_currency)
-            && !in_array('all', $allowed_currency)
+            !in_array($basket->currency, $allowedCurrencies)
+            && !in_array('all', $allowedCurrencies)
         ) {
             return false;
         }
@@ -88,11 +88,17 @@ class AbstractPaymentMethod extends PaymentMethodService
             return false;
         }
 
+        /**
+         * Check country
+         */
         $countryRepo = pluginApp(\Plenty\Modules\Order\Shipping\Countries\Contracts\CountryRepositoryContract::class);
         $country = $countryRepo->findIsoCode($basket->shippingCountryId, 'iso_code_2');
 
-        if (!in_array($country, $paymentDetails[$this->getMethodCode()]['countries'])
-            && !in_array('all', $paymentDetails[$this->getMethodCode()]['countries'])
+        $allowedCountriesKey = 'Payever.'.$this->getMethodCode().'.allowed_countries';
+        $allowedCountries = explode(",", $configRepository->get($allowedCountriesKey));
+
+        if (!in_array($country, $allowedCountries)
+            && !in_array('all', $allowedCountries)
         ) {
             return false;
         }
@@ -210,74 +216,5 @@ class AbstractPaymentMethod extends PaymentMethodService
     public function isSwitchableFrom(int $orderId):bool
     {
         return true;
-    }
-
-    /**
-     * @return array
-     */
-    public function getPayeverPaymentDetails():array
-    {
-        return [
-            'paymill_directdebit' => [
-                'currency' => ['all'],
-                'countries' => ['DE'],
-            ],
-            'sofort' => [
-                'currency' => ['EUR'],
-                'countries' => ['BE', 'NL', 'CH', 'HU', 'DE', 'AT', 'SK', 'GB', 'IT', 'PL', 'ES'],
-            ],
-            'paymill_creditcard' => [
-                'currency' => ['all'],
-                'countries' => ['all'],
-            ],
-            'santander_installment' => [
-                'currency' => ['EUR'],
-                'countries' => ['DE'],
-            ],
-            'santander_installment_no' => [
-                'currency' => ['NOK'],
-                'countries' => ['NO'],
-            ],
-            'santander_installment_dk' => [
-                'currency' => ['DKK'],
-                'countries' => ['DK'],
-            ],
-            'santander_installment_se' => [
-                'currency' => ['SEK'],
-                'countries' => ['SE'],
-            ],
-            'santander_invoice_no' => [
-                'currency' => ['NOK'],
-                'countries' => ['NO'],
-            ],
-            'santander_invoice_de' => [
-                'currency' => ['EUR'],
-                'countries' => ['DE'],
-            ],
-            'santander_factoring_de' => [
-                'currency' => ['EUR'],
-                'countries' => ['DE'],
-            ],
-            'paypal' => [
-                'currency' => ['all'],
-                'countries' => ['all'],
-            ],
-            'stripe' => [
-                'currency' => ['all'],
-                'countries' => ['all'],
-            ],
-            'stripe_directdebit' => [
-                'currency' => ['all'],
-                'countries' => ['all'],
-            ],
-            'payex_faktura' => [
-                'currency' => ['SEK', 'NOK'],
-                'countries' => ['SE', 'NO'],
-            ],
-            'payex_creditcard' => [
-                'currency' => ['all'],
-                'countries' => ['all'],
-            ],
-        ];
     }
 }

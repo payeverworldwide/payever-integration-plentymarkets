@@ -1,9 +1,9 @@
 <?php
 
-use Payever\ExternalIntegration\Core\Base\IToken;
-use Payever\ExternalIntegration\Core\Authorization\TokenList as CoreTokenList;
+use Payever\ExternalIntegration\Core\Authorization\OauthToken;
+use Payever\ExternalIntegration\Core\Authorization\OauthTokenList;
 
-class PayeverTokenList extends CoreTokenList
+class PayeverTokenList extends OauthTokenList
 {
     /**
      * {@inheritdoc}
@@ -12,12 +12,16 @@ class PayeverTokenList extends CoreTokenList
     {
         $savedTokens = $this->getTokenStorage();
 
-        foreach ($savedTokens as $name => $token) {
-            $this->add(
-                $name,
-                $this->create()->load($token)
-            );
+        if (is_array($savedTokens)) {
+            foreach ($savedTokens as $name => $token) {
+                $this->add(
+                    $name,
+                    $this->create()->load($token)
+                );
+            }
         }
+
+        return $this;
     }
 
     /**
@@ -27,22 +31,10 @@ class PayeverTokenList extends CoreTokenList
     {
         $savedTokens = array();
 
-        /** @var PluginToken $token */
+        /** @var OauthToken $token */
         foreach ($this->getAll() as $name => $token) {
             $savedTokens[$name] = $token->getParams();
         }
-    }
-
-    /**
-     * Returns new PayeverToken
-     *
-     * @return IToken
-     *
-     * @throws \Exception
-     */
-    public function create()
-    {
-        return new PayeverToken();
     }
 
     /**
@@ -50,6 +42,7 @@ class PayeverTokenList extends CoreTokenList
      */
     private function getTokenStorage()
     {
-        return array();
+        return [];
     }
 }
+

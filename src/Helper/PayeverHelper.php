@@ -48,9 +48,17 @@ class PayeverHelper
 
     const PLUGIN_KEY = 'plenty_payever';
 
+    const STATUS_NEW        = 'STATUS_NEW';
+    const STATUS_IN_PROCESS = 'STATUS_IN_PROCESS';
+    const STATUS_ACCEPTED   = 'STATUS_ACCEPTED';
+    const STATUS_PAID       = 'STATUS_PAID';
+    const STATUS_DECLINED   = 'STATUS_DECLINED';
+    const STATUS_REFUNDED   = 'STATUS_REFUNDED';
+    const STATUS_FAILED     = 'STATUS_FAILED';
+    const STATUS_CANCELLED  = 'STATUS_CANCELLED';
+
     const LOCKFILE_TIME_LOCK  = 60; //sec
     const LOCKFILE_TIME_SLEEP = 1; //sec
-    const LOCKFILE_MAX_LIFETIME = 120; //sec
 
 	const PLENTY_ORDER_SUCCESS = 5;
 	const PLENTY_ORDER_PROCESSING = 3;
@@ -487,7 +495,7 @@ class PayeverHelper
     public function isPaymentMethodHidden($methodCode, Basket $bakset)
     {
         return $this->isBasketAddressesDifferent($bakset)
-            ? in_array($methodCode, $this->hideOnDifferentAddressMethods)
+            ? in_array($methodCode, $this->sdkService->call('getShouldHideOnDifferentAddressMethods', []))
             : false;
     }
 
@@ -525,21 +533,21 @@ class PayeverHelper
     public function mapStatus(string $state)
     {
         switch ($state) {
-            case 'STATUS_PAID':
+            case self::STATUS_PAID:
                 return Payment::STATUS_CAPTURED;
-            case 'STATUS_ACCEPTED':
+            case self::STATUS_ACCEPTED:
                 return Payment::STATUS_APPROVED;
-            case 'STATUS_IN_PROCESS':
+            case self::STATUS_IN_PROCESS:
                 return Payment::STATUS_AWAITING_APPROVAL;
-            case 'STATUS_FAILED':
+            case self::STATUS_FAILED:
                 return Payment::STATUS_CANCELED;
-            case 'STATUS_CANCELLED':
+            case self::STATUS_CANCELLED:
                 return Payment::STATUS_CANCELED;
-            case 'STATUS_REFUNDED':
+            case self::STATUS_REFUNDED:
                 return Payment::STATUS_REFUNDED;
-            case 'STATUS_DECLINED':
+            case self::STATUS_DECLINED:
                 return Payment::STATUS_REFUSED;
-            case 'STATUS_NEW':
+            case self::STATUS_NEW:
                 return Payment::STATUS_AWAITING_RENEWAL;
         }
     }
@@ -554,21 +562,21 @@ class PayeverHelper
 	private function mapOrderStatus(string $status)
 	{
 		switch ($status) {
-			case 'STATUS_PAID':
+			case self::STATUS_PAID:
 				return self::PLENTY_ORDER_SUCCESS;
-			case 'STATUS_ACCEPTED':
+			case self::STATUS_ACCEPTED:
 				return self::PLENTY_ORDER_SUCCESS;
-			case 'STATUS_IN_PROCESS':
+			case self::STATUS_IN_PROCESS:
 				return self::PLENTY_ORDER_PROCESSING;
-			case 'STATUS_FAILED':
+            case self::STATUS_FAILED:
 				return self::PLENTY_ORDER_CANCELLED;
-			case 'STATUS_CANCELLED':
+			case self::STATUS_CANCELLED:
 				return self::PLENTY_ORDER_CANCELLED;
-			case 'STATUS_REFUNDED':
+            case self::STATUS_REFUNDED:
 				return self::PLENTY_ORDER_RETURN;
-			case 'STATUS_DECLINED':
+            case self::STATUS_DECLINED:
 				return self::PLENTY_ORDER_CANCELLED;
-			case 'STATUS_NEW':
+			case self::STATUS_NEW:
 				return self::PLENTY_ORDER_PROCESSING;
 		}
 	}
@@ -576,9 +584,9 @@ class PayeverHelper
     public function isSuccessfulPaymentStatus(string $status): bool
     {
         return in_array($status, [
-            'STATUS_PAID',
-            'STATUS_ACCEPTED',
-            'STATUS_IN_PROCESS',
+            self::STATUS_PAID,
+            self::STATUS_ACCEPTED,
+            self::STATUS_IN_PROCESS,
         ]);
     }
 

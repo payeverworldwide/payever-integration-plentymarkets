@@ -1,6 +1,14 @@
 # Release Notes for payever
 
-## v1.3.0 (2018-14-06)
+## v1.4.0 (2019-11-18)
+
+### Improved
+- countries/currencies checking
+
+### Implemented
+- payever API SDK 2.0
+
+## v1.3.0 (2019-06-14)
 
 ### Added
 - new payment option Stripe Direct Debit

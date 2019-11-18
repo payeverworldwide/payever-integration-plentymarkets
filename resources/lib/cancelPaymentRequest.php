@@ -1,7 +1,7 @@
 <?php
 
-require_once __DIR__ . '/PayeverSdkHelper.php';
-$payeverApi = PayeverSdkHelper::getPayeverApi(SdkRestApi::getParam('clientId'), SdkRestApi::getParam('clientSecret'), SdkRestApi::getParam('slug'), SdkRestApi::getParam('environment'));
+require_once __DIR__ . '/PayeverSdkProvider.php';
+$payeverApi = new PayeverSdkProvider(SdkRestApi::getParam('apiKeys'));
 
 $transactionId = SdkRestApi::getParam('transaction_id');
-return $payeverApi->cancelPaymentRequest($transactionId)->getResponseEntity()->toArray();
+return $payeverApi->getPaymentsApiClient()->cancelPaymentRequest($transactionId)->getResponseEntity()->toArray();
