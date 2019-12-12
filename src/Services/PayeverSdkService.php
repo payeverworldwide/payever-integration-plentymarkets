@@ -38,12 +38,14 @@ class PayeverSdkService
      */
     public function call(string $method, array $parameters)
     {
-        $parameters['apiKeys'] = [
-            'clientId' => $this->config->get('Payever.clientId'),
-            'clientSecret' => $this->config->get('Payever.clientSecret'),
-            'slug' => $this->config->get('Payever.slug'),
-            'environment' => $this->config->get('Payever.environment')
-        ];
+        if (!isset($parameters['apiKeys'])) {
+            $parameters['apiKeys'] = [
+                'clientId' => $this->config->get('Payever.clientId'),
+                'clientSecret' => $this->config->get('Payever.clientSecret'),
+                'slug' => $this->config->get('Payever.slug'),
+                'environment' => $this->config->get('Payever.environment')
+            ];
+        }
 
         return $this->libCall->call('Payever::' . $method, $parameters);
     }

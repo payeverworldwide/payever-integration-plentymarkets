@@ -4,36 +4,31 @@
 
 # Überblicks
  
-**<a href="https://payever.de">payever</a>** ist eine Commerce-Lösung die Ihnen erlaubt, Ihren Shop mit Zahlungsanbietern und anderen Lösungen zu verbinden. Mit payever können Sie einfach alle gewünschten Zahlarten zu Ihrem Checkout hinzufügen und das in nur wenigen Minuten. Mehr als 4000 Händler verwenden unseren Checkout für Ihre Zahlungsabwicklung. Mehr unter: <a href="http://www.payever.de">www.payever.de</a>
+88% der Nutzer brechen den Kaufvorgang ab, wenn keine ihrer gewünschten Zahlungsarten verfügbar ist. payever bietet Ihnen eine breite Palette an Zahlungsarten, u.a. Kreditkartenzahlung, Lastschrift, Sofortüberweisung, PayPal, Vorkasse, Rechnungskauf, Ratenkauf und Ratenkredit - so ist für jeden Kunden die Richtige dabei. Das Modul fügt alle gewünschten Zahlarten aus Ihrem payever Konto zu Ihrem Plentymarkets Shop hinzu. Sie können wählen, ob der Kunde direkt in Ihrem Shop in einem iframe bezahlt oder auf eine externe Seite weitergeleitet wird. Nach der Transaktion wird der Kunde in beiden Fällen wieder in Ihren Shop geleitet.
 
-**Es wird ein payever Konto benötig. <a href="https://mein.payever.de/register">Registrieren Sie sich hier</a>, zusätzliche Gebühren können anfallen. Die <a href="https://getpayever.com/article/what-are-the-transaction-fees/">Transaktionsgebühren</a> hängen vom jeweiligen Zahlungsanbietern ab.**
+Kreditkartenzahlung, PayPal und Vorkasse sind weltweit verfügbar. Für die anderen Zahlungsarten gelten folgende regionale Beschränkungen: 
+* Lastschrift (Stripe): SEPA-Mitgliedsländer
+* Sofortüberweisung (Klarna): Deutschland, Österreich, Niederlande, Belgien, Spanien, Italien, Schweiz, Polen, Vereinigtes Königreich (Währung des Shops muss EUR sein) 
+* Rechnungskauf (Santander): Deutschland und Norwegen
+* Ratenkauf (Santander): Deutschland
+* Ratenkredit (Santander): Deutschland, Schweden, Norwegen und Dänemark
 
-Das Modul fügt alle gewünschten Zahlarten aus Ihrem payever Konto zu Ihrem Plentymarkets Shop hinzu. Sie können wählen, ob der Kunde direkt in Ihrem Shop in einem iframe bezahlt oder auf eine externe Seite weitergeleitet wird. Nach der Transaction wir der Kunde in beiden Fällen wieder in Ihren Shop geleitet. 
+**Zur Benutzung des Moduls wird ein payever Konto benötigt. Dieses können Sie <a href="https://commerceos.payever.org/entry/registration/business.com">hier</a> erstellen. Die Kontoerstellung ist kostenlos und unverbindlich. Es können allerdings zusätzliche Transaktionsgebühren anfallen. Die Höhe der Transaktionsgebühren hängt vom jeweiligen Zahlungsanbieter ab. Eine Übersicht über die Transaktionsgebühren der gängigen Zahlungsanbieter findet sich <a href="https://getpayever.com/checkout/pricing">hier</a>.**
 
-## So einfach starten Sie mit payever
+##Unsere Vorteile 
 
-    - Installiere kostenfrei das payever Plentymarkets-Plugin
-    - Registrieren Sie sich innerhalb von Minuten bei payever
-    - Aktivieren Sie die gewünschten Zahlungsarten. Fertig.
+**Alle Zahlarten in einem Plugin.** Sie müssen nur ein einziges Zahlungsplugin integrieren, statt wie normalerweise üblich 3 oder 4 Unterschiedliche - so sparen Sie Zeit und minimieren die Wahrscheinlichkeit von Plugin-Konflikten.
 
-## Eine Lösung, die Sie glücklich macht
+**Exklusive Zahlarten.** Den Rechnungskauf, Ratenkauf und Ratenkredit von Santander gibt es nur bei uns. Santander bietet Händlern hierfür deutlich günstigere Konditionen als die meisten anderen Anbieter. 
 
-    - Kostenfrei und in Minuten starten
-    - Verwalte alles direkt in Plentymarkets
-    - Alle Zahlungsarten
-    - Keine Einrichtungsgebühr. Keine monatliche Grundgebühr. Keine Vertragslaufzeit.
-    - Kein Hosting
-    - Keine Programmierung
-    - Mobil optimiert, insbesondere für iOS, Android und Tablets.
+**Kostenlos.** payever selbst kostet Sie keinen Cent - Sie zahlen an uns weder Einrichtungsgebühren noch monatliche Gebühren und sind nicht vertraglich an uns gebunden. Auch die Transaktionsgebühren geben wir eins zu eins vom jeweiligen Zahlungsanbieter an Sie weiter: wir schlagen nichts auf deren Preise auf. 
 
-## Wir unterstützen alle Zahlarten
+**Erstklassige User Experience.** Unser modernes User Interface ist über alle Zahlungsarten hinweg einheitlich und schafft Vertrauen. Selbstverständlich wird der payever Checkout auch auf mobilen Geräten optimal dargestellt. Dank modernster Technologie lädt payever in Lichtgeschwindigkeit und lässt Ihre Kunden nicht unnötig warten. 
 
-    - Santander Rechnungskauf
-    - Santander Ratenkredit
-    - Lastschrift
-    - Kreditkartenzahlung
-    - Sofortüberweisung
-    - PayPal
-    - PayEx
+**Höherer Umsatz.** Die Kombination aus einer großen Vielfalt an Zahlungsarten und dem modernen und benutzerfreundlichen Interface verringert die Wahrscheinlichkeit, dass Kunden Ihren digitalen Einkaufskorb an der Kasse stehen lassen und den Vorgang abbrechen: bis zu 20% mehr Umsatz kann so generiert werden.
 
-<a href="https://mein.payever.de/register/affiliate/plentymarkets@payever.de">Jetzt kostenfrei starten mit payever</a>
+**Einfache Verwaltung.** Sie haben die Wahl - Sie können alle Transaktionen sowohl direkt in Plentymarkets als auch von Ihrem payever Account aus steuern. In der übersichtlichen payever Transactions App können Sie mit wenigen Klicks Statusänderungen, Stornierungen, Teilstornierungen, Rückerstattungen und Analysen durchführen. 
+
+**Zusätzliche Funktionen.** Ihr payever Account bietet zudem noch weitere nützliche Tools - z.B. einen Bezahlungslink, den Sie per Email oder SMS an Kunden versenden können, sowie die Möglichkeit, auch am Point of Sale Zahlungen entgegen zu nehmen.
+
+**Deutschsprachiger Support.** Unser kompetenter Support spricht Deutsch und Englisch und hilft Ihnen bei Integration und technischen Problemen schnell und unkompliziert weiter. Werktags erhalten Sie zwischen 8 und 18 Uhr innerhalb weniger Stunden eine Rückmeldung. 

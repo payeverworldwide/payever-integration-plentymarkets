@@ -1,10 +1,10 @@
 <?php //strict
 namespace Payever\Controllers;
 
-use Plenty\Plugin\ConfigRepository;
 use Plenty\Plugin\Controller;
 use Plenty\Plugin\Http\Request;
 use Plenty\Plugin\Http\Response;
+use Plenty\Modules\Plugin\Contracts\ConfigurationRepositoryContract;
 use Payever\Helper\PayeverHelper;
 use Payever\Services\PayeverSdkService;
 use Plenty\Plugin\Log\Loggable;
@@ -25,7 +25,7 @@ class ConfigController extends Controller
      */
     private $response;
     /**
-     * @var ConfigRepository
+     * @var ConfigurationRepositoryContract
      */
     private $config;
     /**
@@ -42,14 +42,14 @@ class ConfigController extends Controller
      *
      * @param Request $request
      * @param Response $response
-     * @param ConfigRepository $config
+     * @param ConfigurationRepositoryContract $config
      * @param PayeverHelper $payeverHelper
      * @param PayeverSdkService $sdkService
      */
     public function __construct(
         Request $request,
         Response $response,
-        ConfigRepository $config,
+        ConfigurationRepositoryContract $config,
         PayeverHelper $payeverHelper,
         PayeverSdkService $sdkService
     ) {
@@ -68,6 +68,9 @@ class ConfigController extends Controller
      */
     public function synchronize()
     {
+        $pluginSetId = $this->request->get('pluginSetId');
+        $pluginsConfig = $this->config->export($pluginSetId);
+
         static $fieldsMap = [
             // plugin config key => api result key
             'title' => 'name',
@@ -78,8 +81,15 @@ class ConfigController extends Controller
             'max_order_total' => 'max',
         ];
 
-        $paymentOptions = $this->sdkService->call('listPaymentOptionsRequest', []);
-        $this->getLogger(__METHOD__)->debug('Payever::debug.listPaymentOptionsRequest', $paymentOptions);
+        $apiParameters = [];
+        $apiParameters['apiKeys'] = [
+            'clientId' => $pluginsConfig['Payever']['clientId'],
+            'clientSecret' => $pluginsConfig['Payever']['clientSecret'],
+            'slug' => $pluginsConfig['Payever']['slug'],
+            'environment' => (int) $pluginsConfig['Payever']['environment']
+        ];
+
+        $paymentOptions = $this->sdkService->call('listPaymentOptionsRequest', $apiParameters);
         $updatedConfig = [];
 
         if ($paymentOptions['result']) {

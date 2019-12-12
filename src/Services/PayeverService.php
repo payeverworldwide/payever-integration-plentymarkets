@@ -135,7 +135,7 @@ class PayeverService
             "failure_url" => $this->payeverHelper->getFailureURL(),
             "cancel_url" => $this->payeverHelper->getCancelURL(),
             "notice_url" => $this->payeverHelper->getNoticeURL(),
-            'plugin_version' => '1.4.0'
+            'plugin_version' => '1.5.0'
         ];
 
         $this->getLogger(__METHOD__)->debug('Payever::debug.paymentParameters', $paymentParameters);

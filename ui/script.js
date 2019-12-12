@@ -56,6 +56,32 @@ var payeverInProgress = false,
         syncSuccess: 'Synchronization successful. Please, refresh Plugin overview tab.'
     };
 
+window.onload = loadWebstoreSelectOptions();
+function loadWebstoreSelectOptions() {
+    var sel;
+    var options_str = "";
+
+    $.waterfall(
+        $.getJSON('/rest/plugins/search?name=Payever'),
+        $.getJSON('/rest/plugin_sets'),
+        function (payeverPlugin) {
+            return payeverPlugin.entries.shift().pluginSetIds;
+        }
+    ).done(function (payeverPlugin, pluginSets, pluginSetIds) {
+        sel = document.createElement('select');
+        sel.name = 'webstoresSelect';
+        sel.id = 'webstoresSelect';
+        $.each(pluginSets, function (index, pluginSet) {
+            if($.inArray(pluginSet.id.toString(), pluginSetIds) !== -1) {
+                options_str += '<option value="' + pluginSet.id + '">' + pluginSet.name + '</option>';
+            }
+        });
+
+        sel.innerHTML = options_str;
+        document.getElementById('webstoresSelectBlock').appendChild(sel);
+    });
+}
+
 function payeverToggleLoading(state) {
     payeverInProgress = state;
     $('.payever-btn')[state ? 'addClass' : 'removeClass']('in-progress');
@@ -73,7 +99,7 @@ function payeverReportResult(isSuccess, message) {
         .html(message || '');
 }
 
-function payeverUpdateConfig(updateSourceCallback) {
+function payeverUpdateConfig(pluginSetId, updateSourceCallback) {
 
     if (payeverInProgress) {
         return;
@@ -81,8 +107,7 @@ function payeverUpdateConfig(updateSourceCallback) {
 
     payeverToggleLoading(true);
 
-    var pluginSetId,
-        payeverPlugin,
+    var payeverPlugin,
         payeverConfigUri;
 
     /**
@@ -90,14 +115,12 @@ function payeverUpdateConfig(updateSourceCallback) {
      */
     $.waterfall(
         $.getJSON('/rest/plugins/search?name=Payever'),
-        $.getJSON('/rest/webstores'),
         updateSourceCallback,
-        function (payeverPlugin, webstores) {
-            pluginSetId = webstores.slice().shift().pluginSetId;
+        function (payeverPlugin) {
             payeverConfigUri = '/rest/plugins/' + payeverPlugin.entries.shift().id + '/plugin_sets/' + pluginSetId + '/configurations';
             return $.getJSON(payeverConfigUri);
         }
-    ).done(function (payeverPlugin, webstores, syncData, payeverConfig) {
+    ).done(function (payeverPlugin, syncData, payeverConfig) {
 
         /**
          * Update existing config and save it via REST endpoint
@@ -137,7 +160,7 @@ function payeverUpdateConfig(updateSourceCallback) {
         }
 
         console.debug('Payever process finished.', {
-            payeverPlugin: payeverPlugin, webstores: webstores, syncData: syncData, payeverConfig: payeverConfig
+            payeverPlugin: payeverPlugin, syncData: syncData, payeverConfig: payeverConfig
         });
 
     }).fail(function () {
@@ -147,16 +170,16 @@ function payeverUpdateConfig(updateSourceCallback) {
 
 function payeverSynchronize() {
     console.debug('Payever synchronization requested.');
-
-    payeverUpdateConfig(function () {
-        return $.getJSON('/payment/payever/synchronize');
+    let pluginSetId = $("#webstoresSelect" ).val();
+    payeverUpdateConfig(pluginSetId, function () {
+        return $.getJSON('/payment/payever/synchronize?pluginSetId=' + pluginSetId);
     });
 }
 
 function payeverSetupSandbox() {
     console.debug('Payever sandbox setup requested.');
-
-    payeverUpdateConfig(function () {
+    let pluginSetId = $("#webstoresSelect" ).val();
+    payeverUpdateConfig(pluginSetId, function () {
         return {
             result: {
                 "environment": "0",
