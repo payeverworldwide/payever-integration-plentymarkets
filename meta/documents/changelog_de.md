@@ -1,5 +1,15 @@
 # Release Informationen für payever
 
+## v1.5.1 (2019-12-23)
+
+### Veröffentlichung
+- beschreibungen und bilder für den marktplatz
+
+## v1.5.0 (2019-12-10)
+
+### Veröffentlichung
+- synchronisationsprozess für verschiedene plugins übersicht
+
 ## v1.4.0 (2019-11-18)
 
 ### Verbesserungen

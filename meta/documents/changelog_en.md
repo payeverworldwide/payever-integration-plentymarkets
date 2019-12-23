@@ -1,5 +1,15 @@
 # Release Notes for payever
 
+## v1.5.1 (2019-12-23)
+
+### Improved
+- descriptions and pictures for marketplace
+
+## v1.5.0 (2019-12-10)
+
+### Improved
+- synchronization process for different plugins set
+
 ## v1.4.0 (2019-11-18)
 
 ### Improved
