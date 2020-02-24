@@ -25,5 +25,6 @@ class PayeverRouteServiceProvider extends RouteServiceProvider
 
         // Register config routes
         $router->get('payment/payever/synchronize', 'Payever\Controllers\ConfigController@synchronize');
+        $router->get('payment/payever/executeCommand', 'Payever\Controllers\ConfigController@executeCommand');
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Payever\Methods;
 
-use Payever\Helper\PayeverHelper;
+use Payever\Services\PayeverSdkService;
 use Plenty\Modules\Payment\Method\Contracts\PaymentMethodService;
 use Plenty\Plugin\ConfigRepository;
 use Plenty\Modules\Basket\Contracts\BasketRepositoryContract;
@@ -31,13 +31,13 @@ class AbstractPaymentMethod extends PaymentMethodService
      *
      * @param ConfigRepository $configRepository
      * @param BasketRepositoryContract $basketRepositoryContract
-     * @param PayeverHelper $helper
+     * @param PayeverSdkService $sdkService
      * @return bool
      */
     public function isActive(
         ConfigRepository $configRepository,
         BasketRepositoryContract $basketRepositoryContract,
-        PayeverHelper $helper
+        PayeverSdkService $sdkService
     ):bool {
 
         $activeKey = 'Payever.'.$this->getMethodCode().'.active';
@@ -51,7 +51,10 @@ class AbstractPaymentMethod extends PaymentMethodService
         /**
          * Check hiding logic
          */
-        if ($helper->isPaymentMethodHidden($this->getMethodCode(), $basket)) {
+        $isPaymentMethodHidden = $this->isBasketAddressesDifferent($basket)
+            ? in_array($this->getMethodCode(), $sdkService->call('getShouldHideOnDifferentAddressMethods', []))
+            : false;
+        if ($isPaymentMethodHidden) {
             return false;
         }
 
@@ -216,5 +219,30 @@ class AbstractPaymentMethod extends PaymentMethodService
     public function isSwitchableFrom(int $orderId):bool
     {
         return true;
+    }
+
+    /**
+     * @param Basket $basket
+     *
+     * @return bool
+     */
+    public function isBasketAddressesDifferent(Basket $basket)
+    {
+        static $result = null;
+
+        if ($result === null) {
+            $result = false;
+
+            if (
+                !$basket->customerShippingAddressId
+                || !$basket->customerInvoiceAddressId
+            ) {
+                return $result;
+            }
+
+            $result = $basket->customerInvoiceAddressId !== $basket->customerShippingAddressId;
+        }
+
+        return $result;
     }
 }

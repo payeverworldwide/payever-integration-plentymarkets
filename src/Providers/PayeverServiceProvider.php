@@ -13,10 +13,12 @@ use Payever\Helper\PayeverHelper;
 use Plenty\Modules\Basket\Events\Basket\AfterBasketChanged;
 use Plenty\Modules\Basket\Events\BasketItem\AfterBasketItemAdd;
 use Plenty\Modules\Basket\Events\Basket\AfterBasketCreate;
+use Plenty\Modules\Cron\Services\CronContainer;
 use Payever\Services\PayeverService;
 use Payever\Procedures\RefundEventProcedure;
 use Payever\Procedures\CancelEventProcedure;
 use Payever\Procedures\ShippingEventProcedure;
+use Payever\Services\PayeverCronHandler;
 use Plenty\Modules\EventProcedures\Services\EventProceduresService;
 use Plenty\Modules\EventProcedures\Services\Entries\ProcedureEntry;
 use Plenty\Plugin\Log\Loggable;
@@ -43,6 +45,10 @@ class PayeverServiceProvider extends ServiceProvider
      * @param PayeverHelper $paymentHelper
      * @param PaymentMethodContainer $payContainer
      * @param Dispatcher $eventDispatcher
+     * @param PayeverService $payeverService
+     * @param BasketRepositoryContract $basket
+     * @param EventProceduresService $eventProceduresService
+     * @param CronContainer $cronContainer
      */
     public function boot(
         PayeverHelper $paymentHelper,
@@ -50,8 +56,10 @@ class PayeverServiceProvider extends ServiceProvider
         Dispatcher $eventDispatcher,
         PayeverService $payeverService,
         BasketRepositoryContract $basket,
-        EventProceduresService $eventProceduresService
+        EventProceduresService $eventProceduresService,
+        CronContainer $cronContainer
     ) {
+        $cronContainer->add(CronContainer::DAILY, PayeverCronHandler::class);
         /*
          * register the payment method in the payment method container
          */

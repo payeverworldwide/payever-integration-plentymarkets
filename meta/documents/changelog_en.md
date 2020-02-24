@@ -1,5 +1,11 @@
 # Release Notes for payever
 
+## v1.6.0 (2020-02-24)
+
+### Implemented
+- plugin registry and commands API
+- new payment option Direct bank transfer
+
 ## v1.5.1 (2019-12-23)
 
 ### Improved

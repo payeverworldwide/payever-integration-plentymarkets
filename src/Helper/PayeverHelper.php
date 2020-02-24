@@ -17,7 +17,8 @@ use Payever\Methods\StripePaymentMethod;
 use Payever\Methods\StripeDirectDebitPaymentMethod;
 use Payever\Methods\PayexfakturaPaymentMethod;
 use Payever\Methods\PayexcreditcardPaymentMethod;
-use Payever\Services\PayeverSdkService;
+use Payever\Methods\InstantPaymentMethod;
+use Payever\Repositories\PayeverConfigRepository;
 use Plenty\Modules\Account\Address\Contracts\AddressRepositoryContract;
 use Plenty\Modules\Account\Address\Models\Address;
 use Plenty\Modules\Basket\Models\Basket;
@@ -57,13 +58,17 @@ class PayeverHelper
     const STATUS_FAILED     = 'STATUS_FAILED';
     const STATUS_CANCELLED  = 'STATUS_CANCELLED';
 
+    const COMMAND_TIMESTAMT_KEY = 'command_timestamt';
+    const SANDBOX_URL_CONFIG_KEY = 'sandbox_url';
+    const LIVE_URL_CONFIG_KEY = 'live_url';
+
     const LOCKFILE_TIME_LOCK  = 60; //sec
     const LOCKFILE_TIME_SLEEP = 1; //sec
 
-	const PLENTY_ORDER_SUCCESS = 5;
-	const PLENTY_ORDER_PROCESSING = 3;
-	const PLENTY_ORDER_CANCELLED = 8;
-	const PLENTY_ORDER_RETURN = 9;
+    const PLENTY_ORDER_SUCCESS = 5;
+    const PLENTY_ORDER_PROCESSING = 3;
+    const PLENTY_ORDER_CANCELLED = 8;
+    const PLENTY_ORDER_RETURN = 9;
 
     private $app;
     private $webstoreHelper;
@@ -75,8 +80,8 @@ class PayeverHelper
     private $payment;
     private $orderRepo;
     private $statusMap;
-    private $sdkService;
     private $addressRepo;
+    private $payeverConfigRepository;
 
     /** @var  Checkout */
     private $checkout;
@@ -147,6 +152,10 @@ class PayeverHelper
             'class' => PayexcreditcardPaymentMethod::class,
             'name' => 'PayEx Credit Card',
         ],
+        'INSTANT_PAYMENT' => [
+            'class' => InstantPaymentMethod::class,
+            'name' => 'Direct bank transfer',
+        ],
     ];
 
     private $urlMap = [
@@ -156,6 +165,7 @@ class PayeverHelper
         'cancel' => '/payment/payever/checkoutCancel?payment_id=--PAYMENT-ID--',
         'failure' => '/payment/payever/checkoutFailure?payment_id=--PAYMENT-ID--',
         'iframe' => '/payment/payever/checkoutIframe',
+        'command_endpoint' => '/payment/payever/executeCommand',
     ];
 
     /**
@@ -181,9 +191,9 @@ class PayeverHelper
      * @param PaymentProperty $paymentProperty
      * @param OrderRepositoryContract $orderRepo,
      * @param Checkout $checkout
-     * @param PayeverSdkService $sdkService
      * @param AddressRepositoryContract $addressRepo
      * @param StorageRepositoryContract $storageRepository
+     * @param PayeverConfigRepository $payeverConfigRepository
      */
     public function __construct(
         Application $app,
@@ -196,9 +206,9 @@ class PayeverHelper
         OrderRepositoryContract $orderRepo,
         WebstoreHelper $webstoreHelper,
         Checkout $checkout,
-        PayeverSdkService $sdkService,
         AddressRepositoryContract $addressRepo,
-        StorageRepositoryContract $storageRepository
+        StorageRepositoryContract $storageRepository,
+        PayeverConfigRepository $payeverConfigRepository
     ) {
         $this->app = $app;
         $this->webstoreHelper = $webstoreHelper;
@@ -211,9 +221,9 @@ class PayeverHelper
         $this->payment = $payment;
         $this->statusMap = [];
         $this->checkout = $checkout;
-        $this->sdkService = $sdkService;
         $this->addressRepo = $addressRepo;
         $this->storageRepository = $storageRepository;
+        $this->payeverConfigRepository = $payeverConfigRepository;
     }
 
     /**
@@ -241,19 +251,31 @@ class PayeverHelper
         return $result;
     }
 
+    public function getBaseUrl()
+    {
+        $webstoreConfig = $this->webstoreHelper->getCurrentWebstoreConfiguration();
+        if (is_null($webstoreConfig)) {
+            return 'error';
+        }
+
+        return $webstoreConfig->domainSsl;
+    }
+
     /**
      * @param $type
      * @return string
      */
     private function getUrl(string $type):string
     {
-        $webstoreConfig = $this->webstoreHelper->getCurrentWebstoreConfiguration();
-        if (is_null($webstoreConfig)) {
-            return 'error';
-        }
-        $domain = $webstoreConfig->domainSsl;
+        return $this->getBaseUrl() . $this->urlMap[$type];
+    }
 
-        return $domain.$this->urlMap[$type];
+    /**
+     * @return string
+     */
+    public function getCommandEndpoint():string
+    {
+        return $this->getUrl('command_endpoint');
     }
 
     /**
@@ -380,8 +402,8 @@ class PayeverHelper
                 }
             }
 
-	        $orderId = $payment->order->orderId;
-	        $this->updateOrderStatus($orderId, $status);
+            $orderId = $payment->order->orderId;
+            $this->updateOrderStatus($orderId, $status);
 
             /* @var Payment $payment */
             if ($payment->status != $state) {
@@ -434,33 +456,33 @@ class PayeverHelper
         $this->updateOrderStatus($orderId, $paymentStatus);
     }
 
-	/**
-	 * Update order status by order id
-	 *
-	 * @param int $orderId
-	 * @param float $statusId
-	 */
-	public function updateOrderStatus(int $orderId, string $paymentStatus)
-	{
-		try {
-			/** @var \Plenty\Modules\Authorization\Services\AuthHelper $authHelper */
-			$authHelper = pluginApp(AuthHelper::class);
-			$statusId = $this->mapOrderStatus($paymentStatus);
-			$authHelper->processUnguarded(
-				function () use ($orderId, $statusId) {
-					//unguarded
-					$order = $this->orderRepo->findOrderById($orderId);
-					if (!is_null($order) && $order instanceof Order) {
-						$status['statusId'] = (float) $statusId;
-						$this->orderRepo->updateOrder($status, $orderId);
-						$this->getLogger(__METHOD__)->debug('Payever::debug.updateOrderStatus', 'Status of order ' . $orderId . ' was changed to ' . $statusId);
-					}
-				}
-			);
-		} catch (\Exception $exception) {
-			$this->getLogger(__METHOD__)->error('Payever::updateOrderStatus', $exception);
-		}
-	}
+    /**
+     * Update order status by order id
+     *
+     * @param int $orderId
+     * @param float $statusId
+     */
+    public function updateOrderStatus(int $orderId, string $paymentStatus)
+    {
+        try {
+            /** @var \Plenty\Modules\Authorization\Services\AuthHelper $authHelper */
+            $authHelper = pluginApp(AuthHelper::class);
+            $statusId = $this->mapOrderStatus($paymentStatus);
+            $authHelper->processUnguarded(
+                function () use ($orderId, $statusId) {
+                    //unguarded
+                    $order = $this->orderRepo->findOrderById($orderId);
+                    if (!is_null($order) && $order instanceof Order) {
+                        $status['statusId'] = (float) $statusId;
+                        $this->orderRepo->updateOrder($status, $orderId);
+                        $this->getLogger(__METHOD__)->debug('Payever::debug.updateOrderStatus', 'Status of order ' . $orderId . ' was changed to ' . $statusId);
+                    }
+                }
+            );
+        } catch (\Exception $exception) {
+            $this->getLogger(__METHOD__)->error('Payever::updateOrderStatus', $exception);
+        }
+    }
 
     /**
      * @param Payment $payment
@@ -483,45 +505,8 @@ class PayeverHelper
                 return (string) $property->value;
             }
         }
+
         return '';
-    }
-
-    /**
-     * @param string $methodCode
-     * @param Basket $bakset
-     *
-     * @return bool
-     */
-    public function isPaymentMethodHidden($methodCode, Basket $bakset)
-    {
-        return $this->isBasketAddressesDifferent($bakset)
-            ? in_array($methodCode, $this->sdkService->call('getShouldHideOnDifferentAddressMethods', []))
-            : false;
-    }
-
-    /**
-     * @param Basket $basket
-     *
-     * @return bool
-     */
-    public function isBasketAddressesDifferent(Basket $basket)
-    {
-        static $result = null;
-
-        if ($result === null) {
-            $result = false;
-
-            if (
-                !$basket->customerShippingAddressId
-                || !$basket->customerInvoiceAddressId
-            ) {
-                return $result;
-            }
-
-            $result = $basket->customerInvoiceAddressId !== $basket->customerShippingAddressId;
-        }
-
-        return $result;
     }
 
     /**
@@ -552,34 +537,34 @@ class PayeverHelper
         }
     }
 
-	/**
-	 * Returns the plentymarkets order status
-	 *
-	 * @param string $status
-	 *
-	 * @return int
-	 */
-	private function mapOrderStatus(string $status)
-	{
-		switch ($status) {
-			case self::STATUS_PAID:
-				return self::PLENTY_ORDER_SUCCESS;
-			case self::STATUS_ACCEPTED:
-				return self::PLENTY_ORDER_SUCCESS;
-			case self::STATUS_IN_PROCESS:
-				return self::PLENTY_ORDER_PROCESSING;
+    /**
+     * Returns the plentymarkets order status
+     *
+     * @param string $status
+     *
+     * @return int
+     */
+    private function mapOrderStatus(string $status)
+    {
+        switch ($status) {
+            case self::STATUS_PAID:
+                return self::PLENTY_ORDER_SUCCESS;
+            case self::STATUS_ACCEPTED:
+                return self::PLENTY_ORDER_SUCCESS;
+            case self::STATUS_IN_PROCESS:
+                return self::PLENTY_ORDER_PROCESSING;
             case self::STATUS_FAILED:
-				return self::PLENTY_ORDER_CANCELLED;
-			case self::STATUS_CANCELLED:
-				return self::PLENTY_ORDER_CANCELLED;
+                return self::PLENTY_ORDER_CANCELLED;
+            case self::STATUS_CANCELLED:
+                return self::PLENTY_ORDER_CANCELLED;
             case self::STATUS_REFUNDED:
-				return self::PLENTY_ORDER_RETURN;
+                return self::PLENTY_ORDER_RETURN;
             case self::STATUS_DECLINED:
-				return self::PLENTY_ORDER_CANCELLED;
-			case self::STATUS_NEW:
-				return self::PLENTY_ORDER_PROCESSING;
-		}
-	}
+                return self::PLENTY_ORDER_CANCELLED;
+            case self::STATUS_NEW:
+                return self::PLENTY_ORDER_PROCESSING;
+        }
+    }
 
     public function isSuccessfulPaymentStatus(string $status): bool
     {
@@ -690,5 +675,59 @@ class PayeverHelper
         }
 
         return false;
+    }
+
+    /**
+     * Returns custom sandbox url
+     *
+     * @return string|null
+     */
+    public function getCustomSandboxUrl()
+    {
+        return $this->payeverConfigRepository->get(self::SANDBOX_URL_CONFIG_KEY);
+    }
+
+    /**
+     * Returns custom live url
+     *
+     * @return string|null
+     */
+    public function getCustomLiveUrl()
+    {
+        return $this->payeverConfigRepository->get(self::LIVE_URL_CONFIG_KEY);
+    }
+
+    /**
+     * Returns command timestamt
+     *
+     * @return string|null
+     */
+    public function getCommandTimestamt()
+    {
+        return $this->payeverConfigRepository->get(self::COMMAND_TIMESTAMT_KEY);
+    }
+
+    /**
+     * Sets custom sandbox url
+     */
+    public function setCustomSandboxUrl($customSandboxUrl)
+    {
+        $this->payeverConfigRepository->set(self::SANDBOX_URL_CONFIG_KEY, $customSandboxUrl);
+    }
+
+    /**
+     * Sets custom live url
+     */
+    public function setCustomLiveUrl($customLiveUrl)
+    {
+        $this->payeverConfigRepository->set(self::LIVE_URL_CONFIG_KEY, $customLiveUrl);
+    }
+
+    /**
+     * Sets command timestamt
+     */
+    public function setCommandTimestamt($commandTimestamt)
+    {
+        $this->payeverConfigRepository->set(self::COMMAND_TIMESTAMT_KEY, $commandTimestamt);
     }
 }

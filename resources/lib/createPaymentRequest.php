@@ -4,7 +4,7 @@ require_once __DIR__ . '/PayeverSdkProvider.php';
 
 use Payever\ExternalIntegration\Payments\Http\RequestEntity\CreatePaymentRequest;
 
-$payeverApi = new PayeverSdkProvider(SdkRestApi::getParam('apiKeys'));
+$payeverApi = new PayeverSdkProvider(SdkRestApi::getParam('sdkData'));
 
 $params         = SdkRestApi::getParam('payment_parameters');
 $paymentRequest = new CreatePaymentRequest();
@@ -29,7 +29,8 @@ $paymentRequest->setFirstName($params['first_name'])
                ->setPhone($params['phone']);
 
 // set plugin version
-$paymentRequest->setPluginVersion($params['plugin_version']);
+$apiData = SdkRestApi::getParam('sdkData');
+$paymentRequest->setPluginVersion($apiData['pluginVersion']);
 
 $paymentRequest->setSuccessUrl($params['success_url'])
                ->setFailureUrl($params['failure_url'])

@@ -16,6 +16,11 @@ use Plenty\Plugin\Log\Loggable;
 class ConfigController extends Controller
 {
     use Loggable;
+
+    const SET_SANDBOX_HOST = 'set-sandbox-host';
+    const SET_LIVE_HOST = 'set-live-host';
+    const SET_COMMAND_POLLING_DELAY = 'set-command-polling-delay';
+
     /**
      * @var Request
      */
@@ -38,7 +43,7 @@ class ConfigController extends Controller
     private $sdkService;
 
     /**
-     * SettingsController constructor.
+     * ConfigController constructor.
      *
      * @param Request $request
      * @param Response $response
@@ -82,7 +87,7 @@ class ConfigController extends Controller
         ];
 
         $apiParameters = [];
-        $apiParameters['apiKeys'] = [
+        $apiParameters['sdkData'] = [
             'clientId' => $pluginsConfig['Payever']['clientId'],
             'clientSecret' => $pluginsConfig['Payever']['clientSecret'],
             'slug' => $pluginsConfig['Payever']['slug'],
@@ -120,5 +125,86 @@ class ConfigController extends Controller
             'result' => $updatedConfig,
             'errors' => $paymentOptions["error_description"]
         ]);
+    }
+
+    public function executeCommand() {
+        try {
+            $timestamt = $this->payeverHelper->getCommandTimestamt();
+            $this->sdkService->call('registerPlugin', []);
+            $commandsList = $this->sdkService->call('getPluginCommands', ['command_timestamt' => $timestamt]);
+            $supportedCommands = $this->sdkService->call('getSupportedPluginCommands', []);
+
+            foreach ($commandsList as $command) {
+                if ($this->isCommandSupported($command['name'], $supportedCommands)) {
+                    $this->getLogger(__METHOD__)->debug('Payever::debug.executeCommand', $command);
+
+                    $this->execute($command['name'], $command['value']);
+                    $this->sdkService->call('acknowledgePluginCommand', ['commandId' => $command['id']]);
+                } else {
+                    $this->getLogger(__METHOD__)->error(
+                        sprintf(
+                            'Plugin command %s with value %s is not supported',
+                            $command['name'],
+                            $command['value']
+                        )
+                    );
+                }
+            }
+
+            $this->payeverHelper->setCommandTimestamt(time());
+        } catch (\UnexpectedValueException $unexpectedValueException) {
+            $this->getLogger(__METHOD__)->error('The executing commands failed.', $unexpectedValueException);
+        } catch (\Exception $exception) {
+            $this->getLogger(__METHOD__)->error('The executing commands failed.', $exception);
+        }
+    }
+
+    /**
+     * @param $commandName
+     * @param $commandValue
+     */
+    private function execute($commandName, $commandValue)
+    {
+        switch ($commandName) {
+            case self::SET_SANDBOX_HOST:
+                $this->assertApiHostValid($commandValue);
+                $this->payeverHelper->setCustomSandboxUrl($commandValue);
+                break;
+            case self::SET_LIVE_HOST:
+                $this->assertApiHostValid($commandValue);
+                $this->payeverHelper->setCustomLiveUrl($commandValue);
+                break;
+            default:
+                throw new \UnexpectedValueException(
+                    sprintf(
+                        'Command %s with value %s is not supported',
+                        $commandName,
+                        $commandValue
+                    )
+                );
+        }
+    }
+
+    /**
+     * @param $host
+     *
+     * @throws \UnexpectedValueException
+     */
+    private function assertApiHostValid($host)
+    {
+        if ( ! filter_var($host, FILTER_VALIDATE_URL)) {
+            throw new \UnexpectedValueException(sprintf('Command value %s is not a valid URL', $host));
+        }
+    }
+
+    /**
+     * @param $commandName
+     * @param $supportedCommands
+     *
+     * @return bool
+     */
+    private function isCommandSupported($commandName, $supportedCommands)
+    {
+        return in_array($commandName, $supportedCommands);
     }
 }

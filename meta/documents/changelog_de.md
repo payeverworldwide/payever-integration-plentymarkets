@@ -1,5 +1,11 @@
 # Release Informationen für payever
 
+## v1.6.0 (2020-02-24)
+
+### Veröffentlichung
+- plugin registry und kommandos API
+- neue zahlungsoption Direktüberweisung 
+
 ## v1.5.1 (2019-12-23)
 
 ### Veröffentlichung

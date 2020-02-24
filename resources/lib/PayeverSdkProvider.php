@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/PayeverTokenlist.php';
+require_once __DIR__ . '/PluginRegistryInfoProvider.php';
 
 use Payever\ExternalIntegration\Core\ClientConfiguration;
 use Payever\ExternalIntegration\Core\Enum\ChannelSet;
@@ -11,6 +12,7 @@ use Payever\ExternalIntegration\Inventory\InventoryApiClient;
 use Payever\ExternalIntegration\Payments\PaymentsApiClient;
 use Payever\ExternalIntegration\Products\ProductsApiClient;
 use Payever\ExternalIntegration\ThirdParty\ThirdPartyApiClient;
+use Payever\ExternalIntegration\Plugins\PluginsApiClient;
 use Psr\Log\LoggerInterface;
 
 class PayeverSdkProvider
@@ -21,16 +23,24 @@ class PayeverSdkProvider
     /** @var TokenList */
     private $tokenList;
 
-    /** @var LoggerInterface */
-    private $logger;
-
-    private $locker;
+    /** @var PluginRegistryInfoProvider  */
+    private $registryInfoProvider;
 
     public function __construct($apiData)
     {
-        $this->clientConfiguration = $this->prepareClientConfiguration($apiData);
-        $this->tokenList           = new PayeverTokenList();
+        $this->clientConfiguration   = $this->prepareClientConfiguration($apiData);
+        $this->tokenList             = new PayeverTokenList();
+        $this->registryInfoProvider  = new PluginRegistryInfoProvider($apiData);
     }
+
+    /**
+     * @inheritdoc
+     */
+    public function getRegistryInfoProvider()
+    {
+        return $this->registryInfoProvider;
+    }
+
 
     /**
      * @return PaymentsApiClient
@@ -39,6 +49,19 @@ class PayeverSdkProvider
     public function getPaymentsApiClient()
     {
         return new PaymentsApiClient(
+            $this->clientConfiguration,
+            $this->tokenList
+        );
+    }
+
+    /**
+     * @return PluginsApiClient
+     * @throws Exception
+     */
+    public function getPluginsApiClient()
+    {
+        return new PluginsApiClient(
+            $this->registryInfoProvider,
             $this->clientConfiguration,
             $this->tokenList
         );
@@ -81,35 +104,7 @@ class PayeverSdkProvider
     }
 
     /**
-     * @return LoggerInterface
-     */
-    public function getLogger()
-    {
-        return $this->logger;
-    }
-
-    private function prepareLogger($logFile)
-    {
-        return new FileLogger(
-            $logFile,
-            $this->settingsService->getSettings()->getLogging()
-        );
-    }
-
-    /**
-     * @return LockInterface
-     */
-    public function getLocker()
-    {
-        return $this->locker;
-    }
-
-    private function prepareLocker($lockerPath)
-    {
-        return new FileLock($lockerPath);
-    }
-
-    /**
+     * @param $apiData
      * @return ClientConfiguration
      * @throws \Payever\PayeverPayments\Service\Setting\Exception\PayeverSettingsInvalidException
      */
@@ -125,6 +120,14 @@ class PayeverSdkProvider
                             ->setClientId($apiData['clientId'])
                             ->setClientSecret($apiData['clientSecret'])
                             ->setBusinessUuid($apiData['slug']);
+
+        if (!empty($apiData['customSandboxUrl'])) {
+            $clientConfiguration->setCustomSandboxUrl($apiData['customSandboxUrl']);
+        }
+
+        if (!empty($apiData['customLiveUrl'])) {
+            $clientConfiguration->setCustomLiveUrl($apiData['customSandboxUrl']);
+        }
 
         return $clientConfiguration;
     }
