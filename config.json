@@ -121,6 +121,24 @@
               }
             ]
           }
+        },
+        "order_before_payment": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.orderBeforePaymentLabel",
+          "options": {
+            "defaultValue": "1",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
         }
       }
     },

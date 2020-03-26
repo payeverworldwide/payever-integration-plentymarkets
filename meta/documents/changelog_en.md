@@ -1,5 +1,10 @@
 # Release Notes for payever
 
+## v1.7.0 (2020-03-26)
+
+### Implemented
+- option creating order before payment
+
 ## v1.6.0 (2020-02-24)
 
 ### Implemented

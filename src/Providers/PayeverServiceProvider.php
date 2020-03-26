@@ -102,6 +102,7 @@ class PayeverServiceProvider extends ServiceProvider
 
                 if (in_array($mop, $payeverMops)) {
                     $methodKey = array_search($mop, $payeverMops);
+                    //$payeverService->prepareOrder();
                     $event->setValue($payeverService->preparePayeverPayment($basket->load(), strtolower($methodKey)));
                     $event->setType($payeverService->getReturnType());
                 }
@@ -113,13 +114,13 @@ class PayeverServiceProvider extends ServiceProvider
             ExecutePayment::class,
             function (ExecutePayment $event) use ($paymentHelper, $payeverMops, $payeverService) {
                 $this->getLogger(__METHOD__)->debug('Payever::debug.ExecutePayment', $payeverService);
-
-                if (!in_array($event->getMop(), $payeverMops)) {
+                $payeverPaymentId = $payeverService->getPayeverPaymentId();
+                if (!in_array($event->getMop(), $payeverMops) || !$payeverPaymentId) {
                     return;
                 }
 
                 // Execute the payment
-                $payeverPaymentData = $payeverService->executePayment();
+                $payeverPaymentData = $payeverService->pluginExecutePayment($payeverPaymentId);
 
                 $this->getLogger(__METHOD__)->debug('Payever::debug.payeverExecutePayment', $payeverPaymentData);
 
@@ -132,12 +133,12 @@ class PayeverServiceProvider extends ServiceProvider
                 }
 
                 // Create a plentymarkets payment from the payever execution params
-                $plentyPayment = $paymentHelper->createPlentyPayment($payeverPaymentData, $event->getMop());
+                $plentyPayment = $payeverService->createPlentyPayment($payeverPaymentData, $event->getMop());
                 $this->getLogger(__METHOD__)->debug('Payever::debug.createPlentyPayment', $plentyPayment);
 
                 if ($plentyPayment instanceof Payment) {
                     // Assign the payment to an order in plentymarkets
-                    $paymentHelper->assignPlentyPaymentToPlentyOrder($plentyPayment, $event->getOrderId(), $payeverPaymentData['status']);
+                    $payeverService->assignPlentyPaymentToPlentyOrder($plentyPayment, $event->getOrderId(), $payeverPaymentData['status']);
                     $event->setType('success');
                     $event->setValue('The Payment has been executed successfully!');
                 }

@@ -19,24 +19,14 @@ use Payever\Methods\PayexfakturaPaymentMethod;
 use Payever\Methods\PayexcreditcardPaymentMethod;
 use Payever\Methods\InstantPaymentMethod;
 use Payever\Repositories\PayeverConfigRepository;
-use Plenty\Modules\Account\Address\Contracts\AddressRepositoryContract;
-use Plenty\Modules\Account\Address\Models\Address;
-use Plenty\Modules\Basket\Models\Basket;
-use Plenty\Plugin\Application;
-use Plenty\Plugin\ConfigRepository;
 use Plenty\Modules\Payment\Method\Contracts\PaymentMethodRepositoryContract;
-use Plenty\Modules\Payment\Contracts\PaymentOrderRelationRepositoryContract;
-use Plenty\Modules\Payment\Contracts\PaymentRepositoryContract;
-use Plenty\Modules\Order\Contracts\OrderRepositoryContract;
 use Plenty\Modules\Payment\Models\PaymentProperty;
 use Plenty\Modules\Payment\Models\Payment;
 use Plenty\Modules\Order\Models\Order;
 use Plenty\Modules\Helper\Services\WebstoreHelper;
-use Plenty\Modules\Frontend\Contracts\Checkout;
 use Plenty\Modules\Plugin\Storage\Contracts\StorageRepositoryContract;
 use Plenty\Plugin\Log\Loggable;
 use Plenty\Modules\Order\Models\OrderType;
-use Plenty\Modules\Authorization\Services\AuthHelper;
 
 /**
  * Class PayeverHelper
@@ -70,21 +60,20 @@ class PayeverHelper
     const PLENTY_ORDER_CANCELLED = 8;
     const PLENTY_ORDER_RETURN = 9;
 
-    private $app;
+    /**
+     * @var WebstoreHelper
+     */
     private $webstoreHelper;
-    private $paymentMethodRepository;
-    private $config;
-    private $paymentOrderRelationRepo;
-    private $paymentProperty;
-    private $paymentRepo;
-    private $payment;
-    private $orderRepo;
-    private $statusMap;
-    private $addressRepo;
-    private $payeverConfigRepository;
 
-    /** @var  Checkout */
-    private $checkout;
+    /**
+     * @var PaymentMethodRepositoryContract
+     */
+    private $paymentMethodRepository;
+
+    /**
+     * @var PayeverConfigRepository
+     */
+    private $payeverConfigRepository;
 
     /**
      * @var StorageRepositoryContract $storageRepository
@@ -164,7 +153,7 @@ class PayeverHelper
         'notice' => '/payment/payever/checkoutNotice?payment_id=--PAYMENT-ID--',
         'cancel' => '/payment/payever/checkoutCancel?payment_id=--PAYMENT-ID--',
         'failure' => '/payment/payever/checkoutFailure?payment_id=--PAYMENT-ID--',
-        'iframe' => '/payment/payever/checkoutIframe',
+        'iframe' => '/payment/payever/checkoutIframe?method=',
         'command_endpoint' => '/payment/payever/executeCommand',
     ];
 
@@ -180,48 +169,20 @@ class PayeverHelper
     ];
 
     /**
-     * PaymentHelper constructor.
-     * @param Application $app
-     * @param WebstoreHelper $webstoreHelper
+     * PayeverHelper constructor.
      * @param PaymentMethodRepositoryContract $paymentMethodRepository
-     * @param PaymentRepositoryContract $paymentRepo
-     * @param PaymentOrderRelationRepositoryContract $paymentOrderRelationRepo
-     * @param ConfigRepository $config
-     * @param Payment $payment
-     * @param PaymentProperty $paymentProperty
-     * @param OrderRepositoryContract $orderRepo,
-     * @param Checkout $checkout
-     * @param AddressRepositoryContract $addressRepo
+     * @param WebstoreHelper $webstoreHelper
      * @param StorageRepositoryContract $storageRepository
      * @param PayeverConfigRepository $payeverConfigRepository
      */
     public function __construct(
-        Application $app,
         PaymentMethodRepositoryContract $paymentMethodRepository,
-        PaymentRepositoryContract $paymentRepo,
-        PaymentOrderRelationRepositoryContract $paymentOrderRelationRepo,
-        ConfigRepository $config,
-        Payment $payment,
-        PaymentProperty $paymentProperty,
-        OrderRepositoryContract $orderRepo,
         WebstoreHelper $webstoreHelper,
-        Checkout $checkout,
-        AddressRepositoryContract $addressRepo,
         StorageRepositoryContract $storageRepository,
         PayeverConfigRepository $payeverConfigRepository
     ) {
-        $this->app = $app;
         $this->webstoreHelper = $webstoreHelper;
-        $this->config = $config;
         $this->paymentMethodRepository = $paymentMethodRepository;
-        $this->paymentOrderRelationRepo = $paymentOrderRelationRepo;
-        $this->paymentRepo = $paymentRepo;
-        $this->paymentProperty = $paymentProperty;
-        $this->orderRepo = $orderRepo;
-        $this->payment = $payment;
-        $this->statusMap = [];
-        $this->checkout = $checkout;
-        $this->addressRepo = $addressRepo;
         $this->storageRepository = $storageRepository;
         $this->payeverConfigRepository = $payeverConfigRepository;
     }
@@ -232,6 +193,25 @@ class PayeverHelper
     public function getMethodsMetaData():array
     {
         return $this->methodsMetaData;
+    }
+
+    /**
+     * Returns the payever payment method's id.
+     *
+     * @param number $paymentMethodId
+     * @return string
+     */
+    public function getPaymentMopId($paymentMethodId): string
+    {
+        $paymentMethods = $this->paymentMethodRepository->allForPlugin('plenty_payever');
+        if (! is_null($paymentMethods)) {
+            foreach ($paymentMethods as $paymentMethod) {
+                if (strtolower($paymentMethod->paymentKey) == $paymentMethodId) {
+                    return $paymentMethod->id;
+                }
+            }
+        }
+        return 'no_paymentmethod_found';
     }
 
     /**
@@ -279,6 +259,7 @@ class PayeverHelper
     }
 
     /**
+     * @param string $method
      * @return string
      */
     public function getProcessURL(string $method):string
@@ -321,11 +302,14 @@ class PayeverHelper
     }
 
     /**
+     * @param string $method
      * @return string
      */
-    public function getIframeURL():string
+    public function getIframeURL(string $method):string
     {
-        return $this->getUrl('iframe');
+        $result = $this->getUrl('iframe');
+
+        return $result . ($result != 'error' ? $method : '');
     }
 
     /**
@@ -340,92 +324,13 @@ class PayeverHelper
     }
 
     /**
-     * @param array $payeverPayment
-     * @param int $mopId
-     * @return Payment
-     */
-    public function createPlentyPayment(array $payeverPayment, int $mopId):Payment
-    {
-        /** @var Payment $payment */
-        $payment = pluginApp(Payment::class);
-        $payment->mopId = (int)$mopId;
-        $payment->transactionType = Payment::TRANSACTION_TYPE_BOOKED_POSTING;
-        $payment->status = $this->mapStatus($payeverPayment['status']);
-        $payment->currency = $payeverPayment['currency'];
-        $payment->amount = $payeverPayment['amount'];
-        $payment->receivedAt = date("Y-m-d H:i:s", strtotime($payeverPayment['entryDate']));
-        $paymentProperty = [];
-        $bookingText = !empty($payeverPayment['usage_text']) ? 'Payment reference: '. $payeverPayment['usage_text'] : '';
-        $bookingText .= 'TransactionID: '.(string)$payeverPayment['transactionId'];
-        $paymentProperty[] = $this->getPaymentProperty(
-            PaymentProperty::TYPE_BOOKING_TEXT,
-            $bookingText
-        );
-        $paymentProperty[] = $this->getPaymentProperty(
-            PaymentProperty::TYPE_TRANSACTION_ID,
-            $payeverPayment['transactionId']
-        );
-        $paymentProperty[] = $this->getPaymentProperty(
-            PaymentProperty::TYPE_REFERENCE_ID,
-            $payeverPayment['reference']
-        );
-
-        $paymentProperty[] = $this->getPaymentProperty(PaymentProperty::TYPE_ORIGIN, Payment::ORIGIN_PLUGIN);
-        $paymentProperty[] = $this->getPaymentProperty(PaymentProperty::TYPE_PAYMENT_TEXT, $payeverPayment['usage_text']);
-        $payment->properties = $paymentProperty;
-        //$payment->regenerateHash = true;
-        $payment = $this->paymentRepo->createPayment($payment);
-
-        return $payment;
-    }
-
-    /**
-     * @param string $transactionId
-     * @param string $status
-     * @param bool|Date $notificationTime
-     * @return bool|Payment
-     */
-    public function updatePlentyPayment(string $transactionId, string $status, $notificationTime = false)
-    {
-        $payments = $this->paymentRepo->getPaymentsByPropertyTypeAndValue(
-            PaymentProperty::TYPE_TRANSACTION_ID,
-            $transactionId
-        );
-
-        $state = $this->mapStatus($status);
-        foreach ($payments as $payment) {
-            if ($notificationTime) {
-                if (strtotime($notificationTime) > strtotime($payment->receivedAt)) {
-                    $payment->receivedAt = $notificationTime;
-                } else {
-                    return false;
-                }
-            }
-
-            $orderId = $payment->order->orderId;
-            $this->updateOrderStatus($orderId, $status);
-
-            /* @var Payment $payment */
-            if ($payment->status != $state) {
-                $payment->status = $state;
-            }
-
-            $this->paymentRepo->updatePayment($payment);
-
-            return $payment;
-        }
-
-        return false;
-    }
-
-    /**
      * Returns a PaymentProperty with the given params
      *
      * @param $typeId
      * @param $value
      * @return PaymentProperty
      */
-    private function getPaymentProperty($typeId, $value):PaymentProperty
+    public function getPaymentProperty($typeId, $value):PaymentProperty
     {
         /** @var PaymentProperty $paymentProperty */
         $paymentProperty = pluginApp(PaymentProperty::class);
@@ -433,55 +338,6 @@ class PayeverHelper
         $paymentProperty->value = (string)$value;
 
         return $paymentProperty;
-    }
-
-    /**
-     * @param Payment $payment
-     * @param int $orderId
-     */
-    public function assignPlentyPaymentToPlentyOrder(Payment $payment, int $orderId, $paymentStatus)
-    {
-        // Get the order by the given order ID
-        $order = $this->orderRepo->findOrderById($orderId);
-
-        // Check whether the order truly exists in plentymarkets
-        if (!is_null($order) && $order instanceof Order) {
-            // Assign the given payment to the given order
-            $this->paymentOrderRelationRepo->createOrderRelation($payment, $order);
-        }
-
-        $transactionId = $this->getPaymentPropertyValue($payment, PaymentProperty::TYPE_TRANSACTION_ID);
-        $this->getLogger(__METHOD__)->debug('Payever::debug.assignPlentyPaymentToPlentyOrder', 'Transaction ' . $transactionId . ' was assigned to the order #' . $orderId);
-
-        $this->updateOrderStatus($orderId, $paymentStatus);
-    }
-
-    /**
-     * Update order status by order id
-     *
-     * @param int $orderId
-     * @param float $statusId
-     */
-    public function updateOrderStatus(int $orderId, string $paymentStatus)
-    {
-        try {
-            /** @var \Plenty\Modules\Authorization\Services\AuthHelper $authHelper */
-            $authHelper = pluginApp(AuthHelper::class);
-            $statusId = $this->mapOrderStatus($paymentStatus);
-            $authHelper->processUnguarded(
-                function () use ($orderId, $statusId) {
-                    //unguarded
-                    $order = $this->orderRepo->findOrderById($orderId);
-                    if (!is_null($order) && $order instanceof Order) {
-                        $status['statusId'] = (float) $statusId;
-                        $this->orderRepo->updateOrder($status, $orderId);
-                        $this->getLogger(__METHOD__)->debug('Payever::debug.updateOrderStatus', 'Status of order ' . $orderId . ' was changed to ' . $statusId);
-                    }
-                }
-            );
-        } catch (\Exception $exception) {
-            $this->getLogger(__METHOD__)->error('Payever::updateOrderStatus', $exception);
-        }
     }
 
     /**
@@ -544,7 +400,7 @@ class PayeverHelper
      *
      * @return int
      */
-    private function mapOrderStatus(string $status)
+    public function mapOrderStatus(string $status)
     {
         switch ($status) {
             case self::STATUS_PAID:

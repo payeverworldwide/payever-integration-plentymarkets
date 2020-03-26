@@ -20,8 +20,9 @@ class PayeverRouteServiceProvider extends RouteServiceProvider
         $router->get('payment/payever/checkoutSuccess', 'Payever\Controllers\PaymentController@checkoutSuccess');
         $router->get('payment/payever/checkoutCancel', 'Payever\Controllers\PaymentController@checkoutCancel');
         $router->get('payment/payever/checkoutFailure', 'Payever\Controllers\PaymentController@checkoutFailure');
-        $router->get('payment/payever/checkoutNotice', 'Payever\Controllers\PaymentController@checkoutNotice');
+        $router->post('payment/payever/checkoutNotice', 'Payever\Controllers\PaymentController@checkoutNotice');
         $router->get('payment/payever/checkoutIframe', 'Payever\Controllers\PaymentController@checkoutIframe');
+        $router->get('payment/payever/processCheckout', 'Payever\Controllers\PaymentController@processCheckout');
 
         // Register config routes
         $router->get('payment/payever/synchronize', 'Payever\Controllers\ConfigController@synchronize');
