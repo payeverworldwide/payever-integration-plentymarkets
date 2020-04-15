@@ -91,7 +91,7 @@ class ConfigController extends Controller
             'clientId' => $pluginsConfig['Payever']['clientId'],
             'clientSecret' => $pluginsConfig['Payever']['clientSecret'],
             'slug' => $pluginsConfig['Payever']['slug'],
-            'environment' => (int) $pluginsConfig['Payever']['environment']
+            'environment' => (int)$pluginsConfig['Payever']['environment']
         ];
 
         $paymentOptions = $this->sdkService->call('listPaymentOptionsRequest', $apiParameters);
@@ -99,7 +99,7 @@ class ConfigController extends Controller
 
         if ($paymentOptions['result']) {
             foreach ($paymentOptions['result'] as $optionData) {
-                $optionData = (array) $optionData;
+                $optionData = (array)$optionData;
                 $methodKey = $optionData['payment_method'];
                 $updatedConfig["{$methodKey}.active"] = $optionData['status'];
 
@@ -127,7 +127,8 @@ class ConfigController extends Controller
         ]);
     }
 
-    public function executeCommand() {
+    public function executeCommand()
+    {
         try {
             $timestamt = $this->payeverHelper->getCommandTimestamt();
             $this->sdkService->call('registerPlugin', []);
@@ -192,7 +193,7 @@ class ConfigController extends Controller
      */
     private function assertApiHostValid($host)
     {
-        if ( ! filter_var($host, FILTER_VALIDATE_URL)) {
+        if (!filter_var($host, FILTER_VALIDATE_URL)) {
             throw new \UnexpectedValueException(sprintf('Command value %s is not a valid URL', $host));
         }
     }

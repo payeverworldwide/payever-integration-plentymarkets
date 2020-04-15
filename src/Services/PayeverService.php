@@ -421,7 +421,7 @@ class PayeverService
         );
 
         foreach ($payments as $payment) {
-            if ((int) $payment->mopId == $mopId) {
+            if ((int)$payment->mopId == $mopId) {
                 return $payment;
             }
         }
@@ -433,7 +433,7 @@ class PayeverService
     {
         $payments = $this->paymentRepository->getPaymentsByOrderId($orderId);
         foreach ($payments as $payment) {
-            if ((int) $payment->mopId == $mopId) {
+            if ((int)$payment->mopId == $mopId) {
                 return true;
             }
         }
@@ -479,6 +479,8 @@ class PayeverService
                 // Assign the payment to an order in plentymarkets
                 $this->assignPlentyPaymentToPlentyOrder($plentyPayment, $orderId, $payeverPayment['status']);
             }
+        } else {
+            $this->updateOrderStatus($orderId, $payeverPayment['status']);
         }
 
         return $plentyPayment;
@@ -489,7 +491,7 @@ class PayeverService
      * @param int $mopId
      * @return Payment
      */
-    public function createPlentyPayment(array $payeverPayment, int $mopId):Payment
+    public function createPlentyPayment(array $payeverPayment, int $mopId): Payment
     {
         /** @var Payment $payment */
         $payment = pluginApp(Payment::class);
@@ -500,8 +502,8 @@ class PayeverService
         $payment->amount = $payeverPayment['amount'];
         $payment->receivedAt = date("Y-m-d H:i:s", strtotime($payeverPayment['entryDate']));
         $paymentProperty = [];
-        $bookingText = !empty($payeverPayment['usage_text']) ? 'Payment reference: '. $payeverPayment['usage_text'] : '';
-        $bookingText .= 'TransactionID: '.(string)$payeverPayment['transactionId'];
+        $bookingText = !empty($payeverPayment['usage_text']) ? 'Payment reference: ' . $payeverPayment['usage_text'] : '';
+        $bookingText .= 'TransactionID: ' . (string)$payeverPayment['transactionId'];
         $paymentProperty[] = $this->payeverHelper->getPaymentProperty(
             PaymentProperty::TYPE_BOOKING_TEXT,
             $bookingText
@@ -515,8 +517,10 @@ class PayeverService
             $payeverPayment['reference']
         );
 
-        $paymentProperty[] = $this->payeverHelper->getPaymentProperty(PaymentProperty::TYPE_ORIGIN, Payment::ORIGIN_PLUGIN);
-        $paymentProperty[] = $this->payeverHelper->getPaymentProperty(PaymentProperty::TYPE_PAYMENT_TEXT, $payeverPayment['usage_text']);
+        $paymentProperty[] = $this->payeverHelper->getPaymentProperty(PaymentProperty::TYPE_ORIGIN,
+            Payment::ORIGIN_PLUGIN);
+        $paymentProperty[] = $this->payeverHelper->getPaymentProperty(PaymentProperty::TYPE_PAYMENT_TEXT,
+            $payeverPayment['usage_text']);
         $payment->properties = $paymentProperty;
         //$payment->regenerateHash = true;
         $payment = $this->paymentRepository->createPayment($payment);
@@ -584,8 +588,10 @@ class PayeverService
                     $this->paymentOrderRelationRepo->createOrderRelation($payment, $order);
                 }
 
-                $transactionId = $this->payeverHelper->getPaymentPropertyValue($payment, PaymentProperty::TYPE_TRANSACTION_ID);
-                $this->getLogger(__METHOD__)->debug('Payever::debug.assignPlentyPaymentToPlentyOrder', 'Transaction ' . $transactionId . ' was assigned to the order #' . $orderId);
+                $transactionId = $this->payeverHelper->getPaymentPropertyValue($payment,
+                    PaymentProperty::TYPE_TRANSACTION_ID);
+                $this->getLogger(__METHOD__)->debug('Payever::debug.assignPlentyPaymentToPlentyOrder',
+                    'Transaction ' . $transactionId . ' was assigned to the order #' . $orderId);
             }
         );
 
@@ -609,9 +615,10 @@ class PayeverService
                     //unguarded
                     $order = $this->orderRepository->findOrderById($orderId);
                     if (!is_null($order) && $order instanceof Order) {
-                        $status['statusId'] = (float) $statusId;
+                        $status['statusId'] = (float)$statusId;
                         $this->orderRepository->updateOrder($status, $orderId);
-                        $this->getLogger(__METHOD__)->debug('Payever::debug.updateOrderStatus', 'Status of order ' . $orderId . ' was changed to ' . $statusId);
+                        $this->getLogger(__METHOD__)->debug('Payever::debug.updateOrderStatus',
+                            'Status of order ' . $orderId . ' was changed to ' . $statusId);
                     }
                 }
             );

@@ -1,5 +1,10 @@
 # Release Notes for payever
 
+## v1.7.1 (2020-04-15)
+
+### Fixed
+- updating order status by notification
+
 ## v1.7.0 (2020-03-26)
 
 ### Implemented

@@ -212,7 +212,8 @@ class PaymentController extends Controller
 
     private function placeOrder(OrderService $orderService, $executePayment = true)
     {
-        $this->getLogger(__METHOD__)->debug('Payever::debug.placeOrderCalling', "PlaceOrder was called, with executePayment = $executePayment");
+        $this->getLogger(__METHOD__)->debug('Payever::debug.placeOrderCalling',
+            "PlaceOrder was called, with executePayment = $executePayment");
         $orderData = $orderService->placeOrder();
 
         if ($executePayment) {
@@ -245,7 +246,8 @@ class PaymentController extends Controller
             if (is_numeric($payeverPayment["reference"])) {
                 $update = $this->payeverService->createAndUpdatePlentyPayment($payeverPayment);
             } else {
-                $update = $this->payeverService->updatePlentyPayment($paymentId, $payeverPayment["status"], $notificationTime);
+                $update = $this->payeverService->updatePlentyPayment($paymentId, $payeverPayment["status"],
+                    $notificationTime);
             }
 
             $this->getLogger(__METHOD__)->debug('Payever::debug.updatingPlentyPaymentForNotifications', $update);
@@ -287,7 +289,8 @@ class PaymentController extends Controller
         $basket = $basketRepo->load();
 
         $orderData = $this->placeOrder($orderService, false);
-        $createPaymentReponse = $this->payeverService->processCreatePaymentRequest($basket, $method, $orderData->order->id);
+        $createPaymentReponse = $this->payeverService->processCreatePaymentRequest($basket, $method,
+            $orderData->order->id);
 
         if ($createPaymentReponse['error']) {
             $this->notificationService->warn("Creating payment has been declined");

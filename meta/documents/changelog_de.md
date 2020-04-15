@@ -1,5 +1,10 @@
 # Release Informationen für payever
 
+## v1.7.1 (2020-04-15)
+
+### Behoben
+- aktualisierung des bestellstatus durch Benachrichtigung
+
 ## v1.7.0 (2020-03-26)
 
 ### Veröffentlichung
