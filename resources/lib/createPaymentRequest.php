@@ -18,6 +18,10 @@ $paymentRequest
     ->setCart(json_encode($params['cart']));
 
 // set billing data
+if ($params['salutation']) {
+    $paymentRequest->setSalutation($params['salutation']);
+}
+
 $paymentRequest->setFirstName($params['first_name'])
                ->setLastName($params['last_name'])
                ->setCity($params['city'])

@@ -57,6 +57,7 @@ class PayeverHelper
 
     const PLENTY_ORDER_SUCCESS = 5;
     const PLENTY_ORDER_PROCESSING = 3;
+    const PLENTY_ORDER_INPROCESS = 3.3;
     const PLENTY_ORDER_CANCELLED = 8;
     const PLENTY_ORDER_RETURN = 9;
 
@@ -408,7 +409,7 @@ class PayeverHelper
             case self::STATUS_ACCEPTED:
                 return self::PLENTY_ORDER_SUCCESS;
             case self::STATUS_IN_PROCESS:
-                return self::PLENTY_ORDER_PROCESSING;
+                return self::PLENTY_ORDER_INPROCESS;
             case self::STATUS_FAILED:
                 return self::PLENTY_ORDER_CANCELLED;
             case self::STATUS_CANCELLED:

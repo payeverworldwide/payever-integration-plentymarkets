@@ -1,5 +1,13 @@
 # Release Notes for payever
 
+## v1.8.0 (2020-05-06)
+
+### Implemented
+- auto-delete not finished orders
+
+### Added
+- salutation in create payment request
+
 ## v1.7.1 (2020-04-15)
 
 ### Fixed

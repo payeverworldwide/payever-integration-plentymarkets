@@ -28,6 +28,12 @@ class PayeverService
 {
     use Loggable;
 
+    const MR_SALUATATION = 'mr';
+    const MS_SALUATATION = 'ms';
+
+    const PLENTY_FEMALE_SALUATATION = 'female';
+    const PLENTY_MALE_SALUATATION = 'male';
+
     /**
      * @var PaymentMethodRepositoryContract
      */
@@ -181,12 +187,30 @@ class PayeverService
         return [
             'city' => $address->town,
             'email' => $address->email,
+            'salutation' => $this->getSalutation($address->gender),
             'last_name' => $address->lastName,
             'first_name' => $address->firstName,
             'phone' => $address->phone,
             'zip' => $address->postalCode,
             'street' => $address->street . ' ' . $address->houseNumber,
         ];
+    }
+
+    /**
+     * @param string $salutation
+     * @return bool|string
+     */
+    private function getSalutation($salutation)
+    {
+        $salutation = strtolower($salutation);
+        switch ($salutation) {
+            case self::PLENTY_FEMALE_SALUATATION:
+                return self::MS_SALUATATION;
+            case self::PLENTY_MALE_SALUATATION:
+                return self::MR_SALUATATION;
+            default:
+                return false;
+        }
     }
 
     /**
@@ -272,6 +296,7 @@ class PayeverService
             "currency" => $basket->currency,
             "cart" => $this->getOrderProducts($payeverRequestParams['basketItems']),
             "payment_method" => $method,
+            'salutation' => $address['salutation'],
             "first_name" => $address['first_name'],
             "last_name" => $address['last_name'],
             "city" => $address['city'],

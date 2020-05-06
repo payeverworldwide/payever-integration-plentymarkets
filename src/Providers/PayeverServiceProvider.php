@@ -19,6 +19,7 @@ use Payever\Procedures\RefundEventProcedure;
 use Payever\Procedures\CancelEventProcedure;
 use Payever\Procedures\ShippingEventProcedure;
 use Payever\Services\PayeverCronHandler;
+use Payever\Services\PayeverOrdersCronHandler;
 use Plenty\Modules\EventProcedures\Services\EventProceduresService;
 use Plenty\Modules\EventProcedures\Services\Entries\ProcedureEntry;
 use Plenty\Plugin\Log\Loggable;
@@ -60,6 +61,7 @@ class PayeverServiceProvider extends ServiceProvider
         CronContainer $cronContainer
     ) {
         $cronContainer->add(CronContainer::DAILY, PayeverCronHandler::class);
+        $cronContainer->add(CronContainer::EVERY_FIFTEEN_MINUTES, PayeverOrdersCronHandler::class);
         /*
          * register the payment method in the payment method container
          */

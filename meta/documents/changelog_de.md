@@ -1,5 +1,11 @@
 # Release Informationen für payever
 
+## v1.8.0 (2020-05-06)
+
+### Veröffentlichung
+- nicht abgeschlossene Bestellungen automatisch löschen
+- anrede
+
 ## v1.7.1 (2020-04-15)
 
 ### Behoben
