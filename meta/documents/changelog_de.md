@@ -1,5 +1,13 @@
 # Release Informationen für payever
 
+## v1.8.1 (2020-05-15)
+
+### Veröffentlichung
+- Automatische Stornierung nicht abgeschlossener Bestellungen
+
+### Entfernt
+- Automatisches Löschen nicht abgeschlossener Bestellungen
+
 ## v1.8.0 (2020-05-06)
 
 ### Veröffentlichung

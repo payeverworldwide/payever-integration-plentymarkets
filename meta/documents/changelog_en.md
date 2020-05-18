@@ -1,5 +1,13 @@
 # Release Notes for payever
 
+## v1.8.1 (2020-05-15)
+
+### Implemented
+- auto-cancelling not finished orders
+
+### Removed
+- auto-deleting not finished orders
+
 ## v1.8.0 (2020-05-06)
 
 ### Implemented

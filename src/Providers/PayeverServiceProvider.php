@@ -61,7 +61,7 @@ class PayeverServiceProvider extends ServiceProvider
         CronContainer $cronContainer
     ) {
         $cronContainer->add(CronContainer::DAILY, PayeverCronHandler::class);
-        $cronContainer->add(CronContainer::EVERY_FIFTEEN_MINUTES, PayeverOrdersCronHandler::class);
+        $cronContainer->add(CronContainer::HOURLY, PayeverOrdersCronHandler::class);
         /*
          * register the payment method in the payment method container
          */

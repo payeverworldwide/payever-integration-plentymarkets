@@ -57,7 +57,7 @@ class PayeverSdkService
         $parameters['sdkData']['customLiveUrl'] = $this->payeverHelper->getCustomLiveUrl();
         $parameters['sdkData']['host'] = $this->payeverHelper->getBaseUrl();
         $parameters['sdkData']['commandEndpoint'] = $this->payeverHelper->getCommandEndpoint();
-        $parameters['sdkData']['pluginVersion'] = '1.8.0';
+        $parameters['sdkData']['pluginVersion'] = '1.8.1';
 
         return $this->libCall->call('Payever::' . $method, $parameters);
     }

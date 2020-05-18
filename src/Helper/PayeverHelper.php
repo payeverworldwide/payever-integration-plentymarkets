@@ -39,20 +39,20 @@ class PayeverHelper
 
     const PLUGIN_KEY = 'plenty_payever';
 
-    const STATUS_NEW        = 'STATUS_NEW';
+    const STATUS_NEW = 'STATUS_NEW';
     const STATUS_IN_PROCESS = 'STATUS_IN_PROCESS';
-    const STATUS_ACCEPTED   = 'STATUS_ACCEPTED';
-    const STATUS_PAID       = 'STATUS_PAID';
-    const STATUS_DECLINED   = 'STATUS_DECLINED';
-    const STATUS_REFUNDED   = 'STATUS_REFUNDED';
-    const STATUS_FAILED     = 'STATUS_FAILED';
-    const STATUS_CANCELLED  = 'STATUS_CANCELLED';
+    const STATUS_ACCEPTED = 'STATUS_ACCEPTED';
+    const STATUS_PAID = 'STATUS_PAID';
+    const STATUS_DECLINED = 'STATUS_DECLINED';
+    const STATUS_REFUNDED = 'STATUS_REFUNDED';
+    const STATUS_FAILED = 'STATUS_FAILED';
+    const STATUS_CANCELLED = 'STATUS_CANCELLED';
 
     const COMMAND_TIMESTAMT_KEY = 'command_timestamt';
     const SANDBOX_URL_CONFIG_KEY = 'sandbox_url';
     const LIVE_URL_CONFIG_KEY = 'live_url';
 
-    const LOCKFILE_TIME_LOCK  = 60; //sec
+    const LOCKFILE_TIME_LOCK = 60; //sec
     const LOCKFILE_TIME_SLEEP = 1; //sec
 
     const PLENTY_ORDER_SUCCESS = 5;
@@ -191,7 +191,7 @@ class PayeverHelper
     /**
      * @return array
      */
-    public function getMethodsMetaData():array
+    public function getMethodsMetaData(): array
     {
         return $this->methodsMetaData;
     }
@@ -205,7 +205,7 @@ class PayeverHelper
     public function getPaymentMopId($paymentMethodId): string
     {
         $paymentMethods = $this->paymentMethodRepository->allForPlugin('plenty_payever');
-        if (! is_null($paymentMethods)) {
+        if (!is_null($paymentMethods)) {
             foreach ($paymentMethods as $paymentMethod) {
                 if (strtolower($paymentMethod->paymentKey) == $paymentMethodId) {
                     return $paymentMethod->id;
@@ -218,7 +218,7 @@ class PayeverHelper
     /**
      * @return array
      */
-    public function getMopKeyToIdMap():array
+    public function getMopKeyToIdMap(): array
     {
         $result = [];
 
@@ -246,7 +246,7 @@ class PayeverHelper
      * @param $type
      * @return string
      */
-    private function getUrl(string $type):string
+    private function getUrl(string $type): string
     {
         return $this->getBaseUrl() . $this->urlMap[$type];
     }
@@ -254,7 +254,7 @@ class PayeverHelper
     /**
      * @return string
      */
-    public function getCommandEndpoint():string
+    public function getCommandEndpoint(): string
     {
         return $this->getUrl('command_endpoint');
     }
@@ -263,7 +263,7 @@ class PayeverHelper
      * @param string $method
      * @return string
      */
-    public function getProcessURL(string $method):string
+    public function getProcessURL(string $method): string
     {
         $result = $this->getUrl('process');
 
@@ -273,7 +273,7 @@ class PayeverHelper
     /**
      * @return string
      */
-    public function getSuccessURL():string
+    public function getSuccessURL(): string
     {
         return $this->getUrl('success');
     }
@@ -281,7 +281,7 @@ class PayeverHelper
     /**
      * @return string
      */
-    public function getNoticeURL():string
+    public function getNoticeURL(): string
     {
         return $this->getUrl('notice');
     }
@@ -289,7 +289,7 @@ class PayeverHelper
     /**
      * @return string
      */
-    public function getCancelURL():string
+    public function getCancelURL(): string
     {
         return $this->getUrl('cancel');
     }
@@ -297,7 +297,7 @@ class PayeverHelper
     /**
      * @return string
      */
-    public function getFailureURL():string
+    public function getFailureURL(): string
     {
         return $this->getUrl('failure');
     }
@@ -306,7 +306,7 @@ class PayeverHelper
      * @param string $method
      * @return string
      */
-    public function getIframeURL(string $method):string
+    public function getIframeURL(string $method): string
     {
         $result = $this->getUrl('iframe');
 
@@ -331,7 +331,7 @@ class PayeverHelper
      * @param $value
      * @return PaymentProperty
      */
-    public function getPaymentProperty($typeId, $value):PaymentProperty
+    public function getPaymentProperty($typeId, $value): PaymentProperty
     {
         /** @var PaymentProperty $paymentProperty */
         $paymentProperty = pluginApp(PaymentProperty::class);
@@ -359,7 +359,7 @@ class PayeverHelper
                 continue;
             }
             if ($property->typeId == $propertyTypeConstant) {
-                return (string) $property->value;
+                return (string)$property->value;
             }
         }
 
@@ -487,7 +487,7 @@ class PayeverHelper
                 break;
             case OrderType::TYPE_CREDIT_NOTE:
                 $originOrders = $order->originOrders;
-                if (! $originOrders->isEmpty() && $originOrders->count() > 0) {
+                if (!$originOrders->isEmpty() && $originOrders->count() > 0) {
                     $originOrder = $originOrders->first();
                     if ($originOrder instanceof Order) {
                         if ($originOrder->typeId == 1) {
@@ -519,12 +519,12 @@ class PayeverHelper
         $result = isset($transaction['result']) ? $transaction['result'] : [];
 
         if (!empty($result['actions']) && is_object($result['actions'])) {
-            $result['actions'] = (array) $result['actions'];
+            $result['actions'] = (array)$result['actions'];
         }
 
         if (!empty($result['actions']) && is_array($result['actions'])) {
             foreach ($result['actions'] as $action) {
-                $action = (array) $action;
+                $action = (array)$action;
                 if ($action['action'] == $typeTransaction) {
                     return $action['enabled'];
                 }

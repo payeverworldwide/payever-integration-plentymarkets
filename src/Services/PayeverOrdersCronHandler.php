@@ -62,7 +62,7 @@ class PayeverOrdersCronHandler extends CronHandler
             function () {
                 $now = date(\DateTime::W3C);
                 $dateTo = date(\DateTime::W3C, strtotime('-8 hour', strtotime($now)));
-                $this->getLogger(__METHOD__)->debug('Payever::debug.deletingOrdersDateTo', $dateTo);
+                $this->getLogger(__METHOD__)->debug('Payever::debug.cancelingOrdersDateTo', $dateTo);
                 $this->orderRepositoryContract->setFilters([
                     'statusFrom' => PayeverHelper::PLENTY_ORDER_PROCESSING,
                     'statusTo' => PayeverHelper::PLENTY_ORDER_PROCESSING,
@@ -74,9 +74,11 @@ class PayeverOrdersCronHandler extends CronHandler
                 foreach ($orders->getResult() as $order) {
                     $orderModel = $this->orderRepositoryContract->findOrderById($order['id']);
                     if ($this->payeverHelper->isPayeverPaymentMopId($orderModel->methodOfPaymentId)) {
-                        $this->orderRepositoryContract->deleteOrder($orderModel->id);
-                        $this->getLogger(__METHOD__)->debug('Payever::debug.orderDeleting',
-                            "Order #" . $orderModel->id . " has been deleted");
+                        $this->orderRepositoryContract
+                            ->updateOrder(["statusId" => (float) PayeverHelper::PLENTY_ORDER_CANCELLED], $orderModel->id);
+
+                        $this->getLogger(__METHOD__)->debug('Payever::debug.autoOrderCanceling',
+                            "Order #" . $orderModel->id . " has been cancelled");
                     }
                 }
             }
