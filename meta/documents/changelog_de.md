@@ -1,5 +1,10 @@
 # Release Informationen für payever
 
+## v1.9.0 (2020-06-25)
+
+### Veröffentlichung
+- neue Zahlungsoptionen Swedbank Kreditkarte und Swedbank Rechnung
+
 ## v1.8.1 (2020-05-15)
 
 ### Veröffentlichung

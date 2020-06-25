@@ -18,6 +18,8 @@ use Payever\Methods\StripeDirectDebitPaymentMethod;
 use Payever\Methods\PayexfakturaPaymentMethod;
 use Payever\Methods\PayexcreditcardPaymentMethod;
 use Payever\Methods\InstantPaymentMethod;
+use Payever\Methods\SwedbankCreditCardPaymentMethod;
+use Payever\Methods\SwedbankInvoicePaymentMethod;
 use Payever\Repositories\PayeverConfigRepository;
 use Plenty\Modules\Payment\Method\Contracts\PaymentMethodRepositoryContract;
 use Plenty\Modules\Payment\Models\PaymentProperty;
@@ -146,6 +148,14 @@ class PayeverHelper
             'class' => InstantPaymentMethod::class,
             'name' => 'Direct bank transfer',
         ],
+        'SWEDBANK_CREDITCARD' => [
+            'class' => SwedbankCreditCardPaymentMethod::class,
+            'name' => 'Swedbank Credit Card',
+        ],
+        'SWEDBANK_INVOICE' => [
+            'class' => SwedbankInvoicePaymentMethod::class,
+            'name' => 'Swedbank Invoice',
+        ]
     ];
 
     private $urlMap = [

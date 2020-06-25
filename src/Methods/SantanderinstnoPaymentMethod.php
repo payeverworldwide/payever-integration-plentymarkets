@@ -2,8 +2,6 @@
 
 namespace Payever\Methods;
 
-use Payever\Methods\AbstractPaymentMethod;
-
 /**
  * Class santanderinstnoPaymentMethod
  * @package Payever\Methods

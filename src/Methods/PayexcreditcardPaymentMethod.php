@@ -2,8 +2,6 @@
 
 namespace Payever\Methods;
 
-use Payever\Methods\AbstractPaymentMethod;
-
 /**
  * Class PayexcreditcardPaymentMethod
  * @package Payever\Methods

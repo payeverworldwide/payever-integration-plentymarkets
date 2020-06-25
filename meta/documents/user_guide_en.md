@@ -4,7 +4,7 @@
  
 # Overview 
 
-88% of customers cancel their purchase if none of their preferred payment methods are available. With this payever plugin for Plentymarkets you can easily add the most preferred payment options to your checkout: credit card, direct debit, instant transfer, PayPal, wire transfer, as well as invoice, factoring and installments. You can choose any number of payment methods you want to integrate - of course, you can also choose only one payment method if you already have the others.
+88% of customers cancel their purchase if none of their preferred payment methods are available. With this payever plugin for Plentymarkets you can easily add the most preferred payment options to your checkout: credit card, direct debit, instant transfer, PayPal, wire transfer, Instant Payment, Swedbank Credit Card, Swedbank Invoice, as well as invoice, factoring and installments. You can choose any number of payment methods you want to integrate - of course, you can also choose only one payment method if you already have the others.
 
 The plugin will add all payment options that are enabled in your payever account to your shop. You can choose whether the customer should see the checkout in an iframe within your shop or should be redirected to an external payever domain. After the transaction, the customer will be redirected to your shop. Should you have any questions, our German and English speaking support team is happy to assist you.
 
@@ -14,6 +14,8 @@ Please note that while Credit Card, PayPal and Wire transfer are available world
 * Invoice (Santander): Germany and Norway only
 * Installment Factoring (Santander): Germany only
 * Installments (Santander): Germany, Sweden, Norway and Denmark only
+* Instant Payment (Santander): Germany, Austria and Switzerland only
+* Credit Card and Invoice (Swedbank): Sweden only
 
 **To use payever, you need to visit our signup page <a href="https://commerceos.payever.org/entry/registration/business.com">here</a> and create a payever account. Transaction fees will be charged for every transaction. Transaction fees vary from payment provider to payment provider and may also vary from merchant to merchant. For pricing details, please see our pricing page <a href="https://getpayever.com/checkout/pricing">here</a>. For credit card (Stripe), direct debit (Stripe), PayPal, and Instant Transfer (Klarna), detailed prices are publicly available and can be found at the before mentioned link. Santander (invoice, installment factoring, installments) does not provide pricing details publicly (prices will be negotiated with Santander directly).**
 

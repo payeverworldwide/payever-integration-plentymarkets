@@ -1809,6 +1809,216 @@
           }
         }
       }
+    },
+    "Config.SwedbankCreditCardTab": {
+      "label": "Config.SwedbankCreditCardTab",
+      "formFields": {
+        "swedbank_creditcard.active": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverActiveLabel",
+          "options": {
+            "defaultValue": "0",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "swedbank_creditcard.title": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverTitleLabel",
+          "options": {
+            "defaultValue": "Swedbank Credit Card"
+          }
+        },
+        "swedbank_creditcard.description": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverDescriptionLabel",
+          "options": {
+            "defaultValue": "Simply let your customers pay by credit card. We accept MasterCard, Visa, American Express and many more."
+          }
+        },
+        "swedbank_creditcard.accept_fee": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverAcceptFeeLabel",
+          "options": {
+            "defaultValue": "1",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "swedbank_creditcard.fee": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverFeeLabel",
+          "options": {
+            "defaultValue": "0"
+          }
+        },
+        "swedbank_creditcard.variable_fee": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverVariableFeeLabel",
+          "options": {
+            "defaultValue": "0"
+          }
+        },
+        "swedbank_creditcard.min_order_total": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverMinOrderTotalLabel",
+          "options": {
+            "defaultValue": "0"
+          }
+        },
+        "swedbank_creditcard.max_order_total": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverMaxOrderTotalLabel",
+          "options": {
+            "defaultValue": "100000"
+          }
+        },
+        "swedbank_creditcard.allowed_countries": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCountries",
+          "options": {
+            "defaultValue": "all"
+          }
+        },
+        "swedbank_creditcard.allowed_currencies": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCurrencies",
+          "options": {
+            "defaultValue": "NOK,SEK,DKK,USD,EUR"
+          }
+        }
+      }
+    },
+    "Config.SwedbankInvoiceTab": {
+      "label": "Config.SwedbankInvoiceTab",
+      "formFields": {
+        "swedbank_invoice.active": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverActiveLabel",
+          "options": {
+            "defaultValue": "0",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "swedbank_invoice.title": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverTitleLabel",
+          "options": {
+            "defaultValue": "Swedbank Invoice"
+          }
+        },
+        "swedbank_invoice.description": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverDescriptionLabel",
+          "options": {
+            "defaultValue": "Simply let your customers pay after delivery. You receive your payout before the customer pays the invoice."
+          }
+        },
+        "swedbank_invoice.accept_fee": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverAcceptFeeLabel",
+          "options": {
+            "defaultValue": "1",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "swedbank_invoice.fee": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverFeeLabel",
+          "options": {
+            "defaultValue": "0"
+          }
+        },
+        "swedbank_invoice.variable_fee": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverVariableFeeLabel",
+          "options": {
+            "defaultValue": "0"
+          }
+        },
+        "swedbank_invoice.min_order_total": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverMinOrderTotalLabel",
+          "options": {
+            "defaultValue": "0"
+          }
+        },
+        "swedbank_invoice.max_order_total": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverMaxOrderTotalLabel",
+          "options": {
+            "defaultValue": "4755.35"
+          }
+        },
+        "swedbank_invoice.allowed_countries": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCountries",
+          "options": {
+            "defaultValue": "SE,NO,FI"
+          }
+        },
+        "swedbank_invoice.allowed_currencies": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCurrencies",
+          "options": {
+            "defaultValue": "SEK,NOK"
+          }
+        }
+      }
     }
   }
 }

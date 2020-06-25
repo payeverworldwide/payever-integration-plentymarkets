@@ -2,8 +2,6 @@
 
 namespace Payever\Methods;
 
-use Payever\Methods\AbstractPaymentMethod;
-
 /**
  * Class StripeDirectDebitPaymentMethod
  * @package Payever\Methods

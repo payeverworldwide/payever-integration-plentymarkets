@@ -1,5 +1,10 @@
 # Release Notes for payever
 
+## v1.9.0 (2020-06-25)
+
+### Implemented
+- new payment options Swedbank Credit Card and Swedbank Invoice
+
 ## v1.8.1 (2020-05-15)
 
 ### Implemented

@@ -4,7 +4,7 @@
 
 # Überblicks
  
-88% der Nutzer brechen den Kaufvorgang ab, wenn keine ihrer gewünschten Zahlungsarten verfügbar ist. payever bietet Ihnen eine breite Palette an Zahlungsarten, u.a. Kreditkartenzahlung, Lastschrift, Sofortüberweisung, PayPal, Vorkasse, Rechnungskauf, Ratenkauf und Ratenkredit - so ist für jeden Kunden die Richtige dabei. Das Modul fügt alle gewünschten Zahlarten aus Ihrem payever Konto zu Ihrem Plentymarkets Shop hinzu. Sie können wählen, ob der Kunde direkt in Ihrem Shop in einem iframe bezahlt oder auf eine externe Seite weitergeleitet wird. Nach der Transaktion wird der Kunde in beiden Fällen wieder in Ihren Shop geleitet.
+88% der Nutzer brechen den Kaufvorgang ab, wenn keine ihrer gewünschten Zahlungsarten verfügbar ist. payever bietet Ihnen eine breite Palette an Zahlungsarten, u.a. Kreditkartenzahlung, Lastschrift, Sofortüberweisung, Direktüberweisung, Swedbank Kreditkarte, Swedbank Rechnung, PayPal, Vorkasse, Rechnungskauf, Ratenkauf und Ratenkredit - so ist für jeden Kunden die Richtige dabei. Das Modul fügt alle gewünschten Zahlarten aus Ihrem payever Konto zu Ihrem Plentymarkets Shop hinzu. Sie können wählen, ob der Kunde direkt in Ihrem Shop in einem iframe bezahlt oder auf eine externe Seite weitergeleitet wird. Nach der Transaktion wird der Kunde in beiden Fällen wieder in Ihren Shop geleitet.
 
 Kreditkartenzahlung, PayPal und Vorkasse sind weltweit verfügbar. Für die anderen Zahlungsarten gelten folgende regionale Beschränkungen: 
 * Lastschrift (Stripe): SEPA-Mitgliedsländer
@@ -12,6 +12,8 @@ Kreditkartenzahlung, PayPal und Vorkasse sind weltweit verfügbar. Für die ande
 * Rechnungskauf (Santander): Deutschland und Norwegen
 * Ratenkauf (Santander): Deutschland
 * Ratenkredit (Santander): Deutschland, Schweden, Norwegen und Dänemark
+* Direktüberweisung (Santander): Deutschland, Österreich und Schweiz.
+* Kreditkarte und Rechnung (Swedbank): Schweden.
 
 **Zur Benutzung des Moduls wird ein payever Konto benötigt. Dieses können Sie <a href="https://commerceos.payever.org/entry/registration/business.com">hier</a> erstellen. Die Kontoerstellung ist kostenlos und unverbindlich. Es können allerdings zusätzliche Transaktionsgebühren anfallen. Die Höhe der Transaktionsgebühren hängt vom jeweiligen Zahlungsanbieter ab. Eine Übersicht über die Transaktionsgebühren der gängigen Zahlungsanbieter findet sich <a href="https://getpayever.com/checkout/pricing">hier</a>.**
 
