@@ -172,7 +172,13 @@ function payeverSynchronize() {
     console.debug('Payever synchronization requested.');
     let pluginSetId = $("#webstoresSelect" ).val();
     payeverUpdateConfig(pluginSetId, function () {
-        return $.getJSON('/payment/payever/synchronize?pluginSetId=' + pluginSetId);
+        return $.ajax({
+            url: '/payment/payever/synchronize?pluginSetId=' + pluginSetId,
+            type: 'POST',
+            complete: function (jqXHR, textStatus) {
+                console.debug(jqXHR, textStatus);
+            }
+        });
     });
 }
 

@@ -2,33 +2,33 @@
 
 namespace Payever\Helper;
 
+use Payever\Methods\InstantPaymentMethod;
+use Payever\Methods\PayexcreditcardPaymentMethod;
+use Payever\Methods\PayexfakturaPaymentMethod;
 use Payever\Methods\PaymillcreditcardPaymentMethod;
 use Payever\Methods\PaymilldirectdebitPaymentMethod;
 use Payever\Methods\PaypalPaymentMethod;
+use Payever\Methods\SantanderfactoringdePaymentMethod;
 use Payever\Methods\SantanderinstdkPaymentMethod;
 use Payever\Methods\SantanderinstnoPaymentMethod;
 use Payever\Methods\SantanderinstsePaymentMethod;
 use Payever\Methods\SantanderinvoicedePaymentMethod;
 use Payever\Methods\SantanderinvoicenoPaymentMethod;
-use Payever\Methods\SantanderfactoringdePaymentMethod;
 use Payever\Methods\SantanderPaymentMethod;
 use Payever\Methods\SofortPaymentMethod;
-use Payever\Methods\StripePaymentMethod;
 use Payever\Methods\StripeDirectDebitPaymentMethod;
-use Payever\Methods\PayexfakturaPaymentMethod;
-use Payever\Methods\PayexcreditcardPaymentMethod;
-use Payever\Methods\InstantPaymentMethod;
+use Payever\Methods\StripePaymentMethod;
 use Payever\Methods\SwedbankCreditCardPaymentMethod;
 use Payever\Methods\SwedbankInvoicePaymentMethod;
 use Payever\Repositories\PayeverConfigRepository;
-use Plenty\Modules\Payment\Method\Contracts\PaymentMethodRepositoryContract;
-use Plenty\Modules\Payment\Models\PaymentProperty;
-use Plenty\Modules\Payment\Models\Payment;
-use Plenty\Modules\Order\Models\Order;
+use Payever\Services\Lock\StorageLock;
 use Plenty\Modules\Helper\Services\WebstoreHelper;
-use Plenty\Modules\Plugin\Storage\Contracts\StorageRepositoryContract;
-use Plenty\Plugin\Log\Loggable;
+use Plenty\Modules\Order\Models\Order;
 use Plenty\Modules\Order\Models\OrderType;
+use Plenty\Modules\Payment\Method\Contracts\PaymentMethodRepositoryContract;
+use Plenty\Modules\Payment\Models\Payment;
+use Plenty\Modules\Payment\Models\PaymentProperty;
+use Plenty\Plugin\Log\Loggable;
 
 /**
  * Class PayeverHelper
@@ -54,9 +54,6 @@ class PayeverHelper
     const SANDBOX_URL_CONFIG_KEY = 'sandbox_url';
     const LIVE_URL_CONFIG_KEY = 'live_url';
 
-    const LOCKFILE_TIME_LOCK = 60; //sec
-    const LOCKFILE_TIME_SLEEP = 1; //sec
-
     const PLENTY_ORDER_SUCCESS = 5;
     const PLENTY_ORDER_PROCESSING = 3;
     const PLENTY_ORDER_INPROCESS = 3.3;
@@ -79,9 +76,9 @@ class PayeverHelper
     private $payeverConfigRepository;
 
     /**
-     * @var StorageRepositoryContract $storageRepository
+     * @var StorageLock
      */
-    private $storageRepository;
+    private $storageLock;
 
     private $methodsMetaData = [
         'STRIPE' => [
@@ -183,19 +180,19 @@ class PayeverHelper
      * PayeverHelper constructor.
      * @param PaymentMethodRepositoryContract $paymentMethodRepository
      * @param WebstoreHelper $webstoreHelper
-     * @param StorageRepositoryContract $storageRepository
      * @param PayeverConfigRepository $payeverConfigRepository
+     * @param StorageLock $storageLock
      */
     public function __construct(
         PaymentMethodRepositoryContract $paymentMethodRepository,
         WebstoreHelper $webstoreHelper,
-        StorageRepositoryContract $storageRepository,
-        PayeverConfigRepository $payeverConfigRepository
+        PayeverConfigRepository $payeverConfigRepository,
+        StorageLock $storageLock
     ) {
         $this->webstoreHelper = $webstoreHelper;
         $this->paymentMethodRepository = $paymentMethodRepository;
-        $this->storageRepository = $storageRepository;
         $this->payeverConfigRepository = $payeverConfigRepository;
+        $this->storageLock = $storageLock;
     }
 
     /**
@@ -447,38 +444,37 @@ class PayeverHelper
         return $paymentId . '.lock';
     }
 
+    /**
+     * @param string $paymentId
+     */
     public function lockAndBlock($paymentId)
     {
-        $fileName = $this->getLockFileName($paymentId);
-        $this->storageRepository->uploadObject('Payever', $fileName, '');
-        $this->getLogger(__METHOD__)->debug('Payever::debug.lockAndBlock', $paymentId);
+        $this->storageLock->lock($this->storageLock->getLockName($paymentId));
     }
 
+    /**
+     * @param string $paymentId
+     * @return bool
+     */
     public function isLocked($paymentId)
     {
-        $fileName = $this->getLockFileName($paymentId);
-
-        return $this->storageRepository->doesObjectExist('Payever', $fileName);
+        return $this->storageLock->isLocked($this->storageLock->getLockName($paymentId));
     }
 
+    /**
+     * @param string $paymentId
+     */
     public function unlock($paymentId)
     {
-        $fileName = $this->getLockFileName($paymentId);
-        $this->storageRepository->deleteObject('Payever', $fileName);
-        $this->getLogger(__METHOD__)->debug('Payever::debug.unlock', $paymentId);
+        $this->storageLock->unlock($this->storageLock->getLockName($paymentId));
     }
 
+    /**
+     * @param string $paymentId
+     */
     public function waitForUnlock($paymentId)
     {
-        $this->getLogger(__METHOD__)->debug('Payever::debug.waitForUnlock', "start $paymentId");
-
-        $waitingTime = 0;
-        while ($this->isLocked($paymentId) && $waitingTime <= self::LOCKFILE_TIME_LOCK) {
-            $waitingTime += self::LOCKFILE_TIME_SLEEP;
-            sleep(self::LOCKFILE_TIME_SLEEP);
-        }
-
-        $this->getLogger(__METHOD__)->debug('Payever::debug.waitForUnlock', "finish $paymentId");
+        $this->storageLock->waitForUnlock($this->storageLock->getLockName($paymentId));
     }
 
     /**

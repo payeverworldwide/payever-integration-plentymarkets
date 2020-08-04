@@ -3,19 +3,20 @@ namespace Payever\Controllers;
 
 use IO\Services\NotificationService;
 use IO\Services\OrderService;
+use Payever\Helper\PayeverHelper;
+use Payever\Services\PayeverSdkService;
+use Payever\Services\PayeverService;
+use Payever\Services\Payment\Notification\NotificationRequestProcessor;
 use Plenty\Modules\Basket\Contracts\BasketRepositoryContract;
-use Plenty\Modules\Order\Contracts\OrderRepositoryContract;
 use Plenty\Modules\Frontend\Session\Storage\Contracts\FrontendSessionStorageFactoryContract;
+use Plenty\Modules\Order\Contracts\OrderRepositoryContract;
 use Plenty\Modules\Payment\Method\Contracts\PaymentMethodRepositoryContract;
 use Plenty\Plugin\ConfigRepository;
 use Plenty\Plugin\Controller;
 use Plenty\Plugin\Http\Request;
 use Plenty\Plugin\Http\Response;
-use Payever\Services\PayeverService;
-use Payever\Helper\PayeverHelper;
-use Payever\Services\PayeverSdkService;
-use Plenty\Plugin\Templates\Twig;
 use Plenty\Plugin\Log\Loggable;
+use Plenty\Plugin\Templates\Twig;
 
 /**
  * Class PaymentController
@@ -73,6 +74,11 @@ class PaymentController extends Controller
     private $notificationService;
 
     /**
+     * @var NotificationRequestProcessor
+     */
+    private $notificationRequestProcessor;
+
+    /**
      * PaymentController constructor.
      *
      * @param Request $request
@@ -84,6 +90,7 @@ class PaymentController extends Controller
      * @param OrderRepositoryContract $orderContract
      * @param FrontendSessionStorageFactoryContract $sessionStorage
      * @param PayeverSdkService $sdkService
+     * @param NotificationRequestProcessor $notificationRequestProcessor
      */
     public function __construct(
         Request $request,
@@ -96,7 +103,8 @@ class PaymentController extends Controller
         FrontendSessionStorageFactoryContract $sessionStorage,
         PaymentMethodRepositoryContract $paymentMethodRepository,
         PayeverSdkService $sdkService,
-        NotificationService $notificationService
+        NotificationService $notificationService,
+        NotificationRequestProcessor $notificationRequestProcessor
     ) {
         $this->request = $request;
         $this->response = $response;
@@ -109,6 +117,7 @@ class PaymentController extends Controller
         $this->paymentMethodRepository = $paymentMethodRepository;
         $this->sdkService = $sdkService;
         $this->notificationService = $notificationService;
+        $this->notificationRequestProcessor = $notificationRequestProcessor;
     }
 
     /**
@@ -231,32 +240,13 @@ class PaymentController extends Controller
         return $orderData;
     }
 
+    /**
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
     public function checkoutNotice()
     {
-        try {
-            $requestContent = json_decode($this->request->getContent(), true);
-            $notificationTime = array_key_exists('created_at', $requestContent) ? date("Y-m-d H:i:s",
-                strtotime($requestContent['created_at'])) : false;
-
-            $this->getLogger(__METHOD__)->debug('Payever::debug.noticeUrlWasCalled', $requestContent);
-            $paymentId = $this->request->get('payment_id');
-
-            $payeverPayment = $this->payeverService->handlePayeverPayment($paymentId);
-            $this->getLogger(__METHOD__)->debug('Payever::debug.retrievingPaymentForNotifications', $payeverPayment);
-            if (is_numeric($payeverPayment["reference"])) {
-                $update = $this->payeverService->createAndUpdatePlentyPayment($payeverPayment);
-            } else {
-                $update = $this->payeverService->updatePlentyPayment($paymentId, $payeverPayment["status"],
-                    $notificationTime);
-            }
-
-            $this->getLogger(__METHOD__)->debug('Payever::debug.updatingPlentyPaymentForNotifications', $update);
-
-            die(json_encode(['result' => 'success', 'message' => 'Order was updated']));
-        } catch (\Exception $exception) {
-            $this->getLogger(__METHOD__)->error('Payever::notification_error', $exception);
-            die(json_encode(['result' => 'error', 'message' => $exception->getMessage()]));
-        }
+        $this->getLogger(__METHOD__)->debug('Payever::debug.noticeUrlWasCalled');
+        return $this->response->json($this->notificationRequestProcessor->processNotification());
     }
 
     /**

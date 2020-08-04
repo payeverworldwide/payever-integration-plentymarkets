@@ -1,5 +1,10 @@
 # Release Notes for payever
 
+## v1.10.0 (2020-08-04)
+
+### Implemented
+- payment notifications signature
+
 ## v1.9.0 (2020-06-25)
 
 ### Implemented

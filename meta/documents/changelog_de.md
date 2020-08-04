@@ -1,5 +1,10 @@
 # Release Informationen für payever
 
+## v1.10.0 (2020-08-04)
+
+### Veröffentlichung
+- Unterschrift für Zahlungsbenachrichtigungen
+
 ## v1.9.0 (2020-06-25)
 
 ### Veröffentlichung
