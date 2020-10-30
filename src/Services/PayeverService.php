@@ -135,10 +135,11 @@ class PayeverService
         $products = [];
 
         foreach ($basketItems as $basketItem) {
+            $itemsAmount = round($basketItem['quantity'] * $basketItem['price'], 2);
             $products[] = [
-                'name' => 'name' . $basketItem['name'],
-                'price' => $basketItem['price'],
-                'quantity' => $basketItem['quantity'],
+                'name' => $basketItem['name'],
+                'price' => $itemsAmount,
+                'quantity' => 1,
                 'description' => "description",
                 'thumbnail' => "",
                 'url' => "",

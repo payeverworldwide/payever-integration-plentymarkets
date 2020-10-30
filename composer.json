@@ -1,0 +1,43 @@
+{
+  "name": "payever/plentymarkets",
+  "description": "payever plugin for plentymarkets",
+  "type": "library",
+  "require": {
+    "ext-json": "*"
+  },
+  "require-dev": {
+    "plentymarkets/plugin-interface": "dev-beta7",
+    "plentymarkets/plugin-io": "5.0.6",
+    "payever/sdk-php": "2.5.8",
+    "phpunit/phpunit": "~9.2"
+  },
+  "scripts": {
+    "init-plenty-deps": [
+      "git clone --depth 1 --branch 5.0.6 --single-branch https://github.com/plentymarkets/plugin-ceres.git vendor/plentymarkets/plugin-ceres",
+      "git clone --depth 1 --branch master --single-branch https://github.com/plentymarkets/plugin-etsy.git vendor/plentymarkets/plugin-etsy"
+    ]
+  },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/plentymarkets/plugin-io.git"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Payever\\": "src/",
+      "Payever\\tests\\unit\\": "tests/unit/",
+      "Plenty\\": "vendor/plentymarkets/plugin-interface",
+      "Plenty\\Modules\\Webshop\\ItemSearch\\": "vendor/plentymarkets/plugin-interface/ItemSearch"
+    },
+    "classmap": [
+      "tests/unit/mock/Component/HttpFoundation",
+      "tests/unit/mock/Plugin",
+      "tests/unit/mock/Plugin/Log"
+    ],
+    "files": [
+      "tests/unit/mock/Controllers/pluginApp.function.php",
+      "tests/unit/mock/Plugin/Log/pluginApp.function.php"
+    ]
+  }
+}

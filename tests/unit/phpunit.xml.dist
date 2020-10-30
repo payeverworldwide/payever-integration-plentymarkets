@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="bootstrap.php"
+         colors="false"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         stopOnError="false"
+         stopOnFailure="false"
+         stopOnIncomplete="false"
+         stopOnSkipped="false">
+    <filter>
+        <whitelist processUncoveredFilesFromWhitelist="false">
+            <directory suffix=".php">PLUGIN_SOURCE_PATH/src</directory>
+            <exclude>
+                <directory>PLUGIN_SOURCE_PATH/src/Migrations</directory>
+            </exclude>
+        </whitelist>
+    </filter>
+    <testsuites>
+        <testsuite name="main">
+            <directory>./</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <const name="PLUGIN_SOURCE_PATH" value="/dist"/>
+    </php>
+</phpunit>
