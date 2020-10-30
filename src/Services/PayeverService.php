@@ -285,6 +285,9 @@ class PayeverService
         }
 
         $feeAmount = $this->getFeeAmount($basketAmount, $method);
+        $totalFee = round(($basket->shippingAmount - $feeAmount), 2);
+        $totalAmount = $basketAmount + $totalFee;
+
         $address = $this->getAddress($this->getBillingAddress($basket));
         if (!empty($contactId) && $contactId > 0) {
             $customer = $this->contactRepository->findContactById($contactId);
@@ -293,11 +296,12 @@ class PayeverService
             $email = $address['email'];
         }
 
+
         $reference = md5($basket->id . $method . time());
         $paymentParameters = [
             "channel" => "plentymarkets",
-            "amount" => round(($basketAmount - $feeAmount), 2), // basketAmount
-            "fee" => round(($basket->shippingAmount - $feeAmount), 2),
+            "amount" => round($totalAmount, 2), // basketAmount
+            "fee" => $totalFee,
             "order_id" => $orderId ?? $reference,
             "currency" => $basket->currency,
             "cart" => $this->getOrderProducts($payeverRequestParams['basketItems']),
