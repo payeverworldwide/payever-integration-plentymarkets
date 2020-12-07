@@ -1087,6 +1087,111 @@
         }
       }
     },
+    "Config.SantanderInstallmentATTab": {
+      "label": "Config.SantanderInstallmentATTab",
+      "formFields": {
+        "santander_installment_at.active": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverActiveLabel",
+          "options": {
+            "defaultValue": "0",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "santander_installment_at.title": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverTitleLabel",
+          "options": {
+            "defaultValue": "Santander Installments AT"
+          }
+        },
+        "santander_installment_at.description": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverDescriptionLabel",
+          "options": {
+            "defaultValue": ""
+          }
+        },
+        "santander_installment_at.accept_fee": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverAcceptFeeLabel",
+          "options": {
+            "defaultValue": "1",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "santander_installment_at.fee": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverFeeLabel",
+          "options": {
+            "defaultValue": "0"
+          }
+        },
+        "santander_installment_at.variable_fee": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverVariableFeeLabel",
+          "options": {
+            "defaultValue": "0"
+          }
+        },
+        "santander_installment_at.min_order_total": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverMinOrderTotalLabel",
+          "options": {
+            "defaultValue": "99"
+          }
+        },
+        "santander_installment_at.max_order_total": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverMaxOrderTotalLabel",
+          "options": {
+            "defaultValue": "100000"
+          }
+        },
+        "santander_installment_at.allowed_countries": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCountries",
+          "options": {
+            "defaultValue": "AT"
+          }
+        },
+        "santander_installment_at.allowed_currencies": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCurrencies",
+          "options": {
+            "defaultValue": "EUR"
+          }
+        }
+      }
+    },
     "Config.SantanderInstallmentDKTab": {
       "label": "Config.SantanderInstallmentDKTab",
       "formFields": {
@@ -1531,7 +1636,10 @@
         "payex_faktura.title": {
           "type": "inputText",
           "required": false,
-          "label": "Config.payeverTitleLabel"
+          "label": "Config.payeverTitleLabel",
+          "options": {
+            "defaultValue": "PayEx Faktura"
+          }
         },
         "payex_faktura.description": {
           "type": "inputText",
@@ -1630,7 +1738,10 @@
         "payex_creditcard.title": {
           "type": "inputText",
           "required": false,
-          "label": "Config.payeverTitleLabel"
+          "label": "Config.payeverTitleLabel",
+          "options": {
+            "defaultValue": "PayEx Credit Card"
+          }
         },
         "payex_creditcard.description": {
           "type": "inputText",

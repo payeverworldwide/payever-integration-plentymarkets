@@ -11,6 +11,7 @@ use Plenty\Modules\Basket\Contracts\BasketRepositoryContract;
 use Plenty\Modules\Frontend\Session\Storage\Contracts\FrontendSessionStorageFactoryContract;
 use Plenty\Modules\Order\Contracts\OrderRepositoryContract;
 use Plenty\Modules\Payment\Method\Contracts\PaymentMethodRepositoryContract;
+use Plenty\Modules\Webshop\Contracts\SessionStorageRepositoryContract;
 use Plenty\Plugin\ConfigRepository;
 use Plenty\Plugin\Controller;
 use Plenty\Plugin\Http\Request;
@@ -30,30 +31,41 @@ class PaymentController extends Controller
      * @var Request
      */
     private $request;
+
     /**
      * @var Response
      */
     private $response;
+
     /**
      * @var ConfigRepository
      */
     private $config;
+
     /**
      * @var payeverHelper
      */
     private $payeverHelper;
+
     /**
      * @var payeverService
      */
     private $payeverService;
+
     /**
      * @var BasketRepositoryContract
      */
     private $basketContract;
+
     /**
      * @var FrontendSessionStorageFactoryContract
      */
     private $sessionStorage;
+
+    /**
+     * @var SessionStorageRepositoryContract
+     */
+    private $sessionStorageRepository;
 
     /**
      * @var PaymentMethodRepositoryContract
@@ -70,7 +82,9 @@ class PaymentController extends Controller
      */
     private $orderContract;
 
-    /** @var NotificationService */
+    /**
+     * @var NotificationService
+     */
     private $notificationService;
 
     /**
@@ -79,8 +93,6 @@ class PaymentController extends Controller
     private $notificationRequestProcessor;
 
     /**
-     * PaymentController constructor.
-     *
      * @param Request $request
      * @param Response $response
      * @param ConfigRepository $config
@@ -89,6 +101,7 @@ class PaymentController extends Controller
      * @param BasketRepositoryContract $basketContract
      * @param OrderRepositoryContract $orderContract
      * @param FrontendSessionStorageFactoryContract $sessionStorage
+     * @param SessionStorageRepositoryContract $sessionStorageRepository
      * @param PayeverSdkService $sdkService
      * @param NotificationRequestProcessor $notificationRequestProcessor
      */
@@ -101,6 +114,7 @@ class PaymentController extends Controller
         BasketRepositoryContract $basketContract,
         OrderRepositoryContract $orderContract,
         FrontendSessionStorageFactoryContract $sessionStorage,
+        SessionStorageRepositoryContract $sessionStorageRepository,
         PaymentMethodRepositoryContract $paymentMethodRepository,
         PayeverSdkService $sdkService,
         NotificationService $notificationService,
@@ -114,6 +128,7 @@ class PaymentController extends Controller
         $this->basketContract = $basketContract;
         $this->orderContract = $orderContract;
         $this->sessionStorage = $sessionStorage;
+        $this->sessionStorageRepository = $sessionStorageRepository;
         $this->paymentMethodRepository = $paymentMethodRepository;
         $this->sdkService = $sdkService;
         $this->notificationService = $notificationService;
@@ -186,9 +201,14 @@ class PaymentController extends Controller
             }
 
             // If reference equals order id
-            if (is_numeric($payeverPayment["reference"])) {
+            if (is_numeric($payeverPayment['reference'])) {
+                $orderId = $payeverPayment['reference'];
                 $this->payeverService->originExecutePayment($payeverPayment);
                 $this->payeverHelper->unlock($paymentId);
+                $this->getLogger(__METHOD__)->debug(
+                    'Payever::debug.successfulCreatingPlentyPayment',
+                    ['payeverPayment' => $payeverPayment]
+                );
             } else {
                 if (!$this->payeverHelper->isSuccessfulPaymentStatus($payeverPayment['status'])) {
                     return $this->cancelPayment($payeverPayment["reference"]);
@@ -199,7 +219,8 @@ class PaymentController extends Controller
 
                 try {
                     if (!$update) {
-                        $this->placeOrder($orderService);
+                        $orderData = $this->placeOrder($orderService);
+                        $orderId = $orderData->order->id;
                     }
                 } catch (\Exception $exception) {
                     $this->notificationService->error($exception->getMessage());
@@ -210,6 +231,11 @@ class PaymentController extends Controller
                     $this->payeverHelper->unlock($paymentId);
                 }
             }
+            $orderAccessKey = $this->orderContract->generateAccessKey($orderId);
+            $this->sessionStorageRepository->setSessionValue(
+                SessionStorageRepositoryContract::LAST_ACCESSED_ORDER,
+                ['orderId' => $orderId, 'accessKey' => $orderAccessKey]
+            );
         }
 
         $this->payeverHelper->waitForUnlock($paymentId);
@@ -279,18 +305,21 @@ class PaymentController extends Controller
         $basket = $basketRepo->load();
 
         $orderData = $this->placeOrder($orderService, false);
-        $createPaymentReponse = $this->payeverService->processCreatePaymentRequest($basket, $method,
-            $orderData->order->id);
+        $createPaymentResponse = $this->payeverService->processCreatePaymentRequest(
+            $basket,
+            $method,
+            $orderData->order->id
+        );
 
-        if ($createPaymentReponse['error']) {
+        if ($createPaymentResponse['error']) {
             $this->notificationService->warn("Creating payment has been declined");
             return $this->response->redirectTo('checkout');
         }
 
         if ($redirect) {
-            return $this->response->redirectTo($createPaymentReponse['redirect_url']);
+            return $this->response->redirectTo($createPaymentResponse['redirect_url']);
         }
 
-        return $createPaymentReponse['redirect_url'];
+        return $createPaymentResponse['redirect_url'];
     }
 }

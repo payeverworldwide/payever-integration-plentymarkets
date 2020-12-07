@@ -1,5 +1,10 @@
 # Release Informationen für payever
 
+## v1.11.0 (2020-12-02)
+
+### Veröffentlichung
+- neue zahlungsoption Santander Ratenkredit Österreich
+
 ## v1.10.0 (2020-08-04)
 
 ### Veröffentlichung

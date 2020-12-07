@@ -286,13 +286,13 @@ class PayeverService
             $email = $address['email'];
         }
 
-        $reference = md5($basket->id . $method . time());
+        $orderId = $orderId ?? md5($basket->id . $method . time());
 
         $paymentParameters = [
             "channel" => "plentymarkets",
             "amount" => round(($basket->basketAmount - $feeAmount), 2), // basketAmount
             "fee" => round(($basket->shippingAmount - $feeAmount), 2),
-            "order_id" => $orderId ?? $reference,
+            "order_id" => $orderId,
             "currency" => $basket->currency,
             "cart" => $this->getOrderProducts($payeverRequestParams['basketItems']),
             "payment_method" => $method,

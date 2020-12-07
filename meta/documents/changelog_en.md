@@ -1,5 +1,10 @@
 # Release Notes for payever
 
+## v1.11.0 (2020-12-02)
+
+### Added
+- new payment option Santander Installments AT
+
 ## v1.10.0 (2020-08-04)
 
 ### Implemented

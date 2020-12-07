@@ -38,9 +38,9 @@ class AbstractPaymentMethod extends PaymentMethodService
         ConfigRepository $configRepository,
         BasketRepositoryContract $basketRepositoryContract,
         PayeverSdkService $sdkService
-    ):bool {
+    ): bool {
 
-        $activeKey = 'Payever.'.$this->getMethodCode().'.active';
+        $activeKey = 'Payever.' . $this->getMethodCode() . '.active';
         if ($configRepository->get($activeKey) != 1) {
             return false;
         }
@@ -61,7 +61,7 @@ class AbstractPaymentMethod extends PaymentMethodService
         /**
          * Check currency
          */
-        $allowedCurrenciesKey = 'Payever.'.$this->getMethodCode().'.allowed_currencies';
+        $allowedCurrenciesKey = 'Payever.' . $this->getMethodCode() . '.allowed_currencies';
         $allowedCurrencies = explode(",", $configRepository->get($allowedCurrenciesKey));
 
         if (
@@ -74,7 +74,7 @@ class AbstractPaymentMethod extends PaymentMethodService
         /**
          * Check the minimum amount
          */
-        $minAmountKey = 'Payever.'.$this->getMethodCode().'.min_order_total';
+        $minAmountKey = 'Payever.' . $this->getMethodCode() . '.min_order_total';
         if ($configRepository->get($minAmountKey) > 0.00 &&
             $basket->basketAmount <= $configRepository->get($minAmountKey)
         ) {
@@ -84,7 +84,7 @@ class AbstractPaymentMethod extends PaymentMethodService
         /**
          * Check the maximum amount
          */
-        $maxAmountKey = 'Payever.'.$this->getMethodCode().'.max_order_total';
+        $maxAmountKey = 'Payever.' . $this->getMethodCode() . '.max_order_total';
         if ($configRepository->get($maxAmountKey) > 0.00 &&
             $configRepository->get($maxAmountKey) <= $basket->basketAmount
         ) {
@@ -97,7 +97,7 @@ class AbstractPaymentMethod extends PaymentMethodService
         $countryRepo = pluginApp(\Plenty\Modules\Order\Shipping\Countries\Contracts\CountryRepositoryContract::class);
         $country = $countryRepo->findIsoCode($basket->shippingCountryId, 'iso_code_2');
 
-        $allowedCountriesKey = 'Payever.'.$this->getMethodCode().'.allowed_countries';
+        $allowedCountriesKey = 'Payever.' . $this->getMethodCode() . '.allowed_countries';
         $allowedCountries = explode(",", $configRepository->get($allowedCountriesKey));
 
         if (!in_array($country, $allowedCountries)
@@ -115,13 +115,15 @@ class AbstractPaymentMethod extends PaymentMethodService
      * @param BasketRepositoryContract $basketRepositoryContract
      * @return float
      */
-    public function getFee(ConfigRepository $configRepository, BasketRepositoryContract $basketRepositoryContract):float
-    {
+    public function getFee(
+        ConfigRepository $configRepository,
+        BasketRepositoryContract $basketRepositoryContract
+    ): float {
         $basket = $basketRepositoryContract->load();
-        $acceptedFee = $configRepository->get('Payever.'.$this->getMethodCode().'.accept_fee');
+        $acceptedFee = $configRepository->get('Payever.' . $this->getMethodCode() . '.accept_fee');
         if (!$acceptedFee) {
-            $fixedFee = $configRepository->get('Payever.'.$this->getMethodCode().'.fee');
-            $variableFee = $configRepository->get('Payever.'.$this->getMethodCode().'.variable_fee');
+            $fixedFee = $configRepository->get('Payever.' . $this->getMethodCode() . '.fee');
+            $variableFee = $configRepository->get('Payever.' . $this->getMethodCode() . '.variable_fee');
             $feeAmount = $basket->basketAmount * $variableFee / 100 + $fixedFee;
 
             return $feeAmount;
@@ -139,25 +141,25 @@ class AbstractPaymentMethod extends PaymentMethodService
     public function getName(
         ConfigRepository $configRepository,
         BasketRepositoryContract $basketRepositoryContract
-    ):string {
+    ): string {
         $basket = $basketRepositoryContract->load();
-        $titleKey = 'Payever.'.$this->getMethodCode().'.title';
+        $titleKey = 'Payever.' . $this->getMethodCode() . '.title';
         $name = $configRepository->get($titleKey);
 
         if (!strlen($name)) {
             $name = 'Payever';
         }
 
-        $acceptedFee = $configRepository->get('Payever.'.$this->getMethodCode().'.accept_fee');
+        $acceptedFee = $configRepository->get('Payever.' . $this->getMethodCode() . '.accept_fee');
         if (!$acceptedFee) {
-            $fixedFee = $configRepository->get('Payever.'.$this->getMethodCode().'.fee');
-            $variableFee = $configRepository->get('Payever.'.$this->getMethodCode().'.variable_fee');
+            $fixedFee = $configRepository->get('Payever.' . $this->getMethodCode() . '.fee');
+            $variableFee = $configRepository->get('Payever.' . $this->getMethodCode() . '.variable_fee');
             if ($variableFee && $fixedFee) {
-                $name .= ' ('.$variableFee.'% + '.$fixedFee.' '.$basket->currency.')';
+                $name .= ' (' . $variableFee . '% + ' . $fixedFee . ' ' . $basket->currency . ')';
             } elseif ($variableFee && !$fixedFee) {
-                $name .= ' ( + '.$variableFee.'%)';
+                $name .= ' ( + ' . $variableFee . '%)';
             } elseif (!$variableFee && $fixedFee) {
-                $name .= ' ( + '.$fixedFee.' '.$basket->currency.')';
+                $name .= ' ( + ' . $fixedFee . ' ' . $basket->currency . ')';
             }
         }
 
@@ -170,11 +172,11 @@ class AbstractPaymentMethod extends PaymentMethodService
      * @param ConfigRepository $configRepository
      * @return string
      */
-    public function getIcon(ConfigRepository $configRepository):string
+    public function getIcon(ConfigRepository $configRepository): string
     {
         if ($configRepository->get('Payever.display_payment_icon') == 1) {
             $app = pluginApp(Application::class);
-            $icon = $app->getUrlPath('Payever').'/images/logos/'.$this->getMethodCode().'.png';
+            $icon = $app->getUrlPath('Payever') . '/images/logos/' . $this->getMethodCode() . '.png';
 
             return $icon;
         }
@@ -188,15 +190,15 @@ class AbstractPaymentMethod extends PaymentMethodService
      * @param ConfigRepository $configRepository
      * @return string
      */
-    public function getDescription(ConfigRepository $configRepository):string
+    public function getDescription(ConfigRepository $configRepository): string
     {
         if ($configRepository->get('Payever.display_payment_description') == 1) {
-            $descriptionKey = 'Payever.'.$this->getMethodCode().'.description';
+            $descriptionKey = 'Payever.' . $this->getMethodCode() . '.description';
 
-            return $configRepository->get($descriptionKey);
-        } else {
-            return '';
+            return $configRepository->get($descriptionKey) ?? '';
         }
+
+        return '';
     }
 
     /**
@@ -205,7 +207,7 @@ class AbstractPaymentMethod extends PaymentMethodService
      * @param int $orderId
      * @return bool
      */
-    public function isSwitchableTo(int $orderId):bool
+    public function isSwitchableTo(int $orderId): bool
     {
         return false;
     }
@@ -216,7 +218,7 @@ class AbstractPaymentMethod extends PaymentMethodService
      * @param int $orderId
      * @return bool
      */
-    public function isSwitchableFrom(int $orderId):bool
+    public function isSwitchableFrom(int $orderId): bool
     {
         return true;
     }

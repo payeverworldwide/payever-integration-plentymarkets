@@ -9,6 +9,7 @@ use Payever\Methods\PaymillcreditcardPaymentMethod;
 use Payever\Methods\PaymilldirectdebitPaymentMethod;
 use Payever\Methods\PaypalPaymentMethod;
 use Payever\Methods\SantanderfactoringdePaymentMethod;
+use Payever\Methods\SantanderinstatPaymentMethod;
 use Payever\Methods\SantanderinstdkPaymentMethod;
 use Payever\Methods\SantanderinstnoPaymentMethod;
 use Payever\Methods\SantanderinstsePaymentMethod;
@@ -116,6 +117,10 @@ class PayeverHelper
         'SANTANDER_INSTALLMENT_SE' => [
             'class' => SantanderinstsePaymentMethod::class,
             'name' => 'Santander Ratenkauf Sweden',
+        ],
+        'SANTANDER_INSTALLMENT_AT' => [
+            'class' => SantanderinstatPaymentMethod::class,
+            'name' => 'Santander Ratenkauf Austria',
         ],
         'SANTANDER_INSTALLMENT' => [
             'class' => SantanderPaymentMethod::class,
