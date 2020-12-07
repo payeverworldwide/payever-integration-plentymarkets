@@ -30,9 +30,12 @@
   "containers"        : [],
   "dataProviders"     : [],
   "javaScriptFiles"   : [],
-  "require"           : ["IO"],
-  "dependencies":{
-    "payever/sdk-php":"2.5.8"
+  "require"           : {
+    "IO": ">4.0.0",
+    "Ceres":">=4.0.0"
+  },
+  "dependencies": {
+    "payever/sdk-php": "2.5.8"
   },
   "runOnBuild"        : [
     "Payever\\Migrations\\CreatePayeverPaymentMethods6",
