@@ -1,9 +1,13 @@
 # Release Notes for payever
 
-## v1.11.0 (2020-12-02)
+## v2.0.0 (2020-12-15)
 
 ### Added
 - new payment option Santander Installments AT
+- PayEx images
+- specification of supported Ceres and IO versions
+### Fixed
+- 404 error on back redirect after guest checkout
 
 ## v1.10.0 (2020-08-04)
 
