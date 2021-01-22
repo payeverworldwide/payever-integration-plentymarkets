@@ -267,6 +267,19 @@ class PaymentController extends Controller
     }
 
     /**
+     * Payever redirects to this page if the payment was executed correctly
+     *
+     * @return mixed
+     */
+    public function checkoutFinish()
+    {
+        $paymentId = $this->sessionStorage->getPlugin()->getValue('payever_payment_id');
+        $successUrl = $this->payeverHelper->buildSuccessURL($paymentId);
+
+        return $this->response->redirectTo($successUrl);
+    }
+
+    /**
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function checkoutNotice()

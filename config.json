@@ -599,6 +599,24 @@
             "defaultValue": "PayPal. Want it, get it."
           }
         },
+        "paypal.redirect_method": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverRedirectMethod",
+          "options": {
+            "defaultValue": "1",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
         "paypal.accept_fee": {
           "type": "selectBox",
           "required": false,
@@ -1124,6 +1142,24 @@
             "defaultValue": ""
           }
         },
+        "santander_installment_at.redirect_method": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverRedirectMethod",
+          "options": {
+            "defaultValue": "1",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
         "santander_installment_at.accept_fee": {
           "type": "selectBox",
           "required": false,
@@ -1542,6 +1578,24 @@
           "label": "Config.payeverDescriptionLabel",
           "options": {
             "defaultValue": "Simply pay while you are shopping online. By entering your familiar online banking login details and confirmation codes with a maximum level of security. The online shop will receive a real-time transaction confirmation immediately after the transfer has been listed."
+          }
+        },
+        "sofort.redirect_method": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverRedirectMethod",
+          "options": {
+            "defaultValue": "1",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
           }
         },
         "sofort.accept_fee": {

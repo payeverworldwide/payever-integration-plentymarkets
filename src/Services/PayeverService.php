@@ -31,6 +31,10 @@ class PayeverService
     const MR_SALUATATION = 'mr';
     const MS_SALUATATION = 'ms';
 
+    const IFRAME_MODE = 0;
+    const REDIRECT_MODE = 1;
+    const REDIRECT_AND_IFRAME_MODE = 2;
+
     const PLENTY_FEMALE_SALUATATION = 'female';
     const PLENTY_MALE_SALUATATION = 'male';
 
@@ -137,8 +141,8 @@ class PayeverService
         foreach ($basketItems as $basketItem) {
             $products[] = [
                 'name' => 'name' . $basketItem['name'],
-                'price' => $basketItem['price'],
-                'quantity' => $basketItem['quantity'],
+                'price' => floatval($basketItem['price']),
+                'quantity' => intval($basketItem['quantity']),
                 'description' => "description",
                 'thumbnail' => "",
                 'url' => "",
@@ -164,6 +168,19 @@ class PayeverService
         }
 
         return $feeAmount;
+    }
+
+    /**
+     * @param string $method
+     * @return bool
+     */
+    public function isSubmitMethod(string $method): bool
+    {
+        if ($this->config->has('Payever.' . $method . '.redirect_method')) {
+            return (bool) $this->config->get('Payever.' . $method . '.redirect_method');
+        }
+
+        return false;
     }
 
     /**
@@ -236,17 +253,17 @@ class PayeverService
             $redirectUrl = $createPaymentReponse['redirect_url'];
         }
 
-        $checkoutMode = $this->config->get('Payever.redirect_to_payever');
+        $checkoutMode = $this->isSubmitMethod($method) ? self::REDIRECT_MODE : $this->config->get('Payever.redirect_to_payever');
         switch ($checkoutMode) {
-            case 0:
+            case self::IFRAME_MODE:
                 $this->returnType = 'htmlContent';
                 $paymentContent = '<iframe sandbox="allow-same-origin allow-forms allow-top-navigation allow-scripts allow-modals allow-popups" style="width: 100%; height: 700px" frameborder="0" src="' . $redirectUrl . '"></iframe>';
                 break;
-            case 1:
+            case self::REDIRECT_MODE:
                 $this->returnType = 'redirectUrl';
                 $paymentContent = $redirectUrl;
                 break;
-            case 2:
+            case self::REDIRECT_AND_IFRAME_MODE:
                 $this->returnType = 'redirectUrl';
                 $this->sessionStorage->getPlugin()->setValue("payever_iframe_url", $redirectUrl);
                 $paymentContent = $this->payeverHelper->getIframeURL($method);
@@ -311,11 +328,23 @@ class PayeverService
             "notice_url" => $this->payeverHelper->getNoticeURL()
         ];
 
-        $this->getLogger(__METHOD__)->debug('Payever::debug.paymentParameters', $paymentParameters);
-        $paymentRequest = $this->sdkService->call('createPaymentRequest', ["payment_parameters" => $paymentParameters]);
-        $this->getLogger(__METHOD__)->debug('Payever::debug.createPaymentRequest', $paymentRequest);
+        if ($this->isSubmitMethod($method)) {
+            $paymentParameters['finish_url'] = $this->payeverHelper->getFinishURL();
+            $this->getLogger(__METHOD__)->debug('Payever::debug.submitPaymentParameters', $paymentParameters);
+            $paymentResponse = $this->sdkService->call('submitPaymentRequest', ["payment_parameters" => $paymentParameters]);
+            $this->getLogger(__METHOD__)->debug('Payever::debug.submitPaymentResponse', $paymentResponse);
 
-        return $paymentRequest;
+            if (!$paymentResponse['error']) {
+                $this->sessionStorage->getPlugin()->setValue('payever_payment_id', $paymentResponse['result']['id']);
+                $paymentResponse['redirect_url'] = $paymentResponse['result']['payment_details']['redirect_url'];
+            }
+        } else {
+            $this->getLogger(__METHOD__)->debug('Payever::debug.paymentParameters', $paymentParameters);
+            $paymentResponse = $this->sdkService->call('createPaymentRequest', ["payment_parameters" => $paymentParameters]);
+            $this->getLogger(__METHOD__)->debug('Payever::debug.createPaymentResponse', $paymentResponse);
+        }
+
+        return $paymentResponse;
     }
 
     public function getReturnType()

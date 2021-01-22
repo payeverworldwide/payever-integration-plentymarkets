@@ -1,5 +1,10 @@
 # Release Notes for payever
 
+## v2.1.0 (2021-01-21)
+
+### Implemented
+- submit payment;
+
 ## v2.0.0 (2020-12-15)
 
 ### Added

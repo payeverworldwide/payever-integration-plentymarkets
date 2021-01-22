@@ -1,5 +1,10 @@
 # Release Informationen für payever
 
+## v2.1.0 (2021-01-21)
+
+### Implementiert
+- Zahlung ausführen;
+
 ## v2.0.0 (2020-12-15)
 
 ### Hinzugefügt

@@ -18,6 +18,7 @@ class PayeverRouteServiceProvider extends RouteServiceProvider
     {
         // Register payever success and cancellation URLs
         $router->get('payment/payever/checkoutSuccess', 'Payever\Controllers\PaymentController@checkoutSuccess');
+        $router->get('payment/payever/checkoutFinish', 'Payever\Controllers\PaymentController@checkoutFinish');
         $router->get('payment/payever/checkoutCancel', 'Payever\Controllers\PaymentController@checkoutCancel');
         $router->get('payment/payever/checkoutFailure', 'Payever\Controllers\PaymentController@checkoutFailure');
         $router->post('payment/payever/checkoutNotice', 'Payever\Controllers\PaymentController@checkoutNotice');

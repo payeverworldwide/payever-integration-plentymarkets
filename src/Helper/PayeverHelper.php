@@ -163,6 +163,7 @@ class PayeverHelper
     private $urlMap = [
         'process' => '/payment/payever/processCheckout?method=',
         'success' => '/payment/payever/checkoutSuccess?payment_id=--PAYMENT-ID--',
+        'finish' => '/payment/payever/checkoutFinish',
         'notice' => '/payment/payever/checkoutNotice?payment_id=--PAYMENT-ID--',
         'cancel' => '/payment/payever/checkoutCancel?payment_id=--PAYMENT-ID--',
         'failure' => '/payment/payever/checkoutFailure?payment_id=--PAYMENT-ID--',
@@ -288,6 +289,20 @@ class PayeverHelper
     public function getSuccessURL(): string
     {
         return $this->getUrl('success');
+    }
+
+    public function buildSuccessURL(string $paymentId)
+    {
+        $baseSuccessUrl = $this->getUrl('success');
+        return str_replace("--PAYMENT-ID--", $paymentId, "$baseSuccessUrl");
+    }
+
+    /**
+     * @return string
+     */
+    public function getFinishURL(): string
+    {
+        return $this->getUrl('finish');
     }
 
     /**
