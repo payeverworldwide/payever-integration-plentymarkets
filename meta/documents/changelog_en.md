@@ -1,5 +1,11 @@
 # Release Notes for payever
 
+## v2.2.0 (2021-07-06)
+
+### Implemented
+- processing orders by notifications;
+- renamed PayPal;
+
 ## v2.1.0 (2021-01-21)
 
 ### Implemented

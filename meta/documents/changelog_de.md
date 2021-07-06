@@ -1,5 +1,11 @@
 # Release Informationen für payever
 
+## v2.2.0 (2021-07-06)
+
+### Implementiert
+- Bearbeitung von Bestellungen durch Benachrichtigungen;
+- PayPal umbenannt; 
+
 ## v2.1.0 (2021-01-21)
 
 ### Implementiert
