@@ -1,4 +1,4 @@
-<?php //strict
+<?php
 
 namespace Payever\Methods;
 
@@ -8,5 +8,8 @@ namespace Payever\Methods;
  */
 class SwedbankCreditCardPaymentMethod extends AbstractPaymentMethod
 {
-    public $_methodCode = 'swedbank_creditcard';
+    /**
+     * @var string
+     */
+    public $methodCode = 'swedbank_creditcard';
 }

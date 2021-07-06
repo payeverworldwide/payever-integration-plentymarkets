@@ -5,15 +5,24 @@ namespace Payever\Models;
 use Plenty\Modules\Plugin\DataBase\Contracts\Model;
 
 /**
- * Class PayeverConfig
- *
  * @property string $id
  * @property string $value
  */
 class PayeverConfig extends Model
 {
-    protected $primaryKeyFieldName = "id";
+    /**
+     * @var string
+     */
+    protected $primaryKeyFieldName = 'id';
+
+    /**
+     * @var string
+     */
     protected $primaryKeyFieldType = self::FIELD_TYPE_STRING;
+
+    /**
+     * @var bool
+     */
     protected $autoIncrementPrimaryKey = false;
 
     /**
@@ -41,6 +50,9 @@ class PayeverConfig extends Model
         return 'Payever::PayeverConfig';
     }
 
+    /**
+     * @return string
+     */
     public function getValue()
     {
         return $this->value;

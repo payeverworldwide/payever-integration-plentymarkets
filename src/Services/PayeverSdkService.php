@@ -1,4 +1,4 @@
-<?php // strict
+<?php
 
 namespace Payever\Services;
 
@@ -24,8 +24,6 @@ class PayeverSdkService
     private $payeverHelper;
 
     /**
-     * PayeverSdkService constructor.
-     *
      * @param LibraryCallContract $libCall
      * @param ConfigRepository $config
      * @param PayeverHelper $payeverHelper

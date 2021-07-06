@@ -1,12 +1,15 @@
-<?php //strict
+<?php
 
 namespace Payever\Methods;
 
 /**
- * Class sofortPaymentMethod
+ * Class SofortPaymentMethod
  * @package Payever\Methods
  */
 class SofortPaymentMethod extends AbstractPaymentMethod
 {
-    public $_methodCode = 'sofort';
+    /**
+     * @var string
+     */
+    public $methodCode = 'sofort';
 }

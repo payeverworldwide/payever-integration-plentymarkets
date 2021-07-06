@@ -1,4 +1,4 @@
-<?php //strict
+<?php
 
 namespace Payever\Methods;
 
@@ -8,5 +8,8 @@ namespace Payever\Methods;
  */
 class PayexfakturaPaymentMethod extends AbstractPaymentMethod
 {
-    public $_methodCode = 'payex_faktura';
+    /**
+     * @var string
+     */
+    public $methodCode = 'payex_faktura';
 }

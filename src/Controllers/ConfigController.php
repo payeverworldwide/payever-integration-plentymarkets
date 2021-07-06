@@ -1,4 +1,5 @@
-<?php //strict
+<?php
+
 namespace Payever\Controllers;
 
 use Plenty\Plugin\Controller;
@@ -9,10 +10,6 @@ use Payever\Helper\PayeverHelper;
 use Payever\Services\PayeverSdkService;
 use Plenty\Plugin\Log\Loggable;
 
-/**
- * Class SettingsController
- * @package Payever\Controllers
- */
 class ConfigController extends Controller
 {
     use Loggable;
@@ -25,41 +22,41 @@ class ConfigController extends Controller
      * @var Request
      */
     private $request;
+
     /**
      * @var Response
      */
     private $response;
+
     /**
      * @var ConfigurationRepositoryContract
      */
     private $config;
+
     /**
-     * @var payeverHelper
+     * @var PayeverHelper
      */
     private $payeverHelper;
+
     /**
      * @var PayeverSdkService
      */
     private $sdkService;
 
     /**
-     * ConfigController constructor.
-     *
      * @param Request $request
-     * @param Response $response
      * @param ConfigurationRepositoryContract $config
      * @param PayeverHelper $payeverHelper
      * @param PayeverSdkService $sdkService
      */
     public function __construct(
         Request $request,
-        Response $response,
         ConfigurationRepositoryContract $config,
         PayeverHelper $payeverHelper,
         PayeverSdkService $sdkService
     ) {
         $this->request = $request;
-        $this->response = $response;
+        $this->response = pluginApp(Response::class);
         $this->config = $config;
         $this->payeverHelper = $payeverHelper;
         $this->sdkService = $sdkService;
@@ -97,7 +94,7 @@ class ConfigController extends Controller
         $paymentOptions = $this->sdkService->call('listPaymentOptionsRequest', $apiParameters);
         $updatedConfig = [];
 
-        if ($paymentOptions['result']) {
+        if (isset($paymentOptions['result']) && is_array($paymentOptions['result'])) {
             foreach ($paymentOptions['result'] as $optionData) {
                 $optionData = (array)$optionData;
                 $methodKey = $optionData['payment_method'];
@@ -107,8 +104,8 @@ class ConfigController extends Controller
                     $updatedConfig["{$methodKey}.{$pluginKey}"] = strip_tags($optionData[$apiKey]);
                 }
 
-                $updatedConfig["{$methodKey}.allowed_countries"] = implode(",", $optionData['options']['countries']);
-                $updatedConfig["{$methodKey}.allowed_currencies"] = implode(",", $optionData['options']['currencies']);
+                $updatedConfig["{$methodKey}.allowed_countries"] = implode(',', $optionData['options']['countries']);
+                $updatedConfig["{$methodKey}.allowed_currencies"] = implode(',', $optionData['options']['currencies']);
             }
         }
 
@@ -116,43 +113,54 @@ class ConfigController extends Controller
          * Payment options API method doesn't return inactive options,
          * so we need to disable them manually
          */
-        foreach ($this->payeverHelper->getMethodsMetaData() as $methodKey => $data) {
-            $methodConfigKey = strtolower($methodKey) . ".active";
+        foreach (array_keys($this->payeverHelper->getMethodsMetaData()) as $methodKey) {
+            $methodConfigKey = strtolower($methodKey) . '.active';
             $updatedConfig[$methodConfigKey] = $updatedConfig[$methodConfigKey] ?? 0;
         }
 
         return $this->response->json([
             'result' => $updatedConfig,
-            'errors' => $paymentOptions["error_description"]
+            'errors' => !empty($paymentOptions['error'])
+                ? [$this->payeverHelper->retrieveErrorMessageFromSdkResponse($paymentOptions)]
+                : null,
         ]);
     }
 
+    /**
+     * @return void
+     */
     public function executeCommand()
     {
         try {
-            $timestamt = $this->payeverHelper->getCommandTimestamt();
+            $timestamp = $this->payeverHelper->getCommandTimestamp();
             $this->sdkService->call('registerPlugin', []);
-            $commandsList = $this->sdkService->call('getPluginCommands', ['command_timestamt' => $timestamt]);
+            $commandsList = $this->sdkService->call(
+                'getPluginCommands',
+                [PayeverHelper::COMMAND_TIMESTAMP_KEY => $timestamp]
+            );
             $supportedCommands = $this->sdkService->call('getSupportedPluginCommands', []);
 
             foreach ($commandsList as $command) {
-                if ($this->isCommandSupported($command['name'], $supportedCommands)) {
+                $commandId = $command['id'] ?? null;
+                $commandName = $command['name'] ?? null;
+                $commandValue = $command['value'] ?? null;
+                if ($this->isCommandSupported($commandName, $supportedCommands)) {
                     $this->getLogger(__METHOD__)->debug('Payever::debug.executeCommand', $command);
 
-                    $this->execute($command['name'], $command['value']);
-                    $this->sdkService->call('acknowledgePluginCommand', ['commandId' => $command['id']]);
+                    $this->execute($commandName, $commandValue);
+                    $this->sdkService->call('acknowledgePluginCommand', ['commandId' => $commandId]);
                 } else {
                     $this->getLogger(__METHOD__)->error(
                         sprintf(
                             'Plugin command %s with value %s is not supported',
-                            $command['name'],
-                            $command['value']
+                            $commandName,
+                            $commandValue
                         )
                     );
                 }
             }
 
-            $this->payeverHelper->setCommandTimestamt(time());
+            $this->payeverHelper->setCommandTimestamp(time());
         } catch (\UnexpectedValueException $unexpectedValueException) {
             $this->getLogger(__METHOD__)->error('The executing commands failed.', $unexpectedValueException);
         } catch (\Exception $exception) {
@@ -161,10 +169,10 @@ class ConfigController extends Controller
     }
 
     /**
-     * @param $commandName
-     * @param $commandValue
+     * @param string $commandName
+     * @param mixed $commandValue
      */
-    private function execute($commandName, $commandValue)
+    private function execute(string $commandName, $commandValue)
     {
         switch ($commandName) {
             case self::SET_SANDBOX_HOST:
@@ -187,7 +195,7 @@ class ConfigController extends Controller
     }
 
     /**
-     * @param $host
+     * @param mixed $host
      *
      * @throws \UnexpectedValueException
      */
@@ -199,13 +207,13 @@ class ConfigController extends Controller
     }
 
     /**
-     * @param $commandName
-     * @param $supportedCommands
+     * @param mixed $commandName
+     * @param mixed $supportedCommands
      *
      * @return bool
      */
-    private function isCommandSupported($commandName, $supportedCommands)
+    private function isCommandSupported($commandName, $supportedCommands): bool
     {
-        return in_array($commandName, $supportedCommands);
+        return is_string($commandName) && is_array($supportedCommands) && in_array($commandName, $supportedCommands);
     }
 }

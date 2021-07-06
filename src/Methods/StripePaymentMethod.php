@@ -1,12 +1,15 @@
-<?php //strict
+<?php
 
 namespace Payever\Methods;
 
 /**
- * Class stripePaymentMethod
+ * Class StripePaymentMethod
  * @package Payever\Methods
  */
 class StripePaymentMethod extends AbstractPaymentMethod
 {
-    public $_methodCode = 'stripe';
+    /**
+     * @var string
+     */
+    public $methodCode = 'stripe';
 }

@@ -1,12 +1,15 @@
-<?php //strict
+<?php
 
 namespace Payever\Methods;
 
 /**
- * Class paymilldirectdebitPaymentMethod
+ * Class PaymilldirectdebitPaymentMethod
  * @package Payever\Methods
  */
 class PaymilldirectdebitPaymentMethod extends AbstractPaymentMethod
 {
-    public $_methodCode = 'paymill_directdebit';
+    /**
+     * @var string
+     */
+    public $methodCode = 'paymill_directdebit';
 }

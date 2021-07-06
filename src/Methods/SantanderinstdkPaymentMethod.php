@@ -1,12 +1,15 @@
-<?php //strict
+<?php
 
 namespace Payever\Methods;
 
 /**
- * Class santanderinstdkPaymentMethod
+ * Class SantanderinstdkPaymentMethod
  * @package Payever\Methods
  */
 class SantanderinstdkPaymentMethod extends AbstractPaymentMethod
 {
-    public $_methodCode = 'santander_installment_dk';
+    /**
+     * @var string
+     */
+    public $methodCode = 'santander_installment_dk';
 }

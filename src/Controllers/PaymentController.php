@@ -1,12 +1,14 @@
-<?php //strict
+<?php
+
 namespace Payever\Controllers;
 
 use IO\Services\NotificationService;
-use IO\Services\OrderService;
+use Payever\Contracts\PendingPaymentRepositoryContract;
 use Payever\Helper\PayeverHelper;
 use Payever\Services\PayeverSdkService;
 use Payever\Services\PayeverService;
 use Payever\Services\Payment\Notification\NotificationRequestProcessor;
+use Plenty\Modules\Authorization\Services\AuthHelper;
 use Plenty\Modules\Basket\Contracts\BasketRepositoryContract;
 use Plenty\Modules\Frontend\Session\Storage\Contracts\FrontendSessionStorageFactoryContract;
 use Plenty\Modules\Order\Contracts\OrderRepositoryContract;
@@ -18,14 +20,20 @@ use Plenty\Plugin\Http\Request;
 use Plenty\Plugin\Http\Response;
 use Plenty\Plugin\Log\Loggable;
 use Plenty\Plugin\Templates\Twig;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 /**
- * Class PaymentController
- * @package Payever\Controllers
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 class PaymentController extends Controller
 {
     use Loggable;
+
+    /**
+     * @var AuthHelper
+     */
+    private $authHelper;
 
     /**
      * @var Request
@@ -43,12 +51,12 @@ class PaymentController extends Controller
     private $config;
 
     /**
-     * @var payeverHelper
+     * @var PayeverHelper
      */
     private $payeverHelper;
 
     /**
-     * @var payeverService
+     * @var PayeverService
      */
     private $payeverService;
 
@@ -93,8 +101,13 @@ class PaymentController extends Controller
     private $notificationRequestProcessor;
 
     /**
+     * @var PendingPaymentRepositoryContract
+     */
+    private $pendingPaymentRepository;
+
+    /**
+     * @param AuthHelper $authHelper
      * @param Request $request
-     * @param Response $response
      * @param ConfigRepository $config
      * @param PayeverHelper $payeverHelper
      * @param PayeverService $payeverService
@@ -102,12 +115,16 @@ class PaymentController extends Controller
      * @param OrderRepositoryContract $orderContract
      * @param FrontendSessionStorageFactoryContract $sessionStorage
      * @param SessionStorageRepositoryContract $sessionStorageRepository
+     * @param PaymentMethodRepositoryContract $paymentMethodRepository
      * @param PayeverSdkService $sdkService
+     * @param NotificationService $notificationService
      * @param NotificationRequestProcessor $notificationRequestProcessor
+     * @param PendingPaymentRepositoryContract $pendingPaymentRepository
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
+        AuthHelper $authHelper,
         Request $request,
-        Response $response,
         ConfigRepository $config,
         PayeverHelper $payeverHelper,
         PayeverService $payeverService,
@@ -118,10 +135,12 @@ class PaymentController extends Controller
         PaymentMethodRepositoryContract $paymentMethodRepository,
         PayeverSdkService $sdkService,
         NotificationService $notificationService,
-        NotificationRequestProcessor $notificationRequestProcessor
+        NotificationRequestProcessor $notificationRequestProcessor,
+        PendingPaymentRepositoryContract $pendingPaymentRepository
     ) {
+        $this->authHelper = $authHelper;
         $this->request = $request;
-        $this->response = $response;
+        $this->response = pluginApp(Response::class);
         $this->config = $config;
         $this->payeverHelper = $payeverHelper;
         $this->payeverService = $payeverService;
@@ -133,35 +152,60 @@ class PaymentController extends Controller
         $this->sdkService = $sdkService;
         $this->notificationService = $notificationService;
         $this->notificationRequestProcessor = $notificationRequestProcessor;
+        $this->pendingPaymentRepository = $pendingPaymentRepository;
+    }
+
+    /**
+     * @return array|SymfonyResponse
+     */
+    public function checkoutCancelDecorator()
+    {
+        return $this->authHelper->processUnguarded([$this, 'checkoutCancel']);
     }
 
     /**
      * Payever redirects to this page if the payment could not be executed or other problems occurred
+     *
+     * @return array|SymfonyResponse
      */
     public function checkoutCancel()
     {
-        $this->notificationService->warn("Payment has been canceled");
+        $this->notificationService->warn('Payment has been canceled');
 
         return $this->response->redirectTo('checkout');
     }
 
     /**
+     * @return array|SymfonyResponse
+     */
+    public function checkoutFailureDecorator()
+    {
+        return $this->authHelper->processUnguarded([$this, 'checkoutFailure']);
+    }
+
+    /**
      * Payever redirects to this page if the payment could not be executed or other problems occurred
+     *
+     * @return array|SymfonyResponse
      */
     public function checkoutFailure()
     {
-        $this->notificationService->warn("Payment has been declined");
+        $this->notificationService->warn('Payment has been declined');
 
-        $paymentId = $this->request->get('payment_id');
+        $paymentId = (string) $this->request->get('payment_id');
         $payeverPayment = $this->payeverService->handlePayeverPayment($paymentId);
 
-        if ($payeverPayment && is_numeric($payeverPayment["reference"])) {
-            $this->payeverService->updateOrderStatus($payeverPayment["reference"], $payeverPayment["status"]);
+        if ($payeverPayment && is_numeric($payeverPayment['reference'])) {
+            $this->payeverService->updateOrderStatus($payeverPayment['reference'], $payeverPayment['status']);
         }
 
         return $this->response->redirectTo('checkout');
     }
 
+    /**
+     * @param mixed $referenceId
+     * @return SymfonyResponse
+     */
     private function cancelPayment($referenceId)
     {
         if (is_numeric($referenceId)) {
@@ -172,167 +216,176 @@ class PaymentController extends Controller
     }
 
     /**
-     * Payever redirects to this page if the payment was executed correctly
-     *
-     * @param OrderService $orderService
-     *
-     * @return mixed
+     * @return array|SymfonyResponse
      */
-    public function checkoutSuccess(OrderService $orderService)
+    public function checkoutSuccessDecorator()
     {
-        $this->getLogger(__METHOD__)->debug('Payever::debug.successUrlWasCalled', "success url was called");
-        $paymentId = $this->request->get('payment_id');
-
-        /**
-         * Randomize waiting time before lock to assure no double-lock cases
-         */
-        $wait = rand(0, 3);
-        sleep($wait);
-
-        if (!$this->payeverHelper->isLocked($paymentId)) {
-            $this->payeverHelper->lockAndBlock($paymentId);
-            $this->sessionStorage->getPlugin()->setValue('payever_payment_id', $paymentId);
-
-            $payeverPayment = $this->payeverService->handlePayeverPayment($paymentId);
-
-            if (!$payeverPayment) {
-                $this->notificationService->error("Couldn't retrieve payever payment");
-                return $this->checkoutCancel();
-            }
-
-            // If reference equals order id
-            if (is_numeric($payeverPayment['reference'])) {
-                $orderId = $payeverPayment['reference'];
-                $this->payeverService->originExecutePayment($payeverPayment);
-                $this->payeverHelper->unlock($paymentId);
-                $this->getLogger(__METHOD__)->debug(
-                    'Payever::debug.successfulCreatingPlentyPayment',
-                    ['payeverPayment' => $payeverPayment]
-                );
-            } else {
-                if (!$this->payeverHelper->isSuccessfulPaymentStatus($payeverPayment['status'])) {
-                    return $this->cancelPayment($payeverPayment["reference"]);
-                }
-
-                $update = $this->payeverService->updatePlentyPayment($paymentId, $payeverPayment["status"]);
-                $this->getLogger(__METHOD__)->debug('Payever::debug.successfulUpdatingPlentyPayment', $update);
-
-                try {
-                    if (!$update) {
-                        $orderData = $this->placeOrder($orderService);
-                        $orderId = $orderData->order->id;
-                    }
-                } catch (\Exception $exception) {
-                    $this->notificationService->error($exception->getMessage());
-                    $this->getLogger(__METHOD__)->critical('Payever::placingOrderError', $exception);
-
-                    return $this->checkoutCancel();
-                } finally {
-                    $this->payeverHelper->unlock($paymentId);
-                }
-            }
-            $orderAccessKey = $this->orderContract->generateAccessKey($orderId);
-            $this->sessionStorageRepository->setSessionValue(
-                SessionStorageRepositoryContract::LAST_ACCESSED_ORDER,
-                ['orderId' => $orderId, 'accessKey' => $orderAccessKey]
-            );
-        }
-
-        $this->payeverHelper->waitForUnlock($paymentId);
-
-        $this->getLogger(__METHOD__)->debug('Payever::debug.ConfirmationUrlCalling', "Confirmation url was called");
-
-        return $this->response->redirectTo('confirmation');
-    }
-
-    private function placeOrder(OrderService $orderService, $executePayment = true)
-    {
-        $this->getLogger(__METHOD__)->debug('Payever::debug.placeOrderCalling',
-            "PlaceOrder was called, with executePayment = $executePayment");
-        $orderData = $orderService->placeOrder();
-
-        if ($executePayment) {
-            $orderId = $orderData->order->id;
-            $mopId = $orderData->order->methodOfPaymentId;
-
-            $paymentResult = $orderService->executePayment($orderId, $mopId);
-
-            if ($paymentResult["type"] === "error") {
-                // send errors
-                $this->notificationService->error($paymentResult["value"]);
-            }
-        }
-
-        return $orderData;
+        return $this->authHelper->processUnguarded([$this, 'checkoutSuccess']);
     }
 
     /**
      * Payever redirects to this page if the payment was executed correctly
      *
-     * @return mixed
+     * @return array|SymfonyResponse
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     */
+    public function checkoutSuccess()
+    {
+        $this->getLogger(__METHOD__)->debug('Payever::debug.successUrlWasCalled', 'success url was called');
+        $paymentId = (string) $this->request->get('payment_id');
+        $fetchDest = $this->request->header('sec-fetch-dest');
+        $this->payeverHelper->acquireLock($paymentId, $fetchDest);
+        $this->sessionStorage->getPlugin()->setValue('payever_payment_id', $paymentId);
+        $payeverPayment = $this->payeverService->handlePayeverPayment($paymentId);
+        if (!$payeverPayment) {
+            $this->notificationService->error('Unable to retrieve payever payment');
+            $this->payeverHelper->unlock($paymentId);
+
+            return $this->checkoutCancel();
+        }
+
+        // If reference equals order id
+        $orderId = $reference = $payeverPayment['reference'] ?? null;
+        if (is_numeric($reference)) {
+            $this->payeverService->originExecutePayment($payeverPayment);
+            $this->payeverHelper->unlock($paymentId);
+            $this->getLogger(__METHOD__)->debug(
+                'Payever::debug.successfulCreatingPlentyPayment',
+                ['payeverPayment' => $payeverPayment]
+            );
+        } else {
+            if (!$this->payeverHelper->isSuccessfulPaymentStatus($payeverPayment['status'])) {
+                $this->payeverHelper->unlock($paymentId);
+
+                return $this->cancelPayment($reference);
+            }
+
+            $update = $this->payeverService->updatePlentyPayment($paymentId, $payeverPayment['status']);
+            $this->getLogger(__METHOD__)->debug('Payever::debug.successfulUpdatingPlentyPayment', $update);
+
+            try {
+                if (!$update) {
+                    $this->payeverService->prepareBasket($reference);
+                    $orderData = $this->payeverService->placeOrder();
+                    $orderId = $orderData->order->id;
+                } elseif (!empty($update->order) && is_object($update->order) && !empty($update->order->orderId)) {
+                    $orderId = $update->order->orderId;
+                }
+            } catch (\Exception $exception) {
+                $this->notificationService->error($exception->getMessage());
+                $this->getLogger(__METHOD__)->critical('Payever::placingOrderError', $exception);
+
+                return $this->checkoutCancel();
+            } finally {
+                $this->payeverHelper->unlock($paymentId);
+            }
+        }
+        $orderAccessKey = $this->orderContract->generateAccessKey((int) $orderId);
+        $this->sessionStorageRepository->setSessionValue(
+            SessionStorageRepositoryContract::LAST_ACCESSED_ORDER,
+            ['orderId' => $orderId, 'accessKey' => $orderAccessKey]
+        );
+        if (!empty($reference)) {
+            $pendingPayment = $this->pendingPaymentRepository->getByOrderId($reference);
+            if ($pendingPayment) {
+                $this->pendingPaymentRepository->delete($pendingPayment);
+                $this->getLogger(__METHOD__)->debug(
+                    'Payever::debug.checkoutDebug',
+                    sprintf('Pending payment for order %s is removed', $reference)
+                );
+            }
+        }
+        $this->getLogger(__METHOD__)->debug(
+            'Payever::debug.checkoutDebug',
+            [
+                'sec-fetch-dest' => $fetchDest,
+                'reference' => $reference,
+                'orderId' => $orderId,
+                'accessKey' => $orderAccessKey,
+                'pendingPaymentFound' => isset($pendingPayment) && !empty($pendingPayment),
+            ]
+        );
+        $this->payeverHelper->unlock($paymentId);
+
+        $this->getLogger(__METHOD__)->debug('Payever::debug.ConfirmationUrlCalling', 'Confirmation url was called');
+
+        return $this->response->redirectTo('confirmation');
+    }
+
+    /**
+     * @return array|SymfonyResponse
+     */
+    public function checkoutFinishDecorator()
+    {
+        return $this->authHelper->processUnguarded([$this, 'checkoutFinish']);
+    }
+
+    /**
+     * Payever redirects to this page if the payment was executed correctly
+     *
+     * @return array|SymfonyResponse
      */
     public function checkoutFinish()
     {
-        $paymentId = $this->sessionStorage->getPlugin()->getValue('payever_payment_id');
+        $orderId = $this->request->get('reference');
+        $actualToken = $this->request->get('token');
+        $expectedToken = hash_hmac(
+            'sha256',
+            $this->config->get('Payever.clientId') . $orderId,
+            (string) $this->config->get('Payever.clientSecret')
+        );
+        $paymentId = '';
+        $messageCode = 'Payever::debug.tokensAtCheckoutFinishNotMatched';
+        if ($actualToken === $expectedToken) {
+            $messageCode = 'Payever::debug.tokensAtCheckoutFinishMatched';
+            $pendingPayment = $this->pendingPaymentRepository->getByOrderId($orderId);
+            if ($pendingPayment) {
+                $paymentId = $pendingPayment->payeverPaymentId;
+            }
+        }
+        $this->getLogger(__METHOD__)->debug($messageCode, [$actualToken, $expectedToken]);
         $successUrl = $this->payeverHelper->buildSuccessURL($paymentId);
 
         return $this->response->redirectTo($successUrl);
     }
 
     /**
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return SymfonyResponse
+     */
+    public function checkoutNoticeDecorator()
+    {
+        return $this->authHelper->processUnguarded([$this, 'checkoutNotice']);
+    }
+
+    /**
+     * @return SymfonyResponse
      */
     public function checkoutNotice()
     {
         $this->getLogger(__METHOD__)->debug('Payever::debug.noticeUrlWasCalled');
+
         return $this->response->json($this->notificationRequestProcessor->processNotification());
     }
 
     /**
      * @param Twig $twig
-     * @param OrderService $orderService
-     * @param BasketRepositoryContract $basketRepo
-     * @return mixed
+     * @return string|SymfonyResponse
      */
-    public function checkoutIframe(Twig $twig, OrderService $orderService, BasketRepositoryContract $basketRepo)
+    public function checkoutIframe(Twig $twig)
     {
-        if ($this->sessionStorage->getPlugin()->getValue("payever_order_before_payment")) {
-            $iframeUrl = $this->processCheckout($orderService, $basketRepo, false);
-        } else {
-            $iframeUrl = $this->sessionStorage->getPlugin()->getValue("payever_iframe_url");
-        }
+        try {
+            if ($this->sessionStorage->getPlugin()->getValue('payever_order_before_payment')) {
+                $method = (string) $this->request->get('method');
+                $iframeUrl = $this->payeverService->processOrderPayment($method);
+            } else {
+                $iframeUrl = $this->sessionStorage->getPlugin()->getValue('payever_iframe_url');
+            }
+        } catch (\Exception $exception) {
+            $this->notificationService->warn($exception->getMessage());
 
-        return $twig->render('Payever::checkout.iframe', ["iframe_url" => $iframeUrl]);
-    }
-
-    /**
-     * @param OrderService $orderService
-     * @param BasketRepositoryContract $basketRepo
-     * @param bool $redirect
-     * @return mixed
-     */
-    public function processCheckout(OrderService $orderService, BasketRepositoryContract $basketRepo, $redirect = true)
-    {
-        $this->sessionStorage->getPlugin()->unsetKey('payever_payment_id');
-        $method = $this->request->get('method');
-        $basket = $basketRepo->load();
-
-        $orderData = $this->placeOrder($orderService, false);
-        $createPaymentResponse = $this->payeverService->processCreatePaymentRequest(
-            $basket,
-            $method,
-            $orderData->order->id
-        );
-
-        if ($createPaymentResponse['error']) {
-            $this->notificationService->warn("Creating payment has been declined");
             return $this->response->redirectTo('checkout');
         }
 
-        if ($redirect) {
-            return $this->response->redirectTo($createPaymentResponse['redirect_url']);
-        }
-
-        return $createPaymentResponse['redirect_url'];
+        return $twig->render('Payever::checkout.iframe', ['iframe_url' => $iframeUrl]);
     }
 }

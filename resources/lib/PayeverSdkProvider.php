@@ -5,27 +5,26 @@ require_once __DIR__ . '/PluginRegistryInfoProvider.php';
 
 use Payever\ExternalIntegration\Core\ClientConfiguration;
 use Payever\ExternalIntegration\Core\Enum\ChannelSet;
-use Payever\ExternalIntegration\Core\Logger\FileLogger;
-use Payever\ExternalIntegration\Core\Lock\LockInterface;
-use Payever\ExternalIntegration\Core\Lock\FileLock;
 use Payever\ExternalIntegration\Inventory\InventoryApiClient;
 use Payever\ExternalIntegration\Payments\PaymentsApiClient;
+use Payever\ExternalIntegration\Plugins\PluginsApiClient;
 use Payever\ExternalIntegration\Products\ProductsApiClient;
 use Payever\ExternalIntegration\ThirdParty\ThirdPartyApiClient;
-use Payever\ExternalIntegration\Plugins\PluginsApiClient;
-use Psr\Log\LoggerInterface;
 
 class PayeverSdkProvider
 {
     /** @var ClientConfiguration */
     private $clientConfiguration;
 
-    /** @var TokenList */
+    /** @var PayeverTokenList */
     private $tokenList;
 
     /** @var PluginRegistryInfoProvider  */
     private $registryInfoProvider;
 
+    /**
+     * @param array $apiData
+     */
     public function __construct($apiData)
     {
         $this->clientConfiguration   = $this->prepareClientConfiguration($apiData);

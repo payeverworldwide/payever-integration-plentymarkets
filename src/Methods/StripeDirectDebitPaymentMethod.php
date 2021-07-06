@@ -1,4 +1,4 @@
-<?php //strict
+<?php
 
 namespace Payever\Methods;
 
@@ -8,5 +8,8 @@ namespace Payever\Methods;
  */
 class StripeDirectDebitPaymentMethod extends AbstractPaymentMethod
 {
-    public $_methodCode = 'stripe_directdebit';
+    /**
+     * @var string
+     */
+    public $methodCode = 'stripe_directdebit';
 }

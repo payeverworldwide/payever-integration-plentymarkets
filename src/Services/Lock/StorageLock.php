@@ -1,4 +1,4 @@
-<?php //strict
+<?php
 
 namespace Payever\Services\Lock;
 
@@ -40,7 +40,7 @@ class StorageLock
     /**
      * @param string $name
      */
-    public function releaseLock(string $name): void
+    public function releaseLock(string $name)
     {
         $lockName = $this->getLockName($name);
         $this->unlock($lockName);
@@ -59,16 +59,16 @@ class StorageLock
     /**
      * @param string $lockName
      */
-    public function lock(string $lockName): void
+    public function lock(string $lockName)
     {
         $this->storageRepository->uploadObject('Payever', $lockName, '');
-        $this->getLogger(__METHOD__)->debug('Payever::debug.lock', $lockName);
+        $this->getLogger(__METHOD__)->debug('Payever::debug.lockAndBlock', $lockName);
     }
 
     /**
      * @param string $lockName
      */
-    public function unlock(string $lockName): void
+    public function unlock(string $lockName)
     {
         $this->storageRepository->deleteObject('Payever', $lockName);
         $this->getLogger(__METHOD__)->debug('Payever::debug.unlock', $lockName);
@@ -78,7 +78,7 @@ class StorageLock
      * @param string $lockName
      * @param int $timeout
      */
-    public function waitForUnlock(string $lockName, int $timeout = self::DEFAULT_TIMEOUT): void
+    public function waitForUnlock(string $lockName, int $timeout = self::DEFAULT_TIMEOUT)
     {
         $this->getLogger(__METHOD__)->debug('Payever::debug.waitForUnlock', "start $lockName");
         $waitingTime = 0;

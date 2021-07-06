@@ -1,11 +1,12 @@
-<?php //strict
+<?php
 
 namespace Payever\Services\Payment\Notification;
 
+use Payever\Helper\PayeverHelper;
+use Payever\Services\Lock\StorageLock;
 use Payever\Services\PayeverService;
 use Plenty\Plugin\ConfigRepository;
 use Plenty\Plugin\Http\Request;
-use Payever\Services\Lock\StorageLock;
 use Plenty\Plugin\Log\Loggable;
 
 class NotificationRequestProcessor
@@ -36,25 +37,34 @@ class NotificationRequestProcessor
     private $payeverService;
 
     /**
+     * @var PayeverHelper
+     */
+    private $payeverHelper;
+
+    /**
      * @param Request $request
      * @param ConfigRepository $config
      * @param StorageLock $lock
      * @param PayeverService $payeverService
+     * @param PayeverHelper $payeverHelper
      */
     public function __construct(
         Request $request,
         ConfigRepository $config,
         StorageLock $lock,
-        PayeverService $payeverService
+        PayeverService $payeverService,
+        PayeverHelper $payeverHelper
     ) {
         $this->request = $request;
         $this->config = $config;
         $this->lock = $lock;
         $this->payeverService = $payeverService;
+        $this->payeverHelper = $payeverHelper;
     }
 
     /**
      * @return array
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     public function processNotification(): array
     {
@@ -67,25 +77,35 @@ class NotificationRequestProcessor
             }
             $payload = \json_decode($payload, true);
             $payeverPayment = $payload['data']['payment'] ?? [];
+            $this->getLogger(__METHOD__)->debug('Payever::debug.notificationDebug', [$payeverPayment]);
             $notificationTime = array_key_exists('created_at', $payload)
-                ? date("Y-m-d H:i:s", strtotime($payload['created_at']))
+                ? date('Y-m-d H:i:s', strtotime($payload['created_at']))
                 : false;
             $paymentId = $payeverPayment['id'] ?? null;
             if (!$payeverPayment || !$paymentId) {
                 throw new \UnexpectedValueException('Notification entity is invalid', 21);
             }
             $this->lock->acquireLock($paymentId, static::NOTIFICATION_LOCK_SECONDS);
+            $payeverStatus = $payeverPayment['status'] ?? null;
+            $this->getLogger(__METHOD__)->debug('Payever::debug.processingPayeverStatus', [$payeverStatus]);
             if (!empty($payeverPayment['reference']) && is_numeric($payeverPayment['reference'])) {
                 $update = $this->payeverService->createAndUpdatePlentyPayment($payeverPayment);
             } else {
                 $update = $this->payeverService->updatePlentyPayment(
                     $paymentId,
-                    $payeverPayment['status'] ?? null,
+                    $payeverStatus,
                     $notificationTime
                 );
             }
             $result = 'success';
             $message = 'Order was updated';
+            if (!$update && $this->payeverHelper->isSuccessfulPaymentStatus($payeverPayment['status'])) {
+                $this->payeverService->prepareBasket($payeverPayment['reference']);
+                $orderData = $this->payeverService->placeOrder();
+                $payeverPayment['reference'] = $orderData->order->id;
+                $update = $this->payeverService->createAndUpdatePlentyPayment($payeverPayment);
+                $message = 'Order was created';
+            }
             $this->getLogger(__METHOD__)->debug('Payever::debug.updatingPlentyPaymentForNotifications', $update);
         } catch (\Exception $e) {
             $message = $e->getMessage();
@@ -135,7 +155,7 @@ class NotificationRequestProcessor
      * @param string $paymentId
      * @param string $signature
      */
-    private function assertSignatureValid(string $paymentId, string $signature): void
+    private function assertSignatureValid(string $paymentId, string $signature)
     {
         $expectedSignature = hash_hmac(
             'sha256',

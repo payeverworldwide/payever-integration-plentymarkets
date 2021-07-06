@@ -1,28 +1,36 @@
-<?php //strict
+<?php
 
 namespace Payever\Methods;
 
 use Payever\Services\PayeverSdkService;
-use Plenty\Modules\Payment\Method\Contracts\PaymentMethodService;
-use Plenty\Plugin\ConfigRepository;
 use Plenty\Modules\Basket\Contracts\BasketRepositoryContract;
 use Plenty\Modules\Basket\Models\Basket;
-use Plenty\Plugin\Log\Loggable;
+use Plenty\Modules\Payment\Method\Contracts\PaymentMethodService;
 use Plenty\Plugin\Application;
+use Plenty\Plugin\ConfigRepository;
+use Plenty\Plugin\Log\Loggable;
+use Plenty\Modules\Order\Shipping\Countries\Contracts\CountryRepositoryContract;
 
 /**
  * Class AbstractPaymentMethod
  * @package Payever\Methods
+ * @SuppressWarnings(PHPMD.NumberOfChildren)
  */
 class AbstractPaymentMethod extends PaymentMethodService
 {
     use Loggable;
 
-    protected $_methodCode;
+    /**
+     * @var string
+     */
+    protected $methodCode;
 
+    /**
+     * @return string
+     */
     public function getMethodCode()
     {
-        return $this->_methodCode;
+        return $this->methodCode;
     }
 
     /**
@@ -33,6 +41,8 @@ class AbstractPaymentMethod extends PaymentMethodService
      * @param BasketRepositoryContract $basketRepositoryContract
      * @param PayeverSdkService $sdkService
      * @return bool
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     public function isActive(
         ConfigRepository $configRepository,
@@ -75,7 +85,8 @@ class AbstractPaymentMethod extends PaymentMethodService
          * Check the minimum amount
          */
         $minAmountKey = 'Payever.' . $this->getMethodCode() . '.min_order_total';
-        if ($configRepository->get($minAmountKey) > 0.00 &&
+        if (
+            $configRepository->get($minAmountKey) > 0.00 &&
             $basket->basketAmount <= $configRepository->get($minAmountKey)
         ) {
             return false;
@@ -85,7 +96,8 @@ class AbstractPaymentMethod extends PaymentMethodService
          * Check the maximum amount
          */
         $maxAmountKey = 'Payever.' . $this->getMethodCode() . '.max_order_total';
-        if ($configRepository->get($maxAmountKey) > 0.00 &&
+        if (
+            $configRepository->get($maxAmountKey) > 0.00 &&
             $configRepository->get($maxAmountKey) <= $basket->basketAmount
         ) {
             return false;
@@ -93,16 +105,15 @@ class AbstractPaymentMethod extends PaymentMethodService
 
         /**
          * Check country
+         * @var CountryRepositoryContract $countryRepo
          */
-        $countryRepo = pluginApp(\Plenty\Modules\Order\Shipping\Countries\Contracts\CountryRepositoryContract::class);
+        $countryRepo = pluginApp(CountryRepositoryContract::class);
         $country = $countryRepo->findIsoCode($basket->shippingCountryId, 'iso_code_2');
 
         $allowedCountriesKey = 'Payever.' . $this->getMethodCode() . '.allowed_countries';
-        $allowedCountries = explode(",", $configRepository->get($allowedCountriesKey));
+        $allowedCountries = explode(',', $configRepository->get($allowedCountriesKey));
 
-        if (!in_array($country, $allowedCountries)
-            && !in_array('all', $allowedCountries)
-        ) {
+        if (!in_array($country, $allowedCountries) && !in_array('all', $allowedCountries)) {
             return false;
         }
 
@@ -112,6 +123,7 @@ class AbstractPaymentMethod extends PaymentMethodService
     /**
      * Get additional costs for the payment method. Additional costs can be entered in the config.json.
      *
+     * @param ConfigRepository $configRepository
      * @param BasketRepositoryContract $basketRepositoryContract
      * @return float
      */
@@ -136,6 +148,7 @@ class AbstractPaymentMethod extends PaymentMethodService
      * Get the name of the payment method. The name can be entered in the config.json.
      *
      * @param ConfigRepository $configRepository
+     * @param BasketRepositoryContract $basketRepositoryContract
      * @return string
      */
     public function getName(
@@ -206,6 +219,7 @@ class AbstractPaymentMethod extends PaymentMethodService
      *
      * @param int $orderId
      * @return bool
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function isSwitchableTo(int $orderId): bool
     {
@@ -217,6 +231,7 @@ class AbstractPaymentMethod extends PaymentMethodService
      *
      * @param int $orderId
      * @return bool
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function isSwitchableFrom(int $orderId): bool
     {
@@ -228,7 +243,7 @@ class AbstractPaymentMethod extends PaymentMethodService
      *
      * @return bool
      */
-    public function isBasketAddressesDifferent(Basket $basket)
+    public function isBasketAddressesDifferent(Basket $basket): bool
     {
         static $result = null;
 

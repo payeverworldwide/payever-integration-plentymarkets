@@ -1,23 +1,19 @@
 <?php
+
 namespace Payever\Repositories;
 
 use Payever\Contracts\PayeverConfigRepositoryContract;
 use Payever\Models\PayeverConfig;
 use Plenty\Modules\Plugin\DataBase\Contracts\DataBase;
-/**
- * Class PayeverConfigRepository
- *
- * @package Payever\Repositories
- */
+
 class PayeverConfigRepository implements PayeverConfigRepositoryContract
 {
     /**
      * @var DataBase
      */
     private $database;
+
     /**
-     * PayeverConfigRepository constructor.
-     *
      * @param DataBase $dataBase
      */
     public function __construct(DataBase $dataBase)
@@ -34,9 +30,10 @@ class PayeverConfigRepository implements PayeverConfigRepositoryContract
     public function get(string $id)
     {
         $payeverConfig = $this->database->find(PayeverConfig::class, $id);
-
         if ($payeverConfig instanceof PayeverConfig) {
+            // @codeCoverageIgnoreStart
             return $payeverConfig->getValue();
+            // @codeCoverageIgnoreEnd
         }
 
         return false;
@@ -54,30 +51,34 @@ class PayeverConfigRepository implements PayeverConfigRepositoryContract
     {
         /** @var PayeverConfig $payeverConfig */
         $payeverConfig = $this->get($id);
-        if($payeverConfig instanceof PayeverConfig) {
+        if ($payeverConfig instanceof PayeverConfig) {
+            // @codeCoverageIgnoreStart
             $payeverConfig->id = $id;
             $payeverConfig->value = $value;
+            // @codeCoverageIgnoreEnd
         } else {
             /** @var PayeverConfig $payeverConfig */
             $payeverConfig = pluginApp(PayeverConfig::class);
             $payeverConfig->id = $id;
             $payeverConfig->value = $value;
         }
-
         $payeverConfig = $this->database->save($payeverConfig);
+
         return $payeverConfig;
     }
+
     /**
      * Deletes payever config value.
      *
      * @param string $id
      * @return bool
      */
-    public function delete(string $id)
+    public function delete(string $id): bool
     {
         /** @var PayeverConfig $payeverConfig */
         $payeverConfig = pluginApp(PayeverConfig::class);
         $payeverConfig->id = $id;
+
         return $this->database->delete($payeverConfig);
     }
 }

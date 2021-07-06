@@ -1,4 +1,4 @@
-<?php //strict
+<?php
 
 namespace Payever\Methods;
 
@@ -8,5 +8,8 @@ namespace Payever\Methods;
  */
 class SantanderfactoringdePaymentMethod extends AbstractPaymentMethod
 {
-    public $_methodCode = 'santander_factoring_de';
+    /**
+     * @var string
+     */
+    public $methodCode = 'santander_factoring_de';
 }

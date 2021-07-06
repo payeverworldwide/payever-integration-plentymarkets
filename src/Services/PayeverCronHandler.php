@@ -2,8 +2,8 @@
 
 namespace Payever\Services;
 
-use Plenty\Modules\Cron\Contracts\CronHandler;
 use Payever\Controllers\ConfigController;
+use Plenty\Modules\Cron\Contracts\CronHandler;
 
 class PayeverCronHandler extends CronHandler
 {
@@ -13,7 +13,6 @@ class PayeverCronHandler extends CronHandler
     private $configController;
 
     /**
-     * PayeverCronHandler constructor.
      * @param ConfigController $configController
      */
     public function __construct(ConfigController $configController)
@@ -21,6 +20,9 @@ class PayeverCronHandler extends CronHandler
         $this->configController = $configController;
     }
 
+    /**
+     * @return void
+     */
     public function handle()
     {
         $this->configController->executeCommand();

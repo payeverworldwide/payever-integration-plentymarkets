@@ -2,19 +2,16 @@
 
 namespace Payever\Migrations;
 
-use Payever\Models\PayeverConfig;
+use Payever\Models\PendingPayment;
 use Plenty\Modules\Plugin\DataBase\Contracts\Migrate;
 
-/**
- * Class CreatePayeverConfigTable
- */
-class CreatePayeverConfigTable
+class CreatePendingPaymentTable
 {
     /**
      * @param Migrate $migrate
      */
     public function run(Migrate $migrate)
     {
-        $migrate->createTable(PayeverConfig::class);
+        $migrate->createTable(PendingPayment::class);
     }
 }

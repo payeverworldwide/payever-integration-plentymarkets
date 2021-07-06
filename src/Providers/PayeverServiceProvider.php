@@ -1,43 +1,52 @@
-<?php //strict
+<?php
 
 namespace Payever\Providers;
 
+use Payever\Contracts\PendingPaymentRepositoryContract;
+use Payever\Helper\PayeverHelper;
+use Payever\Procedures\CancelEventProcedure;
+use Payever\Procedures\RefundEventProcedure;
+use Payever\Procedures\ShippingEventProcedure;
+use Payever\Repositories\PendingPaymentRepository;
+use Payever\Services\PayeverCronHandler;
+use Payever\Services\PayeverOrdersCronHandler;
+use Payever\Services\PayeverService;
+use Plenty\Modules\Basket\Contracts\BasketRepositoryContract;
+use Plenty\Modules\Basket\Events\Basket\AfterBasketChanged;
+use Plenty\Modules\Basket\Events\Basket\AfterBasketCreate;
+use Plenty\Modules\Basket\Events\BasketItem\AfterBasketItemAdd;
+use Plenty\Modules\Cron\Services\CronContainer;
+use Plenty\Modules\EventProcedures\Services\Entries\ProcedureEntry;
+use Plenty\Modules\EventProcedures\Services\EventProceduresService;
 use Plenty\Modules\Payment\Events\Checkout\ExecutePayment;
 use Plenty\Modules\Payment\Events\Checkout\GetPaymentMethodContent;
-use Plenty\Plugin\ServiceProvider;
-use Plenty\Modules\Basket\Contracts\BasketRepositoryContract;
 use Plenty\Modules\Payment\Method\Contracts\PaymentMethodContainer;
 use Plenty\Modules\Payment\Models\Payment;
 use Plenty\Plugin\Events\Dispatcher;
-use Payever\Helper\PayeverHelper;
-use Plenty\Modules\Basket\Events\Basket\AfterBasketChanged;
-use Plenty\Modules\Basket\Events\BasketItem\AfterBasketItemAdd;
-use Plenty\Modules\Basket\Events\Basket\AfterBasketCreate;
-use Plenty\Modules\Cron\Services\CronContainer;
-use Payever\Services\PayeverService;
-use Payever\Procedures\RefundEventProcedure;
-use Payever\Procedures\CancelEventProcedure;
-use Payever\Procedures\ShippingEventProcedure;
-use Payever\Services\PayeverCronHandler;
-use Payever\Services\PayeverOrdersCronHandler;
-use Plenty\Modules\EventProcedures\Services\EventProceduresService;
-use Plenty\Modules\EventProcedures\Services\Entries\ProcedureEntry;
 use Plenty\Plugin\Log\Loggable;
+use Plenty\Plugin\ServiceProvider;
 
 /**
- * Class PayeverServiceProvider
- * @package Payever\Providers
+ * @codeCoverageIgnore
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class PayeverServiceProvider extends ServiceProvider
 {
     use Loggable;
 
+    /**
+     * @return void
+     */
     public function register()
     {
         $this->getApplication()->register(PayeverRouteServiceProvider::class);
         $this->getApplication()->bind(RefundEventProcedure::class);
         $this->getApplication()->bind(CancelEventProcedure::class);
         $this->getApplication()->bind(ShippingEventProcedure::class);
+        $this->getApplication()->singleton(
+            PendingPaymentRepositoryContract::class,
+            PendingPaymentRepository::class
+        );
     }
 
     /**
@@ -50,6 +59,7 @@ class PayeverServiceProvider extends ServiceProvider
      * @param BasketRepositoryContract $basket
      * @param EventProceduresService $eventProceduresService
      * @param CronContainer $cronContainer
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function boot(
         PayeverHelper $paymentHelper,
@@ -61,7 +71,7 @@ class PayeverServiceProvider extends ServiceProvider
         CronContainer $cronContainer
     ) {
         $cronContainer->add(CronContainer::DAILY, PayeverCronHandler::class);
-        $cronContainer->add(CronContainer::HOURLY, PayeverOrdersCronHandler::class);
+        $cronContainer->add(CronContainer::EVERY_FIVE_MINUTES, PayeverOrdersCronHandler::class);
         /*
          * register the payment method in the payment method container
          */
@@ -140,7 +150,11 @@ class PayeverServiceProvider extends ServiceProvider
 
                 if ($plentyPayment instanceof Payment) {
                     // Assign the payment to an order in plentymarkets
-                    $payeverService->assignPlentyPaymentToPlentyOrder($plentyPayment, $event->getOrderId(), $payeverPaymentData['status']);
+                    $payeverService->assignPlentyPaymentToPlentyOrder(
+                        $plentyPayment,
+                        $event->getOrderId(),
+                        $payeverPaymentData['status']
+                    );
                     $event->setType('success');
                     $event->setValue('The Payment has been executed successfully!');
                 }

@@ -1,4 +1,4 @@
-<?php //strict
+<?php
 
 namespace Payever\Methods;
 
@@ -8,5 +8,8 @@ namespace Payever\Methods;
  */
 class SantanderinvoicenoPaymentMethod extends AbstractPaymentMethod
 {
-    public $_methodCode = 'santander_invoice_no';
+    /**
+     * @var string
+     */
+    public $methodCode = 'santander_invoice_no';
 }

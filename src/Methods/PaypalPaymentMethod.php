@@ -1,4 +1,4 @@
-<?php //strict
+<?php
 
 namespace Payever\Methods;
 
@@ -8,5 +8,8 @@ namespace Payever\Methods;
  */
 class PaypalPaymentMethod extends AbstractPaymentMethod
 {
-    public $_methodCode = 'paypal';
+    /**
+     * @var string
+     */
+    public $methodCode = 'paypal';
 }
