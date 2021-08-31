@@ -15,6 +15,8 @@ use Plenty\Modules\Basket\Contracts\BasketRepositoryContract;
 use Plenty\Modules\Basket\Events\Basket\AfterBasketChanged;
 use Plenty\Modules\Basket\Events\Basket\AfterBasketCreate;
 use Plenty\Modules\Basket\Events\BasketItem\AfterBasketItemAdd;
+use Plenty\Modules\Order\Pdf\Events\OrderPdfGenerationEvent;
+use Plenty\Modules\Order\Pdf\Models\OrderPdfGeneration;
 use Plenty\Modules\Cron\Services\CronContainer;
 use Plenty\Modules\EventProcedures\Services\Entries\ProcedureEntry;
 use Plenty\Modules\EventProcedures\Services\EventProceduresService;
@@ -22,6 +24,7 @@ use Plenty\Modules\Payment\Events\Checkout\ExecutePayment;
 use Plenty\Modules\Payment\Events\Checkout\GetPaymentMethodContent;
 use Plenty\Modules\Payment\Method\Contracts\PaymentMethodContainer;
 use Plenty\Modules\Payment\Models\Payment;
+use Plenty\Modules\Payment\Models\PaymentProperty;
 use Plenty\Plugin\Events\Dispatcher;
 use Plenty\Plugin\Log\Loggable;
 use Plenty\Plugin\ServiceProvider;
@@ -69,9 +72,10 @@ class PayeverServiceProvider extends ServiceProvider
         BasketRepositoryContract $basket,
         EventProceduresService $eventProceduresService,
         CronContainer $cronContainer
-    ) {
+    )
+    {
         $cronContainer->add(CronContainer::DAILY, PayeverCronHandler::class);
-        $cronContainer->add(CronContainer::EVERY_FIVE_MINUTES, PayeverOrdersCronHandler::class);
+        $cronContainer->add(CronContainer::HOURLY, PayeverOrdersCronHandler::class);
         /*
          * register the payment method in the payment method container
          */
@@ -157,6 +161,49 @@ class PayeverServiceProvider extends ServiceProvider
                     );
                     $event->setType('success');
                     $event->setValue('The Payment has been executed successfully!');
+                }
+            }
+        );
+
+        $eventDispatcher->listen(OrderPdfGenerationEvent::class,
+            function (OrderPdfGenerationEvent $event) use ($paymentHelper, $payeverMops, $payeverService) {
+                if ($event->getDocType() === 'invoice') {
+                    $order            = $event->getOrder();
+
+                    $this->getLogger(__METHOD__)->debug('Payever::debug.StartOrderPdfGenerationEvent', $order);
+
+                    if (!in_array($order->methodOfPaymentId, $payeverMops)) {
+                        return;
+                    }
+
+                    $payeverPaymentId = null;
+                    foreach ($order->payments as $payment) {
+                        if ((int)$payment->mopId === (int)$order->methodOfPaymentId) {
+                            $this->getLogger(__METHOD__)->debug('Payever::debug.OrderPdfGenerationEventPayment', $payment);
+                            $payeverPaymentId = $paymentHelper->getPaymentPropertyValue($payment, PaymentProperty::TYPE_TRANSACTION_ID);
+                        }
+                    }
+
+                    if (!$payeverPaymentId) {
+                        return;
+                    }
+
+                    $payeverTransactionResponse = $payeverService->handlePayeverPayment($payeverPaymentId);
+                    $this->getLogger(__METHOD__)->debug('Payever::debug.OrderPdfGenerationEventPayeverResponse', $payeverTransactionResponse);
+
+                    if (array_key_exists('usage_text', $payeverTransactionResponse['payment_details'])) {
+                        /** @var OrderPdfGeneration $generation */
+                        $generation         = pluginApp(OrderPdfGeneration::class);
+                        $generation->advice = $paymentHelper->translate('Payever::Backend.accountUsage') . $payeverTransactionResponse['payment_details']['usage_text'];
+                        $generation->advice = $paymentHelper->translate('Payever::Backend.pdfInfoText') . "\n\n" .
+                            $paymentHelper->translate('Payever::Backend.accountHolder') . "\n" .
+                            $paymentHelper->translate('Payever::Backend.accountIban') . "\n" .
+                            $paymentHelper->translate('Payever::Backend.accountBic') . "\n" .
+                            $paymentHelper->translate('Payever::Backend.orderTotalAmount'). " " . $order->amounts[0]->grossTotal . " " . $order->amounts[0]->currency . "\n\n" .
+                            $paymentHelper->translate('Payever::Backend.accountUsage') . " " . $payeverTransactionResponse['payment_details']['usage_text'];
+
+                        $event->addOrderPdfGeneration($generation);
+                    }
                 }
             }
         );

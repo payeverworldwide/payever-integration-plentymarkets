@@ -30,6 +30,7 @@ use Plenty\Modules\Order\Models\OrderType;
 use Plenty\Modules\Payment\Method\Contracts\PaymentMethodRepositoryContract;
 use Plenty\Modules\Payment\Models\Payment;
 use Plenty\Modules\Payment\Models\PaymentProperty;
+use Plenty\Plugin\Translation\Translator;
 use Plenty\Plugin\Log\Loggable;
 
 /**
@@ -80,6 +81,11 @@ class PayeverHelper
      * @var StorageLock
      */
     private $storageLock;
+
+    /**
+     * @var \Plenty\Plugin\Translation\Translator
+     */
+    private $translator;
 
     /**
      * @var string[][]
@@ -188,18 +194,22 @@ class PayeverHelper
     ];
 
     /**
+     * PayeverHelper constructor.
      * @param PaymentMethodRepositoryContract $paymentMethodRepository
+     * @param Translator $translator
      * @param WebstoreHelper $webStoreHelper
      * @param PayeverConfigRepository $payeverConfigRepository
      * @param StorageLock $storageLock
      */
     public function __construct(
         PaymentMethodRepositoryContract $paymentMethodRepository,
+        Translator $translator,
         WebstoreHelper $webStoreHelper,
         PayeverConfigRepository $payeverConfigRepository,
         StorageLock $storageLock
     ) {
         $this->paymentMethodRepository = $paymentMethodRepository;
+        $this->translator = $translator;
         $this->webStoreHelper = $webStoreHelper;
         $this->payeverConfigRepository = $payeverConfigRepository;
         $this->storageLock = $storageLock;
@@ -339,6 +349,16 @@ class PayeverHelper
         $result = $this->getUrl('iframe');
 
         return $result . ($result != 'error' ? $method : '');
+    }
+
+    /**
+     * @param $textId
+     *
+     * @return mixed
+     */
+    public function translate($textId): string
+    {
+        return $this->translator->trans($textId);
     }
 
     /**

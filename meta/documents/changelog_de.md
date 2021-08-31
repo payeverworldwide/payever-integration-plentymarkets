@@ -1,10 +1,20 @@
 # Release Informationen für payever
 
+## v2.3.0 (2021-08-31)
+
+### Hinzugefügt
+- PAN ID in Rechnungsdokument verschieben
+
 ## v2.2.0 (2021-07-06)
 
 ### Implementiert
-- Bearbeitung von Bestellungen durch Benachrichtigungen;
-- PayPal umbenannt; 
+- Iframe-Problem behoben;
+- Fehler beim Synchronisieren behoben;
+- Behandlung von abgelaufenen Shop-Sitzungen in Checkout-Rückrufen;
+- PayPal im Backend umbenannt;
+
+### Hinzugefügt
+- vatRate, SKU-Attribute zum Warenkorb;
 
 ## v2.1.0 (2021-01-21)
 

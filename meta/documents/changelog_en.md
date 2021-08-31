@@ -1,10 +1,20 @@
 # Release Notes for payever
 
+## v2.3.0 (2021-08-31)
+
+### Added
+- pan id to invoice document
+
 ## v2.2.0 (2021-07-06)
 
 ### Implemented
-- processing orders by notifications;
-- renamed PayPal;
+- fixed iframe issue;
+- fixed error upon synchronization;
+- expired shop session handling in checkout callbacks;
+- renamed PayPal in backend;
+
+### Added
+- vatRate, sku attributes to cart;
 
 ## v2.1.0 (2021-01-21)
 
