@@ -1,5 +1,10 @@
 # Release Informationen für payever
 
+## v2.3.1 (2021-09-03)
+
+### Änderungen
+- Preisformat im Rechnungs-PDF-Dokument
+
 ## v2.3.0 (2021-08-31)
 
 ### Hinzugefügt

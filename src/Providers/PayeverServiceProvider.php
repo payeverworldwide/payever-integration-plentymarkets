@@ -192,6 +192,7 @@ class PayeverServiceProvider extends ServiceProvider
                     $this->getLogger(__METHOD__)->debug('Payever::debug.OrderPdfGenerationEventPayeverResponse', $payeverTransactionResponse);
 
                     if (array_key_exists('usage_text', $payeverTransactionResponse['payment_details'])) {
+                        $totalPrice = number_format($order->amounts[0]->grossTotal, 2, ',', '');
                         /** @var OrderPdfGeneration $generation */
                         $generation         = pluginApp(OrderPdfGeneration::class);
                         $generation->advice = $paymentHelper->translate('Payever::Backend.accountUsage') . $payeverTransactionResponse['payment_details']['usage_text'];
@@ -199,7 +200,7 @@ class PayeverServiceProvider extends ServiceProvider
                             $paymentHelper->translate('Payever::Backend.accountHolder') . "\n" .
                             $paymentHelper->translate('Payever::Backend.accountIban') . "\n" .
                             $paymentHelper->translate('Payever::Backend.accountBic') . "\n" .
-                            $paymentHelper->translate('Payever::Backend.orderTotalAmount'). " " . $order->amounts[0]->grossTotal . " " . $order->amounts[0]->currency . "\n\n" .
+                            $paymentHelper->translate('Payever::Backend.orderTotalAmount'). " " . $totalPrice . " " . $order->amounts[0]->currency . "\n\n" .
                             $paymentHelper->translate('Payever::Backend.accountUsage') . " " . $payeverTransactionResponse['payment_details']['usage_text'];
 
                         $event->addOrderPdfGeneration($generation);

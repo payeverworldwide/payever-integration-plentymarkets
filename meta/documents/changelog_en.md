@@ -1,5 +1,10 @@
 # Release Notes for payever
 
+## v2.3.1 (2021-09-03)
+
+### Fixed
+- format of price in invoice pdf document
+
 ## v2.3.0 (2021-08-31)
 
 ### Added

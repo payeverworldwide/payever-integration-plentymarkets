@@ -40,7 +40,6 @@ class PayeverSdkProvider
         return $this->registryInfoProvider;
     }
 
-
     /**
      * @return PaymentsApiClient
      * @throws \Exception
