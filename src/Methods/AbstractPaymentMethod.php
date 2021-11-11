@@ -49,7 +49,6 @@ class AbstractPaymentMethod extends PaymentMethodService
         BasketRepositoryContract $basketRepositoryContract,
         PayeverSdkService $sdkService
     ): bool {
-
         $activeKey = 'Payever.' . $this->getMethodCode() . '.active';
         if ($configRepository->get($activeKey) != 1) {
             return false;
@@ -249,15 +248,13 @@ class AbstractPaymentMethod extends PaymentMethodService
 
         if ($result === null) {
             $result = false;
-
-            if (
-                !$basket->customerShippingAddressId
-                || !$basket->customerInvoiceAddressId
-            ) {
+            if (!$basket->customerInvoiceAddressId) {
                 return $result;
             }
 
-            $result = $basket->customerInvoiceAddressId !== $basket->customerShippingAddressId;
+            $shippingAddressId = $basket->customerShippingAddressId ?? $basket->customerInvoiceAddressId;
+
+            $result = $basket->customerInvoiceAddressId !== $shippingAddressId;
         }
 
         return $result;

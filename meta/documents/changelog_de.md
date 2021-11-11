@@ -1,5 +1,11 @@
 # Release Informationen für payever
 
+## v2.4.0 (2021-10-15)
+
+### Hinzugefügt
+- Openbank-Zahlungsmethode;
+- Lieferadresse zum Create/SubmitPaymentRequest;
+
 ## v2.3.1 (2021-09-03)
 
 ### Änderungen

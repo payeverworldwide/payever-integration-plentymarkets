@@ -35,6 +35,7 @@ $paymentRequest->setFirstName($params['first_name'])
 // set plugin version
 $apiData = SdkRestApi::getParam('sdkData');
 $paymentRequest->setPluginVersion($apiData['pluginVersion']);
+$paymentRequest->setShippingAddress(json_encode($params['shipping_address']));
 
 $paymentRequest->setSuccessUrl($params['success_url'])
                ->setFailureUrl($params['failure_url'])

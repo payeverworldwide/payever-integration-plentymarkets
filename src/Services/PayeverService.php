@@ -266,7 +266,6 @@ class PayeverService
     }
 
     /**
-     *
      * @param Basket $basket
      * @return Address
      */
@@ -278,11 +277,24 @@ class PayeverService
     }
 
     /**
+     * @param Basket $basket
+     * @return Address
+     */
+    private function getShippingAddress(Basket $basket): Address
+    {
+        $addressId = $basket->customerShippingAddressId ?? $basket->customerInvoiceAddressId;
+
+        return $this->addressRepo->findAddressById($addressId);
+    }
+
+    /**
      * @param Address $address
      * @return array
      */
     private function getAddress(Address $address): array
     {
+        $country = $this->countryRepository->findIsoCode($address->countryId, 'iso_code_2');
+
         return [
             'city' => $address->town,
             'email' => $address->email,
@@ -292,6 +304,7 @@ class PayeverService
             'phone' => $address->phone,
             'zip' => $address->postalCode,
             'street' => $address->street . ' ' . $address->houseNumber,
+            'country' => $country
         ];
     }
 
@@ -385,10 +398,10 @@ HTML;
     public function processCreatePaymentRequest(Basket $basket, string $method, $orderId = null)
     {
         $contactId = $this->accountService->getAccountContactId();
-
         $payeverRequestParams = $this->getPayeverParams($basket);
         $feeAmount = $this->getFeeAmount($basket->basketAmount, $method);
         $address = $this->getAddress($this->getBillingAddress($basket));
+        $shippingAddress = $this->getAddress($this->getShippingAddress($basket));
         if (!empty($contactId) && $contactId > 0) {
             $customer = $this->contactRepository->findContactById($contactId);
             $email = $customer->email;
@@ -412,9 +425,10 @@ HTML;
             'city' => $address['city'],
             'zip' => $address['zip'],
             'street' => $address['street'],
-            'country' => $payeverRequestParams['country']['isoCode2'],
+            'country' => $address['country'],
             'email' => $email,
             'phone' => $address['phone'],
+            'shipping_address' => $shippingAddress,
             'success_url' => $this->payeverHelper->getSuccessURL(),
             'failure_url' => $this->payeverHelper->getFailureURL(),
             'cancel_url' => $this->payeverHelper->getCancelURL(),

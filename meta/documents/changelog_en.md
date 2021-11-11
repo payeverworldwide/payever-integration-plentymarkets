@@ -1,5 +1,11 @@
 # Release Notes for payever
 
+## v2.4.0 (2021-10-15)
+
+### Added
+- Openbank payment method;
+- shipping address to create/submit payment request;
+
 ## v2.3.1 (2021-09-03)
 
 ### Fixed

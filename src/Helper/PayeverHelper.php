@@ -3,6 +3,7 @@
 namespace Payever\Helper;
 
 use Payever\Methods\InstantPaymentMethod;
+use Payever\Methods\OpenbankPaymentMethod;
 use Payever\Methods\PayexcreditcardPaymentMethod;
 use Payever\Methods\PayexfakturaPaymentMethod;
 use Payever\Methods\PaymillcreditcardPaymentMethod;
@@ -166,6 +167,10 @@ class PayeverHelper
         'SWEDBANK_INVOICE' => [
             'class' => SwedbankInvoicePaymentMethod::class,
             'name' => 'Swedbank Invoice',
+        ],
+        'OPENBANK' => [
+            'class' => OpenbankPaymentMethod::class,
+            'name' => 'Openbank',
         ]
     ];
 
