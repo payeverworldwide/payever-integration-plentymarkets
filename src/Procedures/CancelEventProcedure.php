@@ -2,6 +2,7 @@
 
 namespace Payever\Procedures;
 
+use Exception;
 use Payever\Helper\PayeverHelper;
 use Payever\Services\PayeverService;
 use Plenty\Modules\EventProcedures\Events\EventProceduresTriggered;
@@ -19,7 +20,7 @@ class CancelEventProcedure
      * @param PayeverService $paymentService
      * @param PaymentRepositoryContract $paymentContract
      * @param PayeverHelper $paymentHelper
-     * @throws \Exception
+     * @throws Exception
      */
     public function run(
         EventProceduresTriggered $eventTriggered,
@@ -30,11 +31,12 @@ class CancelEventProcedure
         $orderId = $paymentHelper->getOrderIdByEvent($eventTriggered);
 
         if (empty($orderId)) {
-            throw new \Exception('Cancel payever payment failed! The given order is invalid!');
+            throw new Exception('Cancel payever payment failed! The given order is invalid!');
         }
 
         /** @var Payment[] $payment */
         $payments = $paymentContract->getPaymentsByOrderId($orderId);
+
         /** @var Payment $payment */
         foreach ($payments as $payment) {
             if ($paymentHelper->isPayeverPaymentMopId($payment->mopId)) {
@@ -42,13 +44,16 @@ class CancelEventProcedure
                     $payment,
                     PaymentProperty::TYPE_TRANSACTION_ID
                 );
+
                 $this->getLogger(__METHOD__)->debug(
                     'Payever::debug.cancelData',
                     'TransactionId: ' . $transactionId
                 );
+
                 if (!empty($transactionId)) {
                     $transaction = $paymentService->getTransaction($transactionId);
                     $this->getLogger(__METHOD__)->debug('Payever::debug.transactionData', $transaction);
+
                     if ($paymentHelper->isAllowedTransaction($transaction, 'cancel')) {
                         // cancel the payment
                         $cancelResult = $paymentService->cancelPayment($transactionId);
@@ -63,7 +68,7 @@ class CancelEventProcedure
                             'Payever::debug.cancelResponse',
                             'Cancel payever payment is not allowed!'
                         );
-                        throw new \Exception('Cancel payever payment is not allowed!');
+                        throw new Exception('Cancel payever payment is not allowed!');
                     }
                 }
             }

@@ -135,9 +135,8 @@ class AbstractPaymentMethod extends PaymentMethodService
         if (!$acceptedFee) {
             $fixedFee = $configRepository->get('Payever.' . $this->getMethodCode() . '.fee');
             $variableFee = $configRepository->get('Payever.' . $this->getMethodCode() . '.variable_fee');
-            $feeAmount = $basket->basketAmount * $variableFee / 100 + $fixedFee;
 
-            return $feeAmount;
+            return $basket->basketAmount * $variableFee / 100 + $fixedFee;
         } else {
             return 0.00;
         }
@@ -188,9 +187,8 @@ class AbstractPaymentMethod extends PaymentMethodService
     {
         if ($configRepository->get('Payever.display_payment_icon') == 1) {
             $app = pluginApp(Application::class);
-            $icon = $app->getUrlPath('Payever') . '/images/logos/' . $this->getMethodCode() . '.png';
 
-            return $icon;
+            return $app->getUrlPath('Payever') . '/images/logos/' . $this->getMethodCode() . '.png';
         }
 
         return '';

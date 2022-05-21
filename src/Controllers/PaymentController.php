@@ -2,6 +2,7 @@
 
 namespace Payever\Controllers;
 
+use Exception;
 use IO\Services\NotificationService;
 use Payever\Contracts\PendingPaymentRepositoryContract;
 use Payever\Helper\PayeverHelper;
@@ -271,7 +272,7 @@ class PaymentController extends Controller
                 } elseif (!empty($update->order) && is_object($update->order) && !empty($update->order->orderId)) {
                     $orderId = $update->order->orderId;
                 }
-            } catch (\Exception $exception) {
+            } catch (Exception $exception) {
                 $this->notificationService->error($exception->getMessage());
                 $this->getLogger(__METHOD__)->critical('Payever::placingOrderError', $exception);
 
@@ -280,11 +281,13 @@ class PaymentController extends Controller
                 $this->payeverHelper->unlock($paymentId);
             }
         }
+
         $orderAccessKey = $this->orderContract->generateAccessKey((int) $orderId);
         $this->sessionStorageRepository->setSessionValue(
             SessionStorageRepositoryContract::LAST_ACCESSED_ORDER,
             ['orderId' => $orderId, 'accessKey' => $orderAccessKey]
         );
+
         if (!empty($reference)) {
             $pendingPayment = $this->pendingPaymentRepository->getByOrderId($reference);
             if ($pendingPayment) {
@@ -295,6 +298,7 @@ class PaymentController extends Controller
                 );
             }
         }
+
         $this->getLogger(__METHOD__)->debug(
             'Payever::debug.checkoutDebug',
             [
@@ -380,7 +384,7 @@ class PaymentController extends Controller
             } else {
                 $iframeUrl = $this->sessionStorage->getPlugin()->getValue('payever_iframe_url');
             }
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $this->notificationService->warn($exception->getMessage());
 
             return $this->response->redirectTo('checkout');

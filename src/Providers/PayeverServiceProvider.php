@@ -130,7 +130,9 @@ class PayeverServiceProvider extends ServiceProvider
         $eventDispatcher->listen(
             ExecutePayment::class,
             function (ExecutePayment $event) use ($paymentHelper, $payeverMops, $payeverService) {
-                $this->getLogger(__METHOD__)->debug('Payever::debug.ExecutePayment', $payeverService);
+                $this->getLogger('PayeverServiceProvider::boot')
+                    ->debug('Payever::debug.ExecutePayment', $payeverService);
+
                 $payeverPaymentId = $payeverService->getPayeverPaymentId();
                 if (!in_array($event->getMop(), $payeverMops) || !$payeverPaymentId) {
                     return;
@@ -139,7 +141,8 @@ class PayeverServiceProvider extends ServiceProvider
                 // Execute the payment
                 $payeverPaymentData = $payeverService->pluginExecutePayment($payeverPaymentId);
 
-                $this->getLogger(__METHOD__)->debug('Payever::debug.payeverExecutePayment', $payeverPaymentData);
+                $this->getLogger('PayeverServiceProvider::boot')
+                    ->debug('Payever::debug.payeverExecutePayment', $payeverPaymentData);
 
                 // Check whether the payever payment has been executed successfully
                 if ($payeverService->getReturnType() == 'errorCode') {
@@ -151,7 +154,8 @@ class PayeverServiceProvider extends ServiceProvider
 
                 // Create a plentymarkets payment from the payever execution params
                 $plentyPayment = $payeverService->createPlentyPayment($payeverPaymentData, $event->getMop());
-                $this->getLogger(__METHOD__)->debug('Payever::debug.createPlentyPayment', $plentyPayment);
+                $this->getLogger('PayeverServiceProvider::boot')
+                    ->debug('Payever::debug.createPlentyPayment', $plentyPayment);
 
                 if ($plentyPayment instanceof Payment) {
                     // Assign the payment to an order in plentymarkets
@@ -170,9 +174,10 @@ class PayeverServiceProvider extends ServiceProvider
             OrderPdfGenerationEvent::class,
             function (OrderPdfGenerationEvent $event) use ($paymentHelper, $payeverMops, $payeverService) {
                 if ($event->getDocType() === 'invoice') {
-                    $order            = $event->getOrder();
+                    $order = $event->getOrder();
 
-                    $this->getLogger(__METHOD__)->debug('Payever::debug.StartOrderPdfGenerationEvent', $order);
+                    $this->getLogger('PayeverServiceProvider::boot')
+                        ->debug('Payever::debug.StartOrderPdfGenerationEvent', $order);
 
                     if (!in_array($order->methodOfPaymentId, $payeverMops)) {
                         return;
@@ -181,7 +186,7 @@ class PayeverServiceProvider extends ServiceProvider
                     $payeverPaymentId = null;
                     foreach ($order->payments as $payment) {
                         if ((int)$payment->mopId === (int)$order->methodOfPaymentId) {
-                            $this->getLogger(__METHOD__)
+                            $this->getLogger('PayeverServiceProvider::boot')
                                 ->debug('Payever::debug.OrderPdfGenerationEventPayment', $payment);
                             $payeverPaymentId = $paymentHelper->getPaymentPropertyValue(
                                 $payment,
@@ -195,8 +200,8 @@ class PayeverServiceProvider extends ServiceProvider
                     }
 
                     $payeverTransactionResponse = $payeverService->handlePayeverPayment($payeverPaymentId);
-                    $this->getLogger(__METHOD__)
-                        ->debug('Payever::debug.OrderPdfGenerationEventPayeverResponse', $payeverTransactionResponse);
+                    $this->getLogger('PayeverServiceProvider::boot')
+                        ->debug('Payever::debug.OrderPdfGenerationEventPayeverResponse', $payeverTransactionResponse); //phpcs:ignore
 
                     if (array_key_exists('usage_text', $payeverTransactionResponse['payment_details'])) {
                         $totalPrice = number_format($order->amounts[0]->grossTotal, 2, ',', '');

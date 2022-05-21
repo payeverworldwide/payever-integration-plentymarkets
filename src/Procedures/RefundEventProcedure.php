@@ -2,6 +2,7 @@
 
 namespace Payever\Procedures;
 
+use Exception;
 use Payever\Helper\PayeverHelper;
 use Payever\Services\PayeverService;
 use Plenty\Modules\EventProcedures\Events\EventProceduresTriggered;
@@ -19,7 +20,7 @@ class RefundEventProcedure
      * @param PayeverService $paymentService
      * @param PaymentRepositoryContract $paymentContract
      * @param PayeverHelper $paymentHelper
-     * @throws \Exception
+     * @throws Exception
      */
     public function run(
         EventProceduresTriggered $eventTriggered,
@@ -30,10 +31,12 @@ class RefundEventProcedure
         $orderId = $paymentHelper->getOrderIdByEvent($eventTriggered);
 
         if (empty($orderId)) {
-            throw new \Exception('Refund payever payment failed! The given order is invalid!');
+            throw new Exception('Refund payever payment failed! The given order is invalid!');
         }
+
         /** @var Payment[] $payment */
         $payments = $paymentContract->getPaymentsByOrderId($orderId);
+
         /** @var Payment $payment */
         foreach ($payments as $payment) {
             if ($paymentHelper->isPayeverPaymentMopId($payment->mopId)) {
@@ -46,9 +49,11 @@ class RefundEventProcedure
                     'Payever::debug.refundData',
                     'TransactionId: ' . $transactionId . ', amount: ' . $amount
                 );
+
                 if ($transactionId > 0) {
                     // refund the payment
                     $refundResult = $paymentService->refundPayment($transactionId, $amount);
+
                     if ($refundResult) {
                         $this->getLogger(__METHOD__)->debug('Payever::debug.refundResponse', $refundResult);
                         $payment->status = $paymentHelper->mapStatus($refundResult['result']['status']);
@@ -59,7 +64,7 @@ class RefundEventProcedure
                             'Payever::debug.refundResponse',
                             'Refund payever payment is not allowed!'
                         );
-                        throw new \Exception('Refund payever payment is not allowed!');
+                        throw new Exception('Refund payever payment is not allowed!');
                     }
                 }
             }

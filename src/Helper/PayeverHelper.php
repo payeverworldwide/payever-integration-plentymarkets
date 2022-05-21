@@ -359,7 +359,7 @@ class PayeverHelper
     /**
      * @param $textId
      *
-     * @return mixed
+     * @return string
      */
     public function translate($textId): string
     {
@@ -451,7 +451,7 @@ class PayeverHelper
      *
      * @param string $status
      *
-     * @return int|null
+     * @return int|float|null
      */
     public function mapOrderStatus(string $status)
     {
@@ -469,6 +469,8 @@ class PayeverHelper
                 return self::PLENTY_ORDER_RETURN;
             case self::STATUS_NEW:
                 return self::PLENTY_ORDER_PROCESSING;
+            default:
+                return null;
         }
     }
 
@@ -665,7 +667,7 @@ class PayeverHelper
      */
     public function setCommandTimestamp(int $commandTimestamp)
     {
-        $this->payeverConfigRepository->set(self::COMMAND_TIMESTAMP_KEY, $commandTimestamp);
+        $this->payeverConfigRepository->set(self::COMMAND_TIMESTAMP_KEY, (string) $commandTimestamp);
     }
 
     /**

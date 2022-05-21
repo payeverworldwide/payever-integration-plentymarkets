@@ -1,5 +1,10 @@
 # Release Notes for payever
 
+## v2.5.0 (2022-05-11)
+
+### Fixed
+- Dependencies were updated to allow usage PHP8
+
 ## v2.4.0 (2021-10-15)
 
 ### Added

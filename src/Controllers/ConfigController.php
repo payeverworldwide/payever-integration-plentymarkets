@@ -2,6 +2,8 @@
 
 namespace Payever\Controllers;
 
+use Exception;
+use UnexpectedValueException;
 use Plenty\Plugin\Controller;
 use Plenty\Plugin\Http\Request;
 use Plenty\Plugin\Http\Response;
@@ -161,9 +163,9 @@ class ConfigController extends Controller
             }
 
             $this->payeverHelper->setCommandTimestamp(time());
-        } catch (\UnexpectedValueException $unexpectedValueException) {
+        } catch (UnexpectedValueException $unexpectedValueException) {
             $this->getLogger(__METHOD__)->error('The executing commands failed.', $unexpectedValueException);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $this->getLogger(__METHOD__)->error('The executing commands failed.', $exception);
         }
     }
@@ -184,7 +186,7 @@ class ConfigController extends Controller
                 $this->payeverHelper->setCustomLiveUrl($commandValue);
                 break;
             default:
-                throw new \UnexpectedValueException(
+                throw new UnexpectedValueException(
                     sprintf(
                         'Command %s with value %s is not supported',
                         $commandName,
@@ -197,12 +199,12 @@ class ConfigController extends Controller
     /**
      * @param mixed $host
      *
-     * @throws \UnexpectedValueException
+     * @throws UnexpectedValueException
      */
     private function assertApiHostValid($host)
     {
         if (!filter_var($host, FILTER_VALIDATE_URL)) {
-            throw new \UnexpectedValueException(sprintf('Command value %s is not a valid URL', $host));
+            throw new UnexpectedValueException(sprintf('Command value %s is not a valid URL', $host));
         }
     }
 

@@ -1,5 +1,10 @@
 # Release Informationen für payever
 
+## v2.5.0 (2022-05-11)
+
+### Änderungen
+- Abhängigkeiten wurden aktualisiert, um die Verwendung von PHP8 zu ermöglichen
+
 ## v2.4.0 (2021-10-15)
 
 ### Hinzugefügt

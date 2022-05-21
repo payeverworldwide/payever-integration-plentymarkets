@@ -2,6 +2,7 @@
 
 namespace Payever\Services;
 
+use Exception;
 use IO\Models\LocalizedOrder;
 use IO\Services\OrderService;
 use Payever\Contracts\PendingPaymentRepositoryContract;
@@ -376,9 +377,9 @@ HTML;
             }
 
             if (empty($paymentContent) || !strlen($paymentContent)) {
-                throw new \Exception('An unknown error occurred, please try again.');
+                throw new Exception('An unknown error occurred, please try again.');
             }
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $this->returnType = 'errorCode';
             $paymentContent = $exception->getMessage();
             $this->getLogger(__METHOD__)->error('Payever::debug.createPaymentResponse', $exception->getMessage());
@@ -495,13 +496,17 @@ HTML;
                     'Payever::debug.checkoutDebug',
                     sprintf('Pending payment for order %s is loaded', $orderId)
                 );
+
                 $sessionId = $basket->sessionId;
                 $data = $pendingPayment->data;
                 $basketData = $data;
+
                 unset($basketData['basketItems']);
                 $basketData['id'] = $basket->id;
                 $basketData['sessionId'] = $sessionId;
+
                 $this->basketRepository->save($basketData);
+
                 if (is_array($data['basketItems'])) {
                     foreach ($data['basketItems'] as $basketItem) {
                         $this->basketItemRepository->addBasketItem([
@@ -512,14 +517,17 @@ HTML;
                         ]);
                     }
                 }
+
                 $this->checkout->setShippingCountryId($basketData['shippingCountryId']);
                 $this->checkout->setPaymentMethodId($basketData['methodOfPaymentId']);
                 $this->checkout->setShippingProfileId($basketData['shippingProfileId']);
                 $this->checkout->setCurrency($basketData['currency']);
                 $this->checkout->setBasketReferrerId($basketData['referrerId']);
+
                 if ($basketData['customerInvoiceAddressId']) {
                     $this->checkout->setCustomerInvoiceAddressId($basketData['customerInvoiceAddressId']);
                 }
+
                 if ($basketData['customerShippingAddressId']) {
                     $this->checkout->setCustomerShippingAddressId($basketData['customerShippingAddressId']);
                 }
@@ -530,7 +538,7 @@ HTML;
     /**
      * @param bool $executePayment
      * @return LocalizedOrder
-     * @throws \Exception
+     * @throws Exception
      */
     public function placeOrder($executePayment = true)
     {
@@ -548,7 +556,7 @@ HTML;
 
             if ($paymentResult['type'] === 'error') {
                 // send errors
-                throw new \Exception($paymentResult['value']);
+                throw new Exception($paymentResult['value']);
             }
         }
 
@@ -558,7 +566,7 @@ HTML;
     /**
      * @param string $method
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     public function processOrderPayment(string $method)
     {
@@ -573,7 +581,7 @@ HTML;
         );
 
         if ($createPaymentResponse['error']) {
-            throw new \Exception('Creating payment has been declined');
+            throw new Exception('Creating payment has been declined');
         }
 
         return $createPaymentResponse['redirect_url'];
@@ -639,6 +647,7 @@ HTML;
 
             return 'The payment ID is lost!';
         }
+
         $this->getLogger(__METHOD__)->debug('Payever::debug.executePaymentResponse', $executeResponse);
         // Check for errors
         // @codeCoverageIgnoreStart
@@ -676,6 +685,7 @@ HTML;
             $basketItem['sku'] = (string) $basketItem->variationId;
             $payeverRequestParams['basketItems'][] = $basketItem;
         }
+
         // Fill the country for payever parameters
         $country = [];
         $country['isoCode2'] = $this->countryRepository->findIsoCode($basket->shippingCountryId, 'iso_code_2');
@@ -889,7 +899,7 @@ HTML;
                     $payment,
                     PaymentProperty::TYPE_TRANSACTION_ID
                 );
-                $this->getLogger(__METHOD__)->debug(
+                $this->getLogger('PayeverService::assignPlentyPaymentToPlentyOrder')->debug(
                     'Payever::debug.assignPlentyPaymentToPlentyOrder',
                     'Transaction ' . $transactionId . ' was assigned to the order #' . $orderId
                 );
@@ -918,14 +928,14 @@ HTML;
                             'statusId' => (float)$statusId,
                         ];
                         $this->orderRepository->updateOrder($status, $orderId);
-                        $this->getLogger(__METHOD__)->debug(
+                        $this->getLogger('PayeverService::updateOrderStatus')->debug(
                             'Payever::debug.updateOrderStatus',
                             'Status of order ' . $orderId . ' was changed to ' . $statusId
                         );
                     }
                 }
             );
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $this->getLogger(__METHOD__)->error('Payever::updateOrderStatus', $exception);
         }
     }

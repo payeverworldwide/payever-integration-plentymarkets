@@ -24,8 +24,9 @@ class PayeverSdkProvider
 
     /**
      * @param array $apiData
+     * @throws Exception
      */
-    public function __construct($apiData)
+    public function __construct(array $apiData)
     {
         $this->clientConfiguration   = $this->prepareClientConfiguration($apiData);
         $this->tokenList             = new PayeverTokenList();
@@ -33,18 +34,18 @@ class PayeverSdkProvider
     }
 
     /**
-     * @inheritdoc
+     * @return PluginRegistryInfoProvider
      */
-    public function getRegistryInfoProvider()
+    public function getRegistryInfoProvider(): PluginRegistryInfoProvider
     {
         return $this->registryInfoProvider;
     }
 
     /**
      * @return PaymentsApiClient
-     * @throws \Exception
+     * @throws Exception
      */
-    public function getPaymentsApiClient()
+    public function getPaymentsApiClient(): PaymentsApiClient
     {
         return new PaymentsApiClient(
             $this->clientConfiguration,
@@ -56,7 +57,7 @@ class PayeverSdkProvider
      * @return PluginsApiClient
      * @throws Exception
      */
-    public function getPluginsApiClient()
+    public function getPluginsApiClient(): PluginsApiClient
     {
         return new PluginsApiClient(
             $this->registryInfoProvider,
@@ -67,9 +68,9 @@ class PayeverSdkProvider
 
     /**
      * @return ThirdPartyApiClient
-     * @throws \Exception
+     * @throws Exception
      */
-    public function getThirdPartyApiClient()
+    public function getThirdPartyApiClient(): ThirdPartyApiClient
     {
         return new ThirdPartyApiClient(
             $this->clientConfiguration,
@@ -79,9 +80,9 @@ class PayeverSdkProvider
 
     /**
      * @return ProductsApiClient
-     * @throws \Exception
+     * @throws Exception
      */
-    public function getProductsApiClient()
+    public function getProductsApiClient(): ProductsApiClient
     {
         return new ProductsApiClient(
             $this->clientConfiguration,
@@ -91,9 +92,9 @@ class PayeverSdkProvider
 
     /**
      * @return InventoryApiClient
-     * @throws \Exception
+     * @throws Exception
      */
-    public function getInventoryApiClient()
+    public function getInventoryApiClient(): InventoryApiClient
     {
         return new InventoryApiClient(
             $this->clientConfiguration,
@@ -102,11 +103,11 @@ class PayeverSdkProvider
     }
 
     /**
-     * @param $apiData
+     * @param array $apiData
      * @return ClientConfiguration
-     * @throws \Payever\PayeverPayments\Service\Setting\Exception\PayeverSettingsInvalidException
+     * @throws Exception
      */
-    private function prepareClientConfiguration($apiData)
+    private function prepareClientConfiguration(array $apiData): ClientConfiguration
     {
         $clientConfiguration = new ClientConfiguration();
         $apiMode             = $apiData['environment'] == 1
