@@ -171,6 +171,10 @@ class PaymentController extends Controller
      */
     public function checkoutCancel()
     {
+        $this->getLogger(__METHOD__)
+            ->setReferenceType('payeverLog')
+            ->debug('Payever::debug.cancelUrlWasCalled', 'cancel url was called');
+
         $this->notificationService->warn('Payment has been canceled');
 
         return $this->response->redirectTo('checkout');
@@ -191,6 +195,10 @@ class PaymentController extends Controller
      */
     public function checkoutFailure()
     {
+        $this->getLogger(__METHOD__)
+            ->setReferenceType('payeverLog')
+            ->debug('Payever::debug.failureUrlWasCalled', 'failure url was called');
+
         $this->notificationService->warn('Payment has been declined');
 
         $paymentId = (string) $this->request->get('payment_id');
@@ -232,7 +240,10 @@ class PaymentController extends Controller
      */
     public function checkoutSuccess()
     {
-        $this->getLogger(__METHOD__)->debug('Payever::debug.successUrlWasCalled', 'success url was called');
+        $this->getLogger(__METHOD__)
+            ->setReferenceType('payeverLog')
+            ->debug('Payever::debug.successUrlWasCalled', 'success url was called');
+
         $paymentId = (string) $this->request->get('payment_id');
         $fetchDest = $this->request->header('sec-fetch-dest');
         $this->payeverHelper->acquireLock($paymentId, $fetchDest);
@@ -250,10 +261,12 @@ class PaymentController extends Controller
         if (is_numeric($reference)) {
             $this->payeverService->originExecutePayment($payeverPayment);
             $this->payeverHelper->unlock($paymentId);
-            $this->getLogger(__METHOD__)->debug(
-                'Payever::debug.successfulCreatingPlentyPayment',
-                ['payeverPayment' => $payeverPayment]
-            );
+            $this->getLogger(__METHOD__)
+                ->setReferenceType('payeverLog')
+                ->debug(
+                    'Payever::debug.successfulCreatingPlentyPayment',
+                    ['payeverPayment' => $payeverPayment]
+                );
         } else {
             if (!$this->payeverHelper->isSuccessfulPaymentStatus($payeverPayment['status'])) {
                 $this->payeverHelper->unlock($paymentId);
@@ -262,7 +275,9 @@ class PaymentController extends Controller
             }
 
             $update = $this->payeverService->updatePlentyPayment($paymentId, $payeverPayment['status']);
-            $this->getLogger(__METHOD__)->debug('Payever::debug.successfulUpdatingPlentyPayment', $update);
+            $this->getLogger(__METHOD__)
+                ->setReferenceType('payeverLog')
+                ->debug('Payever::debug.successfulUpdatingPlentyPayment', $update);
 
             try {
                 if (!$update) {
@@ -274,7 +289,9 @@ class PaymentController extends Controller
                 }
             } catch (Exception $exception) {
                 $this->notificationService->error($exception->getMessage());
-                $this->getLogger(__METHOD__)->critical('Payever::placingOrderError', $exception);
+                $this->getLogger(__METHOD__)
+                    ->setReferenceType('payeverLog')
+                    ->critical('Payever::placingOrderError', $exception);
 
                 return $this->checkoutCancel();
             } finally {
@@ -292,26 +309,32 @@ class PaymentController extends Controller
             $pendingPayment = $this->pendingPaymentRepository->getByOrderId($reference);
             if ($pendingPayment) {
                 $this->pendingPaymentRepository->delete($pendingPayment);
-                $this->getLogger(__METHOD__)->debug(
-                    'Payever::debug.checkoutDebug',
-                    sprintf('Pending payment for order %s is removed', $reference)
-                );
+                $this->getLogger(__METHOD__)
+                    ->setReferenceType('payeverLog')
+                    ->debug(
+                        'Payever::debug.checkoutDebug',
+                        sprintf('Pending payment for order %s is removed', $reference)
+                    );
             }
         }
 
-        $this->getLogger(__METHOD__)->debug(
-            'Payever::debug.checkoutDebug',
-            [
-                'sec-fetch-dest' => $fetchDest,
-                'reference' => $reference,
-                'orderId' => $orderId,
-                'accessKey' => $orderAccessKey,
-                'pendingPaymentFound' => isset($pendingPayment) && !empty($pendingPayment),
-            ]
-        );
+        $this->getLogger(__METHOD__)
+            ->setReferenceType('payeverLog')
+            ->debug(
+                'Payever::debug.checkoutDebug',
+                [
+                    'sec-fetch-dest' => $fetchDest,
+                    'reference' => $reference,
+                    'orderId' => $orderId,
+                    'accessKey' => $orderAccessKey,
+                    'pendingPaymentFound' => isset($pendingPayment) && !empty($pendingPayment),
+                ]
+            );
         $this->payeverHelper->unlock($paymentId);
 
-        $this->getLogger(__METHOD__)->debug('Payever::debug.ConfirmationUrlCalling', 'Confirmation url was called');
+        $this->getLogger(__METHOD__)
+            ->setReferenceType('payeverLog')
+            ->debug('Payever::debug.ConfirmationUrlCalling', 'Confirmation url was called');
 
         return $this->response->redirectTo('confirmation');
     }
@@ -347,7 +370,11 @@ class PaymentController extends Controller
                 $paymentId = $pendingPayment->payeverPaymentId;
             }
         }
-        $this->getLogger(__METHOD__)->debug($messageCode, [$actualToken, $expectedToken]);
+
+        $this->getLogger(__METHOD__)
+            ->setReferenceType('payeverLog')
+            ->debug($messageCode, [$actualToken, $expectedToken]);
+
         $successUrl = $this->payeverHelper->buildSuccessURL($paymentId);
 
         return $this->response->redirectTo($successUrl);
@@ -366,7 +393,9 @@ class PaymentController extends Controller
      */
     public function checkoutNotice()
     {
-        $this->getLogger(__METHOD__)->debug('Payever::debug.noticeUrlWasCalled');
+        $this->getLogger(__METHOD__)
+            ->setReferenceType('payeverLog')
+            ->debug('Payever::debug.noticeUrlWasCalled');
 
         return $this->response->json($this->notificationRequestProcessor->processNotification());
     }

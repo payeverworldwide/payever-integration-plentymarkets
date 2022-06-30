@@ -448,24 +448,33 @@ HTML;
                     (string) $this->config->get('Payever.clientSecret')
                 )
             );
-            $this->getLogger(__METHOD__)->debug('Payever::debug.submitPaymentParameters', $paymentParameters);
+            $this->getLogger(__METHOD__)
+                ->setReferenceType('payeverLog')
+                ->debug('Payever::debug.submitPaymentParameters', $paymentParameters);
             $paymentResponse = $this->sdkService->call(
                 'submitPaymentRequest',
                 ['payment_parameters' => $paymentParameters]
             );
-            $this->getLogger(__METHOD__)->debug('Payever::debug.submitPaymentResponse', $paymentResponse);
+            $this->getLogger(__METHOD__)
+                ->setReferenceType('payeverLog')
+                ->debug('Payever::debug.submitPaymentResponse', $paymentResponse);
 
             if (!$paymentResponse['error']) {
                 $payeverPaymentId = $paymentResponse['result']['id'];
                 $paymentResponse['redirect_url'] = $paymentResponse['result']['payment_details']['redirect_url'];
             }
         } else {
-            $this->getLogger(__METHOD__)->debug('Payever::debug.paymentParameters', $paymentParameters);
+            $this->getLogger(__METHOD__)
+                ->setReferenceType('payeverLog')
+                ->debug('Payever::debug.paymentParameters', $paymentParameters);
+
             $paymentResponse = $this->sdkService->call(
                 'createPaymentRequest',
                 ['payment_parameters' => $paymentParameters]
             );
-            $this->getLogger(__METHOD__)->debug('Payever::debug.createPaymentResponse', $paymentResponse);
+            $this->getLogger(__METHOD__)
+                ->setReferenceType('payeverLog')
+                ->debug('Payever::debug.createPaymentResponse', $paymentResponse);
         }
         $pendingPayment = $this->pendingPaymentRepository->getByOrderId($orderId);
         if (!$pendingPayment) {
@@ -473,10 +482,13 @@ HTML;
             $pendingPayment->orderId = $orderId;
             $pendingPayment->payeverPaymentId = $payeverPaymentId;
             $pendingPayment->data = $basket->toArray();
-            $this->getLogger(__METHOD__)->debug(
-                'Payever::debug.checkoutDebug',
-                ['pendingPaymentToPersist' => $pendingPayment]
-            );
+            $this->getLogger(__METHOD__)
+                ->setReferenceType('payeverLog')
+                ->debug(
+                    'Payever::debug.checkoutDebug',
+                    ['pendingPaymentToPersist' => $pendingPayment]
+                );
+
             $this->pendingPaymentRepository->persist($pendingPayment);
         }
 
@@ -492,10 +504,12 @@ HTML;
         if (count($basket->basketItems) == 0) {
             $pendingPayment = $this->pendingPaymentRepository->getByOrderId($orderId);
             if ($pendingPayment) {
-                $this->getLogger(__METHOD__)->debug(
-                    'Payever::debug.checkoutDebug',
-                    sprintf('Pending payment for order %s is loaded', $orderId)
-                );
+                $this->getLogger(__METHOD__)
+                    ->setReferenceType('payeverLog')
+                    ->debug(
+                        'Payever::debug.checkoutDebug',
+                        sprintf('Pending payment for order %s is loaded', $orderId)
+                    );
 
                 $sessionId = $basket->sessionId;
                 $data = $pendingPayment->data;
@@ -542,10 +556,12 @@ HTML;
      */
     public function placeOrder($executePayment = true)
     {
-        $this->getLogger(__METHOD__)->debug(
-            'Payever::debug.placeOrderCalling',
-            "PlaceOrder was called, with executePayment = $executePayment"
-        );
+        $this->getLogger(__METHOD__)
+            ->setReferenceType('payeverLog')
+            ->debug(
+                'Payever::debug.placeOrderCalling',
+                "PlaceOrder was called, with executePayment = $executePayment"
+            );
         $orderData = $this->getOrderService()->placeOrder();
 
         if ($executePayment) {
@@ -616,7 +632,10 @@ HTML;
         $executeResponse = [];
         if (!empty($paymentId)) {
             $retrievePayment = $this->sdkService->call('retrievePaymentRequest', ['payment_id' => $paymentId]);
-            $this->getLogger(__METHOD__)->debug('Payever::debug.executePaymentRetrieve', $retrievePayment);
+            $this->getLogger(__METHOD__)
+                ->setReferenceType('payeverLog')
+                ->debug('Payever::debug.executePaymentRetrieve', $retrievePayment);
+
             if (!empty($retrievePayment['error'])) {
                 $this->returnType = 'errorCode';
 
@@ -643,12 +662,16 @@ HTML;
             }
         } else {
             $this->returnType = 'errorCode';
-            $this->getLogger(__METHOD__)->error('Payever::debug.Error', 'The payment ID is lost!');
+            $this->getLogger(__METHOD__)
+                ->setReferenceType('payeverLog')
+                ->error('Payever::debug.Error', 'The payment ID is lost!');
 
             return 'The payment ID is lost!';
         }
 
-        $this->getLogger(__METHOD__)->debug('Payever::debug.executePaymentResponse', $executeResponse);
+        $this->getLogger(__METHOD__)
+            ->setReferenceType('payeverLog')
+            ->debug('Payever::debug.executePaymentResponse', $executeResponse);
         // Check for errors
         // @codeCoverageIgnoreStart
         if (is_array($executeResponse) && !empty($executeResponse['error'])) {
@@ -753,7 +776,9 @@ HTML;
     public function handlePayeverPayment(string $paymentId): array
     {
         $retrievePayment = $this->sdkService->call('retrievePaymentRequest', ['payment_id' => $paymentId]);
-        $this->getLogger(__METHOD__)->debug('Payever::debug.getPaymentDetails', $retrievePayment);
+        $this->getLogger(__METHOD__)
+            ->setReferenceType('payeverLog')
+            ->debug('Payever::debug.getPaymentDetails', $retrievePayment);
 
         return $retrievePayment['result'] ?? [];
     }
@@ -899,10 +924,13 @@ HTML;
                     $payment,
                     PaymentProperty::TYPE_TRANSACTION_ID
                 );
-                $this->getLogger('PayeverService::assignPlentyPaymentToPlentyOrder')->debug(
-                    'Payever::debug.assignPlentyPaymentToPlentyOrder',
-                    'Transaction ' . $transactionId . ' was assigned to the order #' . $orderId
-                );
+
+                $this->getLogger('PayeverService::assignPlentyPaymentToPlentyOrder')
+                    ->setReferenceType('payeverLog')
+                    ->debug(
+                        'Payever::debug.assignPlentyPaymentToPlentyOrder',
+                        'Transaction ' . $transactionId . ' was assigned to the order #' . $orderId
+                    );
             }
         );
 

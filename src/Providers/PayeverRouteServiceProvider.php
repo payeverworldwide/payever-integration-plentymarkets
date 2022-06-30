@@ -4,6 +4,7 @@ namespace Payever\Providers;
 
 use Plenty\Plugin\RouteServiceProvider;
 use Plenty\Plugin\Routing\Router;
+use Payever\Controllers\PaymentController;
 
 class PayeverRouteServiceProvider extends RouteServiceProvider
 {
@@ -15,25 +16,33 @@ class PayeverRouteServiceProvider extends RouteServiceProvider
         // Register payever success and cancellation URLs
         $router->get(
             'payment/payever/checkoutSuccess',
-            'Payever\Controllers\PaymentController@checkoutSuccessDecorator'
+            PaymentController::class . '@checkoutSuccessDecorator'
         );
+
         $router->get(
             'payment/payever/checkoutFinish',
-            'Payever\Controllers\PaymentController@checkoutFinishDecorator'
+            PaymentController::class . '@checkoutFinishDecorator'
         );
+
         $router->get(
             'payment/payever/checkoutCancel',
-            'Payever\Controllers\PaymentController@checkoutCancelDecorator'
+            PaymentController::class . '@checkoutCancelDecorator'
         );
+
         $router->get(
             'payment/payever/checkoutFailure',
-            'Payever\Controllers\PaymentController@checkoutFailureDecorator'
+            PaymentController::class . '@checkoutFailureDecorator'
         );
+
         $router->post(
             'payment/payever/checkoutNotice',
-            'Payever\Controllers\PaymentController@checkoutNoticeDecorator'
+            PaymentController::class . '@checkoutNoticeDecorator'
         );
-        $router->get('payment/payever/checkoutIframe', 'Payever\Controllers\PaymentController@checkoutIframe');
+
+        $router->get(
+            'payment/payever/checkoutIframe',
+            PaymentController::class . '@checkoutIframe'
+        );
 
         // Register config routes
         $router->post('payment/payever/synchronize', 'Payever\Controllers\ConfigController@synchronize');

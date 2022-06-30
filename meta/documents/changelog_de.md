@@ -1,4 +1,7 @@
 # Release Informationen für payever
+## v2.6.0 (2022-06-29)
+### Hinzugefügt
+- Assistent
 
 ## v2.5.0 (2022-05-11)
 

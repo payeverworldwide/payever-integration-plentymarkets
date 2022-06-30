@@ -2,6 +2,8 @@
 
 namespace Payever\Providers;
 
+use Plenty\Log\Services\ReferenceContainer;
+use Plenty\Log\Exceptions\ReferenceTypeException;
 use Payever\Contracts\PendingPaymentRepositoryContract;
 use Payever\Helper\PayeverHelper;
 use Payever\Procedures\CancelEventProcedure;
@@ -28,6 +30,8 @@ use Plenty\Modules\Payment\Models\PaymentProperty;
 use Plenty\Plugin\Events\Dispatcher;
 use Plenty\Plugin\Log\Loggable;
 use Plenty\Plugin\ServiceProvider;
+use Plenty\Modules\Wizard\Contracts\WizardContainerContract;
+use Payever\Assistants\PayeverAssistant;
 
 /**
  * @codeCoverageIgnore
@@ -65,16 +69,30 @@ class PayeverServiceProvider extends ServiceProvider
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
+     * @param WizardContainerContract $wizardContainerContract
      */
     public function boot(
+        ReferenceContainer $referenceContainer,
         PayeverHelper $paymentHelper,
         PaymentMethodContainer $payContainer,
         Dispatcher $eventDispatcher,
         PayeverService $payeverService,
         BasketRepositoryContract $basket,
         EventProceduresService $eventProceduresService,
-        CronContainer $cronContainer
+        CronContainer $cronContainer,
+        WizardContainerContract $wizardContainerContract
     ) {
+        // Register reference types for logs.
+        try {
+            $referenceContainer->add(['payeverLog' => 'payeverLog']);
+        } catch (ReferenceTypeException $e) {
+            $this->getLogger(__METHOD__)
+                ->setReferenceType('payeverLog')
+                ->critical('Payever::debug.boot', [$e->getMessage(), $e->getTraceAsString()]);
+        }
+
+        $wizardContainerContract->register(PayeverAssistant::WIZARD_KEY, PayeverAssistant::class);
+
         $cronContainer->add(CronContainer::DAILY, PayeverCronHandler::class);
         $cronContainer->add(CronContainer::HOURLY, PayeverOrdersCronHandler::class);
         /*
@@ -131,6 +149,7 @@ class PayeverServiceProvider extends ServiceProvider
             ExecutePayment::class,
             function (ExecutePayment $event) use ($paymentHelper, $payeverMops, $payeverService) {
                 $this->getLogger('PayeverServiceProvider::boot')
+                    ->setReferenceType('payeverLog')
                     ->debug('Payever::debug.ExecutePayment', $payeverService);
 
                 $payeverPaymentId = $payeverService->getPayeverPaymentId();
@@ -142,6 +161,7 @@ class PayeverServiceProvider extends ServiceProvider
                 $payeverPaymentData = $payeverService->pluginExecutePayment($payeverPaymentId);
 
                 $this->getLogger('PayeverServiceProvider::boot')
+                    ->setReferenceType('payeverLog')
                     ->debug('Payever::debug.payeverExecutePayment', $payeverPaymentData);
 
                 // Check whether the payever payment has been executed successfully
@@ -155,6 +175,7 @@ class PayeverServiceProvider extends ServiceProvider
                 // Create a plentymarkets payment from the payever execution params
                 $plentyPayment = $payeverService->createPlentyPayment($payeverPaymentData, $event->getMop());
                 $this->getLogger('PayeverServiceProvider::boot')
+                    ->setReferenceType('payeverLog')
                     ->debug('Payever::debug.createPlentyPayment', $plentyPayment);
 
                 if ($plentyPayment instanceof Payment) {
@@ -177,6 +198,7 @@ class PayeverServiceProvider extends ServiceProvider
                     $order = $event->getOrder();
 
                     $this->getLogger('PayeverServiceProvider::boot')
+                        ->setReferenceType('payeverLog')
                         ->debug('Payever::debug.StartOrderPdfGenerationEvent', $order);
 
                     if (!in_array($order->methodOfPaymentId, $payeverMops)) {
@@ -201,6 +223,7 @@ class PayeverServiceProvider extends ServiceProvider
 
                     $payeverTransactionResponse = $payeverService->handlePayeverPayment($payeverPaymentId);
                     $this->getLogger('PayeverServiceProvider::boot')
+                        ->setReferenceType('payeverLog')
                         ->debug('Payever::debug.OrderPdfGenerationEventPayeverResponse', $payeverTransactionResponse); //phpcs:ignore
 
                     if (array_key_exists('usage_text', $payeverTransactionResponse['payment_details'])) {
