@@ -83,10 +83,11 @@ class PayeverAssistantSettingsHandler implements WizardSettingsHandler
 
         $configuration = [];
         foreach ($data as $key => $value) {
-            if ((strpos($key, 'allowed_countries') !== false) || //phpcs:ignore
-                (strpos($key, 'allowed_currencies') !== false)
+            if (((strpos($key, 'allowed_countries') !== false) || //phpcs:ignore
+                (strpos($key, 'allowed_currencies') !== false)) &&
+                is_array($value)
             ) {
-                $value = implode($value, ',');
+                $value = implode(',', $value);
             }
 
             $configuration[] = [

@@ -1,4 +1,9 @@
 # Release Notes for payever
+## v2.6.1 (2022-07-20)
+
+### Fixed
+- implode() bug
+
 ## v2.6.0 (2022-06-29)
 ### Added
 - Assistant

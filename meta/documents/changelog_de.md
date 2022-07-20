@@ -1,4 +1,10 @@
 # Release Informationen für payever
+
+## v2.6.1 (2022-07-20)
+
+### Änderungen
+- implode() bug
+
 ## v2.6.0 (2022-06-29)
 ### Hinzugefügt
 - Assistent
