@@ -500,7 +500,7 @@ class PayeverHelper
      *
      * @return string
      */
-    public function getPluginVersion()
+    public function getPluginVersion(): string
     {
         return self::PLUGIN_VERSION;
     }
