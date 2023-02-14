@@ -237,6 +237,7 @@ class PaymentController extends Controller
      *
      * @return array|SymfonyResponse
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function checkoutSuccess()
     {
@@ -291,7 +292,7 @@ class PaymentController extends Controller
                 $this->notificationService->error($exception->getMessage());
                 $this->getLogger(__METHOD__)
                     ->setReferenceType('payeverLog')
-                    ->critical('Payever::placingOrderError', $exception);
+                    ->critical('Payever::debug::placingOrderError', $exception);
 
                 return $this->checkoutCancel();
             } finally {

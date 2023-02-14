@@ -1975,10 +1975,10 @@
         }
       }
     },
-    "Config.OpenbankPaymentTab": {
-      "label": "Config.OpenbankPaymentTab",
+    "Config.ZiniaBnplTab": {
+      "label": "Config.ZiniaBnplTab",
       "formFields": {
-        "openbank.active": {
+        "zinia_bnpl.active": {
           "type": "selectBox",
           "required": false,
           "label": "Config.payeverActiveLabel",
@@ -1996,23 +1996,23 @@
             ]
           }
         },
-        "openbank.title": {
+        "zinia_bnpl.title": {
           "type": "inputText",
           "required": false,
           "label": "Config.payeverTitleLabel",
           "options": {
-            "defaultValue": "Openbank"
+            "defaultValue": "Zinia. Achteraf Betalen"
           }
         },
-        "openbank.description": {
+        "zinia_bnpl.description": {
           "type": "inputText",
           "required": false,
           "label": "Config.payeverDescriptionLabel",
           "options": {
-            "defaultValue": "Voldoe in betaalbare maandelijkse termijnen via onze partner Openbank"
+            "defaultValue": "Voldoe in betaalbare maandelijkse termijnen via onze partner Zinia"
           }
         },
-        "openbank.redirect_method": {
+        "zinia_bnpl.redirect_method": {
           "type": "selectBox",
           "required": false,
           "label": "Config.payeverRedirectMethod",
@@ -2030,7 +2030,7 @@
             ]
           }
         },
-        "openbank.accept_fee": {
+        "zinia_bnpl.accept_fee": {
           "type": "selectBox",
           "required": false,
           "label": "Config.payeverAcceptFeeLabel",
@@ -2048,7 +2048,7 @@
             ]
           }
         },
-        "openbank.fee": {
+        "zinia_bnpl.fee": {
           "type": "inputText",
           "required": false,
           "label": "Config.payeverFeeLabel",
@@ -2056,7 +2056,7 @@
             "defaultValue": "0"
           }
         },
-        "openbank.variable_fee": {
+        "zinia_bnpl.variable_fee": {
           "type": "inputText",
           "required": false,
           "label": "Config.payeverVariableFeeLabel",
@@ -2064,7 +2064,7 @@
             "defaultValue": "0"
           }
         },
-        "openbank.min_order_total": {
+        "zinia_bnpl.min_order_total": {
           "type": "inputText",
           "required": false,
           "label": "Config.payeverMinOrderTotalLabel",
@@ -2072,7 +2072,7 @@
             "defaultValue": "50"
           }
         },
-        "openbank.max_order_total": {
+        "zinia_bnpl.max_order_total": {
           "type": "inputText",
           "required": false,
           "label": "Config.payeverMaxOrderTotalLabel",
@@ -2080,7 +2080,7 @@
             "defaultValue": "750"
           }
         },
-        "openbank.allowed_countries": {
+        "zinia_bnpl.allowed_countries": {
           "type": "inputText",
           "required": false,
           "label": "Config.payeverAllowedCountries",
@@ -2088,7 +2088,130 @@
             "defaultValue": "NL"
           }
         },
-        "openbank.allowed_currencies": {
+        "zinia_bnpl.allowed_currencies": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCurrencies",
+          "options": {
+            "defaultValue": "EUR"
+          }
+        }
+      }
+    },
+    "Config.ZiniaBnplDETab": {
+      "label": "Config.ZiniaBnplDETab",
+      "formFields": {
+        "zinia_bnpl_de.active": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverActiveLabel",
+          "options": {
+            "defaultValue": "0",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "zinia_bnpl_de.title": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverTitleLabel",
+          "options": {
+            "defaultValue": "Zinia Rechnungskauf"
+          }
+        },
+        "zinia_bnpl_de.description": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverDescriptionLabel",
+          "options": {
+            "defaultValue": "Mit dem Zinia Rechnungskauf geben Sie Ihren Kunden 14 Tage Zeit um den Einkauf zu bezahlen."
+          }
+        },
+        "zinia_bnpl_de.redirect_method": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverRedirectMethod",
+          "options": {
+            "defaultValue": "1",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "zinia_bnpl_de.accept_fee": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverAcceptFeeLabel",
+          "options": {
+            "defaultValue": "1",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "zinia_bnpl_de.fee": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverFeeLabel",
+          "options": {
+            "defaultValue": "0"
+          }
+        },
+        "zinia_bnpl_de.variable_fee": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverVariableFeeLabel",
+          "options": {
+            "defaultValue": "0"
+          }
+        },
+        "zinia_bnpl_de.min_order_total": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverMinOrderTotalLabel",
+          "options": {
+            "defaultValue": "50"
+          }
+        },
+        "zinia_bnpl_de.max_order_total": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverMaxOrderTotalLabel",
+          "options": {
+            "defaultValue": "750"
+          }
+        },
+        "zinia_bnpl_de.allowed_countries": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCountries",
+          "options": {
+            "defaultValue": "DE"
+          }
+        },
+        "zinia_bnpl_de.allowed_currencies": {
           "type": "inputText",
           "required": false,
           "label": "Config.payeverAllowedCurrencies",

@@ -8,6 +8,7 @@ use Payever\Contracts\PendingPaymentRepositoryContract;
 use Payever\Helper\PayeverHelper;
 use Payever\Procedures\CancelEventProcedure;
 use Payever\Procedures\RefundEventProcedure;
+use Payever\Procedures\ReturnEventProcedure;
 use Payever\Procedures\ShippingEventProcedure;
 use Payever\Repositories\PendingPaymentRepository;
 use Payever\Services\PayeverCronHandler;
@@ -48,6 +49,7 @@ class PayeverServiceProvider extends ServiceProvider
     {
         $this->getApplication()->register(PayeverRouteServiceProvider::class);
         $this->getApplication()->bind(RefundEventProcedure::class);
+        $this->getApplication()->bind(ReturnEventProcedure::class);
         $this->getApplication()->bind(CancelEventProcedure::class);
         $this->getApplication()->bind(ShippingEventProcedure::class);
         $this->getApplication()->singleton(
@@ -86,7 +88,7 @@ class PayeverServiceProvider extends ServiceProvider
         try {
             $referenceContainer->add(['payeverLog' => 'payeverLog']);
         } catch (ReferenceTypeException $e) {
-            $this->getLogger(__METHOD__)
+            $this->getLogger('PayeverServiceProvider::boot')
                 ->setReferenceType('payeverLog')
                 ->critical('Payever::debug.boot', [$e->getMessage(), $e->getTraceAsString()]);
         }
@@ -114,6 +116,12 @@ class PayeverServiceProvider extends ServiceProvider
             'de' => 'Rückzahlung der payever-Zahlung',
             'en' => 'Refund the payever payment'
         ], 'Payever\Procedures\RefundEventProcedure@run');
+
+        // Register Return Event Procedure
+        $eventProceduresService->registerProcedure(PayeverHelper::PLUGIN_KEY, ProcedureEntry::PROCEDURE_GROUP_ORDER, [
+            'de' => 'Payever-Zahlung teilweise zurückerstatten',
+            'en' => 'Partial return the payever payment'
+        ], 'Payever\Procedures\ReturnEventProcedure@run');
 
         // Register Cancel Event Procedure
         $eventProceduresService->registerProcedure(PayeverHelper::PLUGIN_KEY, ProcedureEntry::PROCEDURE_GROUP_ORDER, [

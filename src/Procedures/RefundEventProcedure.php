@@ -21,6 +21,7 @@ class RefundEventProcedure
      * @param PaymentRepositoryContract $paymentContract
      * @param PayeverHelper $paymentHelper
      * @throws Exception
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     public function run(
         EventProceduresTriggered $eventTriggered,

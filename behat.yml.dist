@@ -1,0 +1,35 @@
+default:
+  suites:
+    default:
+      filters:
+        tags: "__BEHAT_TAG__"
+      paths:
+        features: "tests/features"
+        bootstrap: "tests/features/bootstrap"
+      contexts:
+        - Payever\Tests\BackendContext
+        - Payever\Tests\FrontendContext
+  extensions:
+    Behat\MinkExtension:
+      base_url: "__BASE_URL__"
+      browser_name: "chrome"
+      sessions:
+        default:
+          selenium2:
+            wd_host: "__SELENIUM_URL__"
+            browser: "chrome"
+            #capabilities: {"browserName": "chrome", "browser": "chrome", 'chrome': {'switches': ['--disable-gpu', '--window-size=1920,1080']}, "marionette": true, "extra_capabilities": { "chromeOptions": { "w3c": false } }}
+            capabilities: {"browserName": "chrome", "browser": "chrome", 'chrome': {'switches': ['--disable-gpu', '--window-size=1920,1080', '--disable-dev-shm-usage', '--no-sandbox']}, "marionette": true, "extra_capabilities": { "goog:chromeOptions": { "w3c": false } }}
+    Payever\Tests\BehatExtension\ServiceContainer\PlentyPluginsExtension:
+      plugin:
+        base_url: "__BASE_URL__"
+        connector_class: Payever\Tests\PlentyConnector
+        cms_directory: "__CMS_DIRECTORY__"
+        backend:
+          url: "__BACKEND_URL__"
+          username: "__BACKEND_USERNAME__"
+          password: "__BACKEND_PASSWORD__"
+    Bex\Behat\ScreenshotExtension:
+      image_drivers:
+        local:
+          screenshot_directory: "__SCREENSHOT_DIRECTORY__"
