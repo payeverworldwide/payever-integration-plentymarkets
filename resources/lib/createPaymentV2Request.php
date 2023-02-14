@@ -19,6 +19,7 @@ $paymentRequest
     ->setPaymentMethod($params['payment_method'])
     ->setCart(json_encode($params['cart']));
 
+$paymentRequest->setPluginVersion($apiData['pluginVersion']);
 $paymentRequest->setPaymentData(json_encode(['force_redirect' => (bool)$params['force_redirect']]));
 
 $paymentRequest->setEmail($params['email'])

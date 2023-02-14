@@ -38,7 +38,7 @@
     "php": ">=7.3 <8.1"
   },
   "dependencies": {
-    "payever/sdk-php": "4.1.1"
+    "payever/sdk-php": "4.4.0"
   },
   "runOnBuild"        : [
     "Payever\\Migrations\\CreatePayeverPaymentMethods9",
