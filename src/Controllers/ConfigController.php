@@ -135,10 +135,14 @@ class ConfigController extends Controller
     {
         try {
             $timestamp = $this->payeverHelper->getCommandTimestamp();
+            $apiVersion = $this->payeverHelper->getApiVersion();
             $this->sdkService->call('registerPlugin', []);
             $commandsList = $this->sdkService->call(
                 'getPluginCommands',
-                [PayeverHelper::COMMAND_TIMESTAMP_KEY => $timestamp]
+                [
+                    PayeverHelper::COMMAND_TIMESTAMP_KEY => $timestamp,
+                    PayeverHelper::API_VERSION_KEY => $apiVersion,
+                ]
             );
             $supportedCommands = $this->sdkService->call('getSupportedPluginCommands', []);
 

@@ -6,6 +6,14 @@ use Exception;
 use Payever\Helper\PayeverHelper;
 use Payever\Services\PayeverService;
 use Plenty\Modules\EventProcedures\Events\EventProceduresTriggered;
+use Plenty\Modules\Order\Contracts\OrderRepositoryContract;
+use Plenty\Modules\Order\Models\Order;
+use Plenty\Modules\Order\Models\OrderAmount;
+use Plenty\Modules\Order\Models\OrderItem;
+use Plenty\Modules\Order\Models\OrderItemAmount;
+use Plenty\Modules\Order\Shipping\Contracts\ParcelServicePresetRepositoryContract;
+use Plenty\Modules\Order\Shipping\Package\Contracts\OrderShippingPackageRepositoryContract;
+use Plenty\Modules\Order\Shipping\Package\Models\OrderShippingPackage;
 use Plenty\Modules\Payment\Contracts\PaymentRepositoryContract;
 use Plenty\Modules\Payment\Models\Payment;
 use Plenty\Modules\Payment\Models\PaymentProperty;
@@ -20,13 +28,19 @@ class ShippingEventProcedure
      * @param PayeverService $paymentService
      * @param PaymentRepositoryContract $paymentContract
      * @param PayeverHelper $paymentHelper
+     * @param OrderRepositoryContract $orderRepository
      * @throws Exception
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function run(
         EventProceduresTriggered $eventTriggered,
         PayeverService $paymentService,
         PaymentRepositoryContract $paymentContract,
-        PayeverHelper $paymentHelper
+        PayeverHelper $paymentHelper,
+        OrderRepositoryContract $orderRepository,
+        OrderShippingPackageRepositoryContract $orderShippingPackageRepository,
+        ParcelServicePresetRepositoryContract $parcelServicePresetRepository
     ) {
         $orderId = $paymentHelper->getOrderIdByEvent($eventTriggered);
 
@@ -45,28 +59,148 @@ class ShippingEventProcedure
                     PaymentProperty::TYPE_TRANSACTION_ID
                 );
 
-                $this->getLogger(__METHOD__)->debug(
-                    'Payever::debug.shippingData',
-                    'TransactionId: ' . $transactionId
-                );
+                $this->getLogger('ShippingEventProcedure::run')
+                    ->setReferenceType('payeverLog')
+                    ->setReferenceValue($transactionId)
+                    ->debug(
+                        'Payever::debug.shippingData',
+                        'TransactionId: ' . $transactionId . '. OrderID: ' . $orderId
+                    );
 
                 if (!empty($transactionId)) {
                     $transaction = $paymentService->getTransaction($transactionId);
-                    $this->getLogger(__METHOD__)->debug('Payever::debug.transactionData', $transaction);
+                    $this->getLogger('ShippingEventProcedure::run')
+                        ->setReferenceType('payeverLog')
+                        ->debug('Payever::debug.transactionData', (array) $transaction);
 
                     if ($paymentHelper->isAllowedTransaction($transaction, 'shipping_goods')) {
+                        /** @var Order $order */
+                        $order = $orderRepository->findOrderById($orderId);
+
+                        /** @var OrderAmount $amount */
+                        $amount = $order->amount;
+                        $paymentItems = $this->getPaymentItems($order);
+                        $deliveryFee = $this->getDeliveryFee($order);
+                        $trackingNumber = null;
+                        $trackingUrl = null;
+                        $carrier = null;
+
+                        // Get tracking number
+                        $orderShippingPackages = $orderShippingPackageRepository->listOrderShippingPackages($order->id);
+                        foreach ($orderShippingPackages as $orderShippingPackage) {
+                            if ($orderShippingPackage instanceof OrderShippingPackage) {
+                                $trackingNumber = $orderShippingPackage->packageNumber;
+
+                                break;
+                            }
+                        }
+
+                        // Get tracking url
+                        $parcelServicePreset = $parcelServicePresetRepository->getPresetById($order->shippingProfileId);
+                        if ($parcelServicePreset->parcelService) {
+                            $trackingUrl = $parcelServicePreset->parcelService->trackingUrl;
+                            $carrier = $parcelServicePreset->parcelService->backendName;
+                        }
+
+                        $this->getLogger('ShippingEventProcedure::run')
+                            ->setReferenceType('payeverLog')
+                            ->setReferenceValue($transactionId)
+                            ->debug(
+                                'Payever::debug.shippingRequest',
+                                [
+                                    $transactionId,
+                                    $amount->grossTotal,
+                                    $paymentItems,
+                                    $deliveryFee,
+                                    $carrier,
+                                    $trackingNumber,
+                                    $trackingUrl
+                                ]
+                            );
+
                         // shipping the payment
-                        $shippingResult = $paymentService->shippingGoodsPayment($transactionId);
-                        $this->getLogger(__METHOD__)->debug('Payever::debug.shippingResponse', $shippingResult);
-                    } else {
-                        $this->getLogger(__METHOD__)->debug(
-                            'Payever::debug.shippingResponse',
-                            'Shipping goods payever payment action is not allowed!'
+                        $shippingResult = $paymentService->shippingGoodsPayment(
+                            $transactionId,
+                            $amount->grossTotal,
+                            $paymentItems,
+                            $deliveryFee,
+                            'Ship goods',
+                            $carrier,
+                            $trackingNumber,
+                            $trackingUrl
                         );
+
+                        $this->getLogger('ShippingEventProcedure::run')
+                            ->setReferenceType('payeverLog')
+                            ->setReferenceValue($transactionId)
+                            ->debug('Payever::debug.shippingResponse', [$shippingResult]);
+                    } else {
+                        $this->getLogger('ShippingEventProcedure::run')
+                            ->setReferenceType('payeverLog')
+                            ->debug(
+                                'Payever::debug.shippingResponse',
+                                'Shipping goods payever payment action is not allowed!'
+                            );
+
                         throw new Exception('Shipping goods payever payment action is not allowed!');
                     }
                 }
             }
         }
+    }
+
+    /**
+     * Get Payment Items.
+     *
+     * @param Order $order
+     * @return array{identifier: string, name: string, price: float, quantity: int}
+     */
+    private function getPaymentItems(Order $order)
+    {
+        $paymentItems = [];
+        foreach ($order->orderItems as $orderItem) {
+            /** @var OrderItem $orderItem */
+            if ($orderItem->typeId !== 1) {
+                // Sales order
+                continue;
+            }
+
+            /** @var OrderItemAmount $amount */
+            $amount = $orderItem->amount;
+
+            $paymentItems[] = [
+                'identifier' => (string) $orderItem->itemVariationId,
+                'name' => $orderItem->orderItemName,
+                'price' => $amount->priceGross,
+                'quantity' => $orderItem->quantity
+            ];
+        }
+
+        return $paymentItems;
+    }
+
+    /**
+     * Get Delivery Fee.
+     *
+     * @param Order $order
+     * @return float|int
+     */
+    private function getDeliveryFee(Order $order)
+    {
+        $deliveryFee = 0;
+        foreach ($order->orderItems as $orderItem) {
+            /** @var OrderItem $orderItem */
+            if ($orderItem->typeId !== 6) {
+                // Delivery
+                continue;
+            }
+
+            /** @var OrderItemAmount $amount */
+            $amount = $orderItem->amount;
+
+            $deliveryFee += $amount->priceGross;
+        }
+
+        return $deliveryFee;
     }
 }

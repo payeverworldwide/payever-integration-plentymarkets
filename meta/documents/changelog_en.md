@@ -1,4 +1,10 @@
 # Release Notes for payever
+
+## v2.7.0 (2023-01-25)
+- Added Zinia payment options
+- Applied shipping details and payment items for shipping goods request
+- Implemented v2 api version;
+
 ## v2.6.1 (2022-07-20)
 
 ### Fixed

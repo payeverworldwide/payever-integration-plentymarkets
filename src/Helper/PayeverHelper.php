@@ -3,7 +3,8 @@
 namespace Payever\Helper;
 
 use Payever\Methods\InstantPaymentMethod;
-use Payever\Methods\OpenbankPaymentMethod;
+use Payever\Methods\ZiniaBnplPaymentMethod;
+use Payever\Methods\ZiniaBnplDePaymentMethod;
 use Payever\Methods\PayexcreditcardPaymentMethod;
 use Payever\Methods\PayexfakturaPaymentMethod;
 use Payever\Methods\PaymillcreditcardPaymentMethod;
@@ -56,12 +57,15 @@ class PayeverHelper
     const COMMAND_TIMESTAMP_KEY = 'command_timestamp';
     const SANDBOX_URL_CONFIG_KEY = 'sandbox_url';
     const LIVE_URL_CONFIG_KEY = 'live_url';
+    const API_VERSION_KEY  = 'api_version';
 
     const PLENTY_ORDER_SUCCESS = 5;
     const PLENTY_ORDER_PROCESSING = 3;
     const PLENTY_ORDER_INPROCESS = 3.3;
     const PLENTY_ORDER_CANCELLED = 8;
     const PLENTY_ORDER_RETURN = 9;
+
+    const PLUGIN_VERSION = '2.7.0';
 
     /**
      * @var PaymentMethodRepositoryContract
@@ -168,9 +172,13 @@ class PayeverHelper
             'class' => SwedbankInvoicePaymentMethod::class,
             'name' => 'Swedbank Invoice',
         ],
-        'OPENBANK' => [
-            'class' => OpenbankPaymentMethod::class,
-            'name' => 'Openbank',
+        'ZINIA_BNPL' => [
+            'class' => ZiniaBnplPaymentMethod::class,
+            'name' => 'Zinia BNPL',
+        ],
+        'ZINIA_BNPL_DE' => [
+            'class' => ZiniaBnplDePaymentMethod::class,
+            'name' => 'Zinia BNPL DE',
         ]
     ];
 
@@ -488,6 +496,16 @@ class PayeverHelper
     }
 
     /**
+     * Returns current plugin version
+     *
+     * @return string
+     */
+    public function getPluginVersion()
+    {
+        return self::PLUGIN_VERSION;
+    }
+
+    /**
      * @param mixed $paymentId
      * @return string
      */
@@ -641,6 +659,16 @@ class PayeverHelper
     }
 
     /**
+     * Returns api version
+     *
+     * @return int|null
+     */
+    public function getApiVersion()
+    {
+        return (int)$this->payeverConfigRepository->get(self::API_VERSION_KEY);
+    }
+
+    /**
      * Sets custom sandbox url
      *
      * @param mixed $customSandboxUrl
@@ -668,6 +696,16 @@ class PayeverHelper
     public function setCommandTimestamp(int $commandTimestamp)
     {
         $this->payeverConfigRepository->set(self::COMMAND_TIMESTAMP_KEY, (string) $commandTimestamp);
+    }
+
+    /**
+     * Sets command api version
+     *
+     * @param int $apiVersion
+     */
+    public function setApiVersion(int $apiVersion)
+    {
+        $this->payeverConfigRepository->set(self::API_VERSION_KEY, (int) $apiVersion);
     }
 
     /**

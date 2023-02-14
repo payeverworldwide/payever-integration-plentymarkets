@@ -6,10 +6,10 @@ namespace Payever\Methods;
  * Class OpenbankPaymentMethod
  * @package Payever\Methods
  */
-class OpenbankPaymentMethod extends AbstractPaymentMethod
+class ZiniaBnplDePaymentMethod extends AbstractPaymentMethod
 {
     /**
      * @var string
      */
-    public $methodCode = 'openbank';
+    public $methodCode = 'zinia_bnpl_de';
 }

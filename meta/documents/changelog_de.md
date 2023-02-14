@@ -1,5 +1,10 @@
 # Release Informationen für payever
 
+## v2.7.0 (2023-01-25)
+- Zinia-Zahlungsoptionen hinzugefügt
+- Angewendete Versanddetails und Zahlungspositionen für VersandWarenanfrage
+- Implementierte v2-API-Version;
+
 ## v2.6.1 (2022-07-20)
 
 ### Änderungen
