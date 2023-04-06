@@ -1,9 +1,14 @@
 # Release Notes for payever
 
+## v2.8.0 (2023-04-06)
+- Added IVY, iDEAL, Santander Installments Finland payment options
+
 ## v2.7.0 (2023-01-25)
 - Added Zinia payment options
 - Applied shipping details and payment items for shipping goods request
 - Implemented v2 api version;
+- Partial cancel;
+- Shipping goods details;
 
 ## v2.6.1 (2022-07-20)
 

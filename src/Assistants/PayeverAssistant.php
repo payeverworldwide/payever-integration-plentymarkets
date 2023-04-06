@@ -1357,6 +1357,131 @@ class PayeverAssistant extends WizardProvider
                                 ],
                             ]
                         ],
+                        // Santander Installments FI
+                        [
+                            'title' => 'Assistant.SantanderInstallmentFITab',
+                            'description' => 'Assistant.SantanderInstallmentFITab',
+                            'form' => [
+                                'santander_installment_fi.active' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverActiveLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'santander_installment_fi.title' => [
+                                    'type' => 'text',
+                                    'defaultValue' => 'Santander Installments FI',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverTitleLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'santander_installment_fi.description' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverDescriptionLabel',
+                                        'required' => false,
+                                    ]
+                                ],
+                                'santander_installment_fi.accept_fee' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAcceptFeeLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'santander_installment_fi.redirect_method' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverRedirectMethod',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'santander_installment_fi.fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0.25',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'santander_installment_fi.variable_fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverVariableFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'santander_installment_fi.min_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '300',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMinOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'santander_installment_fi.max_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '40000',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMaxOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'santander_installment_fi.allowed_countries' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['FI'],
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCountries',
+                                        'checkboxValues' => $this->getCountriesList(['FI']),
+                                    ]
+                                ],
+                                'santander_installment_fi.allowed_currencies' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['EUR'],
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCurrencies',
+                                        'checkboxValues' => $this->getCurrenciesList(['EUR']),
+                                    ]
+                                ],
+                            ]
+                        ],
                         // Santander Installment DK
                         [
                             'title' => 'Assistant.SantanderInstallmentDKTab',
@@ -2126,12 +2251,12 @@ class PayeverAssistant extends WizardProvider
                                 ],
                             ]
                         ],
-                        // Openbank
+                        // Zinia BNPL
                         [
-                            'title' => 'Assistant.OpenbankPaymentTab',
-                            'description' => 'Assistant.OpenbankPaymentTab',
+                            'title' => 'Assistant.ZiniaBnplTab',
+                            'description' => 'Assistant.ZiniaBnplTab',
                             'form' => [
-                                'openbank.active' => [
+                                'zinia_bnpl.active' => [
                                     'type' => 'select',
                                     'defaultValue' => '1',
                                     'options' => [
@@ -2149,23 +2274,41 @@ class PayeverAssistant extends WizardProvider
                                         ]
                                     ]
                                 ],
-                                'openbank.title' => [
+                                'zinia_bnpl.title' => [
                                     'type' => 'text',
-                                    'defaultValue' => 'Openbank',
+                                    'defaultValue' => 'Zinia. Achteraf Betalen',
                                     'options' => [
                                         'name' => 'Assistant.payeverTitleLabel',
                                         'required' => true,
                                     ]
                                 ],
-                                'openbank.description' => [
+                                'zinia_bnpl.description' => [
                                     'type' => 'text',
-                                    'defaultValue' => 'Voldoe in betaalbare maandelijkse termijnen via onze partner Openbank', //phpcs:ignore
+                                    'defaultValue' => 'Voldoe in betaalbare maandelijkse termijnen via onze partner Zinia', //phpcs:ignore
                                     'options' => [
                                         'name' => 'Assistant.payeverDescriptionLabel',
                                         'required' => false,
                                     ]
                                 ],
-                                'openbank.accept_fee' => [
+                                'zinia_bnpl.redirect_method' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverRedirectMethod',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'zinia_bnpl.accept_fee' => [
                                     'type' => 'select',
                                     'defaultValue' => '1',
                                     'options' => [
@@ -2183,7 +2326,7 @@ class PayeverAssistant extends WizardProvider
                                         ]
                                     ]
                                 ],
-                                'openbank.fee' => [
+                                'zinia_bnpl.fee' => [
                                     'type' => 'text',
                                     'defaultValue' => '0',
                                     'options' => [
@@ -2191,7 +2334,7 @@ class PayeverAssistant extends WizardProvider
                                         'required' => true,
                                     ]
                                 ],
-                                'openbank.variable_fee' => [
+                                'zinia_bnpl.variable_fee' => [
                                     'type' => 'text',
                                     'defaultValue' => '0',
                                     'options' => [
@@ -2199,7 +2342,7 @@ class PayeverAssistant extends WizardProvider
                                         'required' => true,
                                     ]
                                 ],
-                                'openbank.min_order_total' => [
+                                'zinia_bnpl.min_order_total' => [
                                     'type' => 'text',
                                     'defaultValue' => '50',
                                     'options' => [
@@ -2207,7 +2350,7 @@ class PayeverAssistant extends WizardProvider
                                         'required' => true,
                                     ]
                                 ],
-                                'openbank.max_order_total' => [
+                                'zinia_bnpl.max_order_total' => [
                                     'type' => 'text',
                                     'defaultValue' => '750',
                                     'options' => [
@@ -2215,7 +2358,7 @@ class PayeverAssistant extends WizardProvider
                                         'required' => true,
                                     ]
                                 ],
-                                'openbank.allowed_countries' => [
+                                'zinia_bnpl.allowed_countries' => [
                                     'type' => 'checkboxGroup',
                                     'defaultValue' => ['NL'],
                                     'options' => [
@@ -2223,7 +2366,132 @@ class PayeverAssistant extends WizardProvider
                                         'checkboxValues' => $this->getCountriesList(['NL']),
                                     ]
                                 ],
-                                'openbank.allowed_currencies' => [
+                                'zinia_bnpl.allowed_currencies' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['EUR'],
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCurrencies',
+                                        'checkboxValues' => $this->getCurrenciesList(['EUR']),
+                                    ]
+                                ],
+                            ]
+                        ],
+                        // Zinia BNPL DE
+                        [
+                            'title' => 'Assistant.ZiniaBnplDETab',
+                            'description' => 'Assistant.ZiniaBnplDETab',
+                            'form' => [
+                                'zinia_bnpl_de.active' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverActiveLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'zinia_bnpl_de.title' => [
+                                    'type' => 'text',
+                                    'defaultValue' => 'Zinia Rechnungskauf',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverTitleLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_bnpl_de.description' => [
+                                    'type' => 'text',
+                                    'defaultValue' => 'Mit dem Zinia Rechnungskauf geben Sie Ihren Kunden 14 Tage Zeit um den Einkauf zu bezahlen.', //phpcs:ignore
+                                    'options' => [
+                                        'name' => 'Assistant.payeverDescriptionLabel',
+                                        'required' => false,
+                                    ]
+                                ],
+                                'zinia_bnpl_de.redirect_method' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverRedirectMethod',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'zinia_bnpl_de.accept_fee' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAcceptFeeLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'zinia_bnpl_de.fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_bnpl_de.variable_fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverVariableFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_bnpl_de.min_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '50',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMinOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_bnpl_de.max_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '750',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMaxOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_bnpl_de.allowed_countries' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['DE'],
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCountries',
+                                        'checkboxValues' => $this->getCountriesList(['DE']),
+                                    ]
+                                ],
+                                'zinia_bnpl_de.allowed_currencies' => [
                                     'type' => 'checkboxGroup',
                                     'defaultValue' => ['EUR'],
                                     'options' => [
@@ -2445,6 +2713,240 @@ class PayeverAssistant extends WizardProvider
                                     'options' => [
                                         'name' => 'Assistant.payeverAllowedCurrencies',
                                         'checkboxValues' => $this->getCurrenciesList(['NOK', 'SEK']),
+                                    ]
+                                ],
+                            ]
+                        ],
+                        // iDEAL
+                        [
+                            'title' => 'Assistant.IdealTab',
+                            'description' => 'Assistant.IdealTab',
+                            'form' => [
+                                'ideal.active' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverActiveLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'ideal.title' => [
+                                    'type' => 'text',
+                                    'defaultValue' => 'iDEAL',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverTitleLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'ideal.description' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '', //phpcs:ignore
+                                    'options' => [
+                                        'name' => 'Assistant.payeverDescriptionLabel',
+                                        'required' => false,
+                                    ]
+                                ],
+                                'ideal.accept_fee' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAcceptFeeLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'ideal.fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0.29',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'ideal.variable_fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverVariableFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'ideal.min_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0.5',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMinOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'ideal.max_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '100000',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMaxOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'ideal.allowed_countries' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['AU', 'AT', 'BE', 'BG', 'CA', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GI', 'GR', 'HK', 'HU', 'IE', 'IT', 'JP', 'LV', 'LI', 'LT', 'LU', 'MT', 'MX', 'NL', 'NZ', 'NO', 'PL', 'PT', 'RO', 'SG', 'SK', 'SI', 'ES', 'SE', 'CH', 'GB', 'US'], //phpcs:ignore
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCountries',
+                                        'checkboxValues' => $this->getCountriesList(
+                                            ['AU', 'AT', 'BE', 'BG', 'CA', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GI', 'GR', 'HK', 'HU', 'IE', 'IT', 'JP', 'LV', 'LI', 'LT', 'LU', 'MT', 'MX', 'NL', 'NZ', 'NO', 'PL', 'PT', 'RO', 'SG', 'SK', 'SI', 'ES', 'SE', 'CH', 'GB', 'US'] //phpcs:ignore
+                                        ),
+                                    ]
+                                ],
+                                'ideal.allowed_currencies' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['EUR'],
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCurrencies',
+                                        'checkboxValues' => $this->getCurrenciesList(['EUR']),
+                                    ]
+                                ],
+                            ]
+                        ],
+                        // IVY
+                        [
+                            'title' => 'Assistant.IvyTab',
+                            'description' => 'Assistant.IvyTab',
+                            'form' => [
+                                'ivy.active' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverActiveLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'ivy.title' => [
+                                    'type' => 'text',
+                                    'defaultValue' => 'IVY',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverTitleLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'ivy.description' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverDescriptionLabel',
+                                        'required' => false,
+                                    ]
+                                ],
+                                'ivy.redirect_method' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverRedirectMethod',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'ivy.accept_fee' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAcceptFeeLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'ivy.fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'ivy.variable_fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverVariableFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'ivy.min_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '300',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMinOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'ivy.max_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '40000',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMaxOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'ivy.allowed_countries' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['FI'],
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCountries',
+                                        'checkboxValues' => $this->getCountriesList(['FI']),
+                                    ]
+                                ],
+                                'ivy.allowed_currencies' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['EUR'],
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCurrencies',
+                                        'checkboxValues' => $this->getCurrenciesList(['EUR']),
                                     ]
                                 ],
                             ]

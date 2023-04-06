@@ -1,5 +1,8 @@
 # Release Informationen für payever
 
+## v2.8.0 (2023-04-06)
+- IVY, iDEAL, Santander Ratenkredit Finnland Zahlungsoptionen hinzugefügt
+
 ## v2.7.0 (2023-01-25)
 - Zinia-Zahlungsoptionen hinzugefügt
 - Angewendete Versanddetails und Zahlungspositionen für VersandWarenanfrage

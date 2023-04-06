@@ -3,6 +3,9 @@
 namespace Payever\Helper;
 
 use Payever\Methods\InstantPaymentMethod;
+use Payever\Methods\IvyPaymentMethod;
+use Payever\Methods\IdealPaymentMethod;
+use Payever\Methods\SantanderinstfiPaymentMethod;
 use Payever\Methods\ZiniaBnplPaymentMethod;
 use Payever\Methods\ZiniaBnplDePaymentMethod;
 use Payever\Methods\PayexcreditcardPaymentMethod;
@@ -65,7 +68,7 @@ class PayeverHelper
     const PLENTY_ORDER_CANCELLED = 8;
     const PLENTY_ORDER_RETURN = 9;
 
-    const PLUGIN_VERSION = '2.7.0';
+    const PLUGIN_VERSION = '2.8.0';
 
     /**
      * @var PaymentMethodRepositoryContract
@@ -136,6 +139,10 @@ class PayeverHelper
             'class' => SantanderinstatPaymentMethod::class,
             'name' => 'Santander Ratenkauf Austria',
         ],
+        'SANTANDER_INSTALLMENT_FI' => [
+            'class' => SantanderinstfiPaymentMethod::class,
+            'name' => 'Santander Installment FI',
+        ],
         'SANTANDER_INSTALLMENT' => [
             'class' => SantanderPaymentMethod::class,
             'name' => 'Santander Installment',
@@ -179,6 +186,14 @@ class PayeverHelper
         'ZINIA_BNPL_DE' => [
             'class' => ZiniaBnplDePaymentMethod::class,
             'name' => 'Zinia BNPL DE',
+        ],
+        'IVY' => [
+            'class' => IvyPaymentMethod::class,
+            'name' => 'Ivy',
+        ],
+        'IDEAL' => [
+            'class' => IdealPaymentMethod::class,
+            'name' => 'Ideal',
         ]
     ];
 
