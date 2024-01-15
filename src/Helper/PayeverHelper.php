@@ -70,7 +70,7 @@ class PayeverHelper
     const PLENTY_ORDER_CANCELLED = 8;
     const PLENTY_ORDER_RETURN = 9;
 
-    const PLUGIN_VERSION = '2.9.0';
+    const PLUGIN_VERSION = '3.0.1';
 
     const ACTION_PREFIX = "action.";
 
