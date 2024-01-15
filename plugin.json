@@ -1,17 +1,17 @@
 {
   "name"              : "Payever",
-  "marketplaceName"   : {"de":"payever","en":"payever"},
+  "marketplaceName"   : {"de":"payever Checkout","en":"payever Checkout"},
   "namespace"         : "Payever",
   "type"              : "payment",
-  "version"           : "2.8.0",
+  "version"           : "2.9.0",
   "license"           : "GNU AFFERO GENERAL PUBLIC LICENSE",
   "isClosedSource"    : false,
   "pluginIcon"        : "icon_plugin_xs.png",
   "price"             : 0.00,
-  "description"       : "payever combines all common payment methods in just one plugin, e.g. credit card, direct debit, PayPal, as well as invoice, factoring and installments. Over 10,000 merchants already trust us - join them today!",
+  "description"       : "From Financing & Buy Now Pay Later products to Cards, PayPal and other Wallets, different local payment methods or Open Banking Payments - everything without additional costs and with an easy integration as well as fast onboarding.",
   "shortDescription"  : {
-    "de":"payever verbindet alle gängigen Zahlungsarten in nur einem Plugin, u.a. Kreditkarte, Lastschrift, PayPal, Rechnungskauf, Ratenkauf und Ratenkredit. Über 10.000 Händler vertrauen uns bereits - seien Sie der Nächste!",
-    "en":"payever combines all common payment methods in just one plugin, e.g. credit card, direct debit, PayPal, as well as invoice, factoring and installments. Over 10,000 merchants already trust us - join them today!"
+    "de":"Von Finanzierung & Rechnungs-/Ratenkauf bis hin zu Kreditkartenzahlung, PayPal und andere Wallets, lokale Zahlarten sowie Sofort-Banküberweisung auf Basis von Open-Banking-Technologie – alles ohne zusätzliche Kosten bei einfachster Integration und schnellem Onboarding.",
+    "en":"From Financing & Buy Now Pay Later products to Cards, PayPal and other Wallets, different local payment methods or Open Banking Payments - everything without additional costs and with an easy integration as well as fast onboarding."
   },
   "categories"        : ["3519"],
   "keywords"          : [
@@ -38,11 +38,15 @@
     "php": ">=7.3 <8.1"
   },
   "dependencies": {
-    "payever/sdk-php": "4.4.0"
+    "payever/sdk-php": "4.1.1"
   },
   "runOnBuild"        : [
-    "Payever\\Migrations\\CreatePayeverPaymentMethods10",
+    "Payever\\Migrations\\CreatePayeverPaymentMethods11",
     "Payever\\Migrations\\CreatePayeverConfigTable",
-    "Payever\\Migrations\\CreatePendingPaymentTable"
+    "Payever\\Migrations\\CreatePendingPaymentTable",
+    "Payever\\Migrations\\CreateLogTable",
+    "Payever\\Migrations\\CreateOrderTotalTable",
+    "Payever\\Migrations\\CreateOrderTotalItemTable",
+    "Payever\\Migrations\\CreateActionHistoryTable"
   ]
 }

@@ -10,6 +10,8 @@ use Payever\ExternalIntegration\Payments\PaymentsApiClient;
 use Payever\ExternalIntegration\Plugins\PluginsApiClient;
 use Payever\ExternalIntegration\Products\ProductsApiClient;
 use Payever\ExternalIntegration\ThirdParty\ThirdPartyApiClient;
+use Payever\ExternalIntegration\Payments\ThirdPartyPluginsApiClient;
+use Payever\ExternalIntegration\Payments\Action\ActionDecider;
 
 class PayeverSdkProvider
 {
@@ -103,6 +105,18 @@ class PayeverSdkProvider
     }
 
     /**
+     * @return ThirdPartyPluginsApiClient
+     * @throws Exception
+     */
+    public function getThirdPartyPluginsApiClient(): ThirdPartyPluginsApiClient
+    {
+        return new ThirdPartyPluginsApiClient(
+            $this->clientConfiguration,
+            $this->tokenList
+        );
+    }
+
+    /**
      * @param array $apiData
      * @return ClientConfiguration
      * @throws Exception
@@ -129,5 +143,14 @@ class PayeverSdkProvider
         }
 
         return $clientConfiguration;
+    }
+
+    /**
+     * @return ActionDecider
+     * @throws Exception
+     */
+    public function getActionDecider(): ActionDecider
+    {
+        return new ActionDecider($this->getPaymentsApiClient());
     }
 }

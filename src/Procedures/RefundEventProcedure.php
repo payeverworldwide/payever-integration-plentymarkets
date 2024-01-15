@@ -5,6 +5,7 @@ namespace Payever\Procedures;
 use Exception;
 use Payever\Helper\PayeverHelper;
 use Payever\Services\PayeverService;
+use Payever\Traits\Logger;
 use Plenty\Modules\EventProcedures\Events\EventProceduresTriggered;
 use Plenty\Modules\Payment\Contracts\PaymentRepositoryContract;
 use Plenty\Modules\Payment\Models\Payment;
@@ -13,7 +14,7 @@ use Plenty\Plugin\Log\Loggable;
 
 class RefundEventProcedure
 {
-    use Loggable;
+    use Logger;
 
     /**
      * @param EventProceduresTriggered $eventTriggered
@@ -31,7 +32,23 @@ class RefundEventProcedure
     ) {
         $orderId = $paymentHelper->getOrderIdByEvent($eventTriggered);
 
+        $this->log(
+            'debug',
+            __METHOD__,
+            'Payever::debug.refundEventProcedure',
+            'Run RefundEventProcedure',
+            []
+        )->setReferenceValue($orderId);
+
         if (empty($orderId)) {
+            $this->log(
+                'error',
+                __METHOD__,
+                'Payever::debug.refundEventProcedure',
+                'RefundEventProcedure: Return payever payment failed! The given order is invalid!',
+                []
+            )->setReferenceValue($orderId);
+
             throw new Exception('Refund payever payment failed! The given order is invalid!');
         }
 
@@ -46,25 +63,42 @@ class RefundEventProcedure
                     PaymentProperty::TYPE_TRANSACTION_ID
                 );
                 $amount = $payment->amount;
-                $this->getLogger(__METHOD__)->debug(
+
+                $this->log(
+                    'debug',
+                    __METHOD__,
                     'Payever::debug.refundData',
-                    'TransactionId: ' . $transactionId . ', amount: ' . $amount
-                );
+                    'RefundEventProcedure: TransactionId: ' . $transactionId,
+                    []
+                )->setReferenceValue($orderId);
 
                 if ($transactionId > 0) {
                     // refund the payment
                     $refundResult = $paymentService->refundPayment($transactionId, $amount);
 
                     if ($refundResult) {
-                        $this->getLogger(__METHOD__)->debug('Payever::debug.refundResponse', $refundResult);
+                        $this->log(
+                            'debug',
+                            __METHOD__,
+                            'Payever::debug.refundResponse',
+                            'Refund response',
+                            [
+                                ['refundResult' => $refundResult]
+                            ]
+                        )->setReferenceValue($transactionId);
+
                         $payment->status = $paymentHelper->mapStatus($refundResult['result']['status']);
                         // update the refunded payment
                         $paymentContract->updatePayment($payment);
                     } else {
-                        $this->getLogger(__METHOD__)->debug(
+                        $this->log(
+                            'debug',
+                            __METHOD__,
                             'Payever::debug.refundResponse',
-                            'Refund payever payment is not allowed!'
-                        );
+                            'Refund payever payment action is not allowed!',
+                            []
+                        )->setReferenceValue($transactionId);
+
                         throw new Exception('Refund payever payment is not allowed!');
                     }
                 }

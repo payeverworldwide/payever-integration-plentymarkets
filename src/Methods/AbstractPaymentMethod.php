@@ -8,8 +8,8 @@ use Plenty\Modules\Basket\Models\Basket;
 use Plenty\Modules\Payment\Method\Contracts\PaymentMethodService;
 use Plenty\Plugin\Application;
 use Plenty\Plugin\ConfigRepository;
-use Plenty\Plugin\Log\Loggable;
 use Plenty\Modules\Order\Shipping\Countries\Contracts\CountryRepositoryContract;
+use Plenty\Plugin\Log\Loggable;
 
 /**
  * Class AbstractPaymentMethod

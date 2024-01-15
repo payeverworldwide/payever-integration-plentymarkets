@@ -1,5 +1,8 @@
 # Release Informationen für payever
 
+## v2.9.0 (2023-12-27)
+- Santander Ratenkredit Belgium Zahlungsoptionen hinzugefügt
+
 ## v2.8.0 (2023-04-06)
 - IVY, iDEAL, Santander Ratenkredit Finnland Zahlungsoptionen hinzugefügt
 

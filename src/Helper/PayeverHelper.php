@@ -18,6 +18,7 @@ use Payever\Methods\SantanderinstatPaymentMethod;
 use Payever\Methods\SantanderinstdkPaymentMethod;
 use Payever\Methods\SantanderinstnoPaymentMethod;
 use Payever\Methods\SantanderinstsePaymentMethod;
+use Payever\Methods\SantanderinstbePaymentMethod;
 use Payever\Methods\SantanderinvoicedePaymentMethod;
 use Payever\Methods\SantanderinvoicenoPaymentMethod;
 use Payever\Methods\SantanderPaymentMethod;
@@ -32,6 +33,7 @@ use Plenty\Modules\EventProcedures\Events\EventProceduresTriggered;
 use Plenty\Modules\Helper\Services\WebstoreHelper;
 use Plenty\Modules\Order\Models\Order;
 use Plenty\Modules\Order\Models\OrderType;
+use Plenty\Modules\Payment\Contracts\PaymentRepositoryContract;
 use Plenty\Modules\Payment\Method\Contracts\PaymentMethodRepositoryContract;
 use Plenty\Modules\Payment\Models\Payment;
 use Plenty\Modules\Payment\Models\PaymentProperty;
@@ -68,7 +70,9 @@ class PayeverHelper
     const PLENTY_ORDER_CANCELLED = 8;
     const PLENTY_ORDER_RETURN = 9;
 
-    const PLUGIN_VERSION = '2.8.0';
+    const PLUGIN_VERSION = '2.9.0';
+
+    const ACTION_PREFIX = "action.";
 
     /**
      * @var PaymentMethodRepositoryContract
@@ -94,6 +98,11 @@ class PayeverHelper
      * @var \Plenty\Plugin\Translation\Translator
      */
     private $translator;
+
+    /**
+     * @var PaymentRepositoryContract
+     */
+    private PaymentRepositoryContract $paymentContract;
 
     /**
      * @var string[][]
@@ -142,6 +151,10 @@ class PayeverHelper
         'SANTANDER_INSTALLMENT_FI' => [
             'class' => SantanderinstfiPaymentMethod::class,
             'name' => 'Santander Installment FI',
+        ],
+        'SANTANDER_INSTALLMENT_BE' => [
+            'class' => SantanderinstbePaymentMethod::class,
+            'name' => 'Santander Installment BE',
         ],
         'SANTANDER_INSTALLMENT' => [
             'class' => SantanderPaymentMethod::class,
@@ -228,19 +241,22 @@ class PayeverHelper
      * @param WebstoreHelper $webStoreHelper
      * @param PayeverConfigRepository $payeverConfigRepository
      * @param StorageLock $storageLock
+     * @param PaymentRepositoryContract $paymentContract
      */
     public function __construct(
         PaymentMethodRepositoryContract $paymentMethodRepository,
         Translator $translator,
         WebstoreHelper $webStoreHelper,
         PayeverConfigRepository $payeverConfigRepository,
-        StorageLock $storageLock
+        StorageLock $storageLock,
+        PaymentRepositoryContract $paymentContract,
     ) {
         $this->paymentMethodRepository = $paymentMethodRepository;
         $this->translator = $translator;
         $this->webStoreHelper = $webStoreHelper;
         $this->payeverConfigRepository = $payeverConfigRepository;
         $this->storageLock = $storageLock;
+        $this->paymentContract = $paymentContract;
     }
 
     /**

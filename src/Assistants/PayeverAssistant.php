@@ -1357,6 +1357,131 @@ class PayeverAssistant extends WizardProvider
                                 ],
                             ]
                         ],
+                        // Santander Installments BE
+                        [
+                            'title' => 'Assistant.SantanderInstallmentBETab',
+                            'description' => 'Assistant.SantanderInstallmentTab',
+                            'form' => [
+                                'santander_installment_be.active' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverActiveLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'santander_installment_be.title' => [
+                                    'type' => 'text',
+                                    'defaultValue' => 'Santander Installments BE',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverTitleLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'santander_installment_be.description' => [
+                                    'type' => 'text',
+                                    'defaultValue' => 'Santander Installments BE',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverDescriptionLabel',
+                                        'required' => false,
+                                    ]
+                                ],
+                                'santander_installment_be.accept_fee' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAcceptFeeLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'santander_installment_be.redirect_method' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverRedirectMethod',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'santander_installment_be.fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0.25',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'santander_installment_be.variable_fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverVariableFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'santander_installment_be.min_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMinOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'santander_installment_be.max_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '100000',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMaxOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'santander_installment_be.allowed_countries' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['BE'],
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCountries',
+                                        'checkboxValues' => $this->getCountriesList(['BE']),
+                                    ]
+                                ],
+                                'santander_installment_be.allowed_currencies' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['EUR'],
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCurrencies',
+                                        'checkboxValues' => $this->getCurrenciesList(['EUR']),
+                                    ]
+                                ],
+                            ]
+                        ],
                         // Santander Installments FI
                         [
                             'title' => 'Assistant.SantanderInstallmentFITab',

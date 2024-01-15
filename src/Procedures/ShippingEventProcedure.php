@@ -5,6 +5,7 @@ namespace Payever\Procedures;
 use Exception;
 use Payever\Helper\PayeverHelper;
 use Payever\Services\PayeverService;
+use Payever\Traits\Logger;
 use Plenty\Modules\EventProcedures\Events\EventProceduresTriggered;
 use Plenty\Modules\Order\Contracts\OrderRepositoryContract;
 use Plenty\Modules\Order\Models\Order;
@@ -21,7 +22,7 @@ use Plenty\Plugin\Log\Loggable;
 
 class ShippingEventProcedure
 {
-    use Loggable;
+    use Logger;
 
     /**
      * @param EventProceduresTriggered $eventTriggered
@@ -44,7 +45,23 @@ class ShippingEventProcedure
     ) {
         $orderId = $paymentHelper->getOrderIdByEvent($eventTriggered);
 
+        $this->log(
+            'debug',
+            __METHOD__,
+            'Payever::debug.shippingEventProcedure',
+            'Run ShippingEventProcedure',
+            []
+        )->setReferenceValue($orderId);
+
         if (empty($orderId)) {
+            $this->log(
+                'error',
+                __METHOD__,
+                'Payever::debug.shippingEventProcedure',
+                'ShippingEventProcedure: Shipping goods payever payment failed! The given order is invalid!',
+                []
+            );
+
             throw new Exception('Shipping goods payever payment action is failed! The given order is invalid!');
         }
 
@@ -59,19 +76,26 @@ class ShippingEventProcedure
                     PaymentProperty::TYPE_TRANSACTION_ID
                 );
 
-                $this->getLogger('ShippingEventProcedure::run')
-                    ->setReferenceType('payeverLog')
-                    ->setReferenceValue($transactionId)
-                    ->debug(
-                        'Payever::debug.shippingData',
-                        'TransactionId: ' . $transactionId . '. OrderID: ' . $orderId
-                    );
+                $this->log(
+                    'debug',
+                    __METHOD__,
+                    'Payever::debug.shippingData',
+                    'TransactionId: ' . $transactionId . '. OrderID: ' . $orderId,
+                    []
+                )->setReferenceValue($transactionId);
 
                 if (!empty($transactionId)) {
                     $transaction = $paymentService->getTransaction($transactionId);
-                    $this->getLogger('ShippingEventProcedure::run')
-                        ->setReferenceType('payeverLog')
-                        ->debug('Payever::debug.transactionData', (array) $transaction);
+
+                    $this->log(
+                        'debug',
+                        __METHOD__,
+                        'Payever::debug.transactionData',
+                        'Transaction',
+                        [
+                            'transaction' => $transaction
+                        ]
+                    )->setReferenceValue($transactionId);
 
                     if ($paymentHelper->isAllowedTransaction($transaction, 'shipping_goods')) {
                         /** @var Order $order */
@@ -102,21 +126,21 @@ class ShippingEventProcedure
                             $carrier = $parcelServicePreset->parcelService->backendName;
                         }
 
-                        $this->getLogger('ShippingEventProcedure::run')
-                            ->setReferenceType('payeverLog')
-                            ->setReferenceValue($transactionId)
-                            ->debug(
-                                'Payever::debug.shippingRequest',
-                                [
-                                    $transactionId,
-                                    $amount->grossTotal,
-                                    $paymentItems,
-                                    $deliveryFee,
-                                    $carrier,
-                                    $trackingNumber,
-                                    $trackingUrl
-                                ]
-                            );
+                        $this->log(
+                            'debug',
+                            __METHOD__,
+                            'Payever::debug.shippingRequest',
+                            'Shipping request',
+                            [
+                                $transactionId,
+                                $amount->grossTotal,
+                                $paymentItems,
+                                $deliveryFee,
+                                $carrier,
+                                $trackingNumber,
+                                $trackingUrl
+                            ]
+                        )->setReferenceValue($transactionId);
 
                         // shipping the payment
                         $shippingResult = $paymentService->shippingGoodsPayment(
@@ -130,17 +154,23 @@ class ShippingEventProcedure
                             $trackingUrl
                         );
 
-                        $this->getLogger('ShippingEventProcedure::run')
-                            ->setReferenceType('payeverLog')
-                            ->setReferenceValue($transactionId)
-                            ->debug('Payever::debug.shippingResponse', [$shippingResult]);
+                        $this->log(
+                            'debug',
+                            __METHOD__,
+                            'Payever::debug.shippingGoodsResponse',
+                            'Shipping response',
+                            [
+                                'shippingResult' => $shippingResult
+                            ]
+                        )->setReferenceValue($transactionId);
                     } else {
-                        $this->getLogger('ShippingEventProcedure::run')
-                            ->setReferenceType('payeverLog')
-                            ->debug(
-                                'Payever::debug.shippingResponse',
-                                'Shipping goods payever payment action is not allowed!'
-                            );
+                        $this->log(
+                            'debug',
+                            __METHOD__,
+                            'Payever::debug.shippingResponse',
+                            'Shipping goods payever payment action is not allowed!',
+                            []
+                        )->setReferenceValue($transactionId);
 
                         throw new Exception('Shipping goods payever payment action is not allowed!');
                     }

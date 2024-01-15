@@ -3,14 +3,14 @@
 namespace Payever\Controllers;
 
 use Exception;
-use UnexpectedValueException;
+use Payever\Helper\PayeverHelper;
+use Payever\Services\PayeverSdkService;
+use Plenty\Modules\Plugin\Contracts\ConfigurationRepositoryContract;
 use Plenty\Plugin\Controller;
 use Plenty\Plugin\Http\Request;
 use Plenty\Plugin\Http\Response;
-use Plenty\Modules\Plugin\Contracts\ConfigurationRepositoryContract;
-use Payever\Helper\PayeverHelper;
-use Payever\Services\PayeverSdkService;
 use Plenty\Plugin\Log\Loggable;
+use UnexpectedValueException;
 
 class ConfigController extends Controller
 {
@@ -156,13 +156,12 @@ class ConfigController extends Controller
                     $this->execute($commandName, $commandValue);
                     $this->sdkService->call('acknowledgePluginCommand', ['commandId' => $commandId]);
                 } else {
-                    $this->getLogger(__METHOD__)->error(
-                        sprintf(
-                            'Plugin command %s with value %s is not supported',
-                            $commandName,
-                            $commandValue
-                        )
+                    $error = sprintf(
+                        'Plugin command %s with value %s is not supported',
+                        $commandName,
+                        $commandValue
                     );
+                    $this->getLogger(__METHOD__)->error($error);
                 }
             }
 

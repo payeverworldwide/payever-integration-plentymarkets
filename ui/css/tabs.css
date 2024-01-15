@@ -1,0 +1,23 @@
+.tab {
+    border-top: 1px solid black;
+}
+
+.tab-btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    margin-right: 0.5rem;
+    border: 1px solid #bdbdbd;
+    background-color: transparent;
+    transition: border-color 0.2s, background-color 0.2s;
+    color: #435a6b;
+    cursor: pointer;
+    border-top-left-radius: 0.5em;
+    border-top-right-radius: 0.5em;
+    border-bottom: 0;
+    width: auto;
+    user-select: none;
+}
+
+.active-tab {
+    background-color: #ffffff;
+}

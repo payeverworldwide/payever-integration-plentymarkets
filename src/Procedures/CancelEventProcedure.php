@@ -5,6 +5,7 @@ namespace Payever\Procedures;
 use Exception;
 use Payever\Helper\PayeverHelper;
 use Payever\Services\PayeverService;
+use Payever\Traits\Logger;
 use Plenty\Modules\EventProcedures\Events\EventProceduresTriggered;
 use Plenty\Modules\Payment\Contracts\PaymentRepositoryContract;
 use Plenty\Modules\Payment\Models\Payment;
@@ -13,7 +14,7 @@ use Plenty\Plugin\Log\Loggable;
 
 class CancelEventProcedure
 {
-    use Loggable;
+    use Logger;
 
     /**
      * @param EventProceduresTriggered $eventTriggered
@@ -30,7 +31,23 @@ class CancelEventProcedure
     ) {
         $orderId = $paymentHelper->getOrderIdByEvent($eventTriggered);
 
+        $this->log(
+            'debug',
+            __METHOD__,
+            'Payever::debug.cancelEventProcedure',
+            'Run CancelEventProcedure',
+            []
+        )->setReferenceValue($orderId);
+
         if (empty($orderId)) {
+            $this->log(
+                'error',
+                __METHOD__,
+                'Payever::debug.cancelEventProcedure',
+                'CancelEventProcedure: Cancel payever payment failed! The given order is invalid!',
+                []
+            )->setReferenceValue($orderId);
+
             throw new Exception('Cancel payever payment failed! The given order is invalid!');
         }
 
@@ -44,30 +61,55 @@ class CancelEventProcedure
                     $payment,
                     PaymentProperty::TYPE_TRANSACTION_ID
                 );
-
-                $this->getLogger(__METHOD__)->debug(
+                $this->log(
+                    'debug',
+                    __METHOD__,
                     'Payever::debug.cancelData',
-                    'TransactionId: ' . $transactionId
-                );
+                    'CancelEventProcedure: TransactionId: ' . $transactionId,
+                    []
+                )->setReferenceValue($orderId);
 
                 if (!empty($transactionId)) {
                     $transaction = $paymentService->getTransaction($transactionId);
-                    $this->getLogger(__METHOD__)->debug('Payever::debug.transactionData', $transaction);
+
+                    $this->log(
+                        'debug',
+                        __METHOD__,
+                        'Payever::debug.transactionData',
+                        'Transaction',
+                        [
+                            ['transaction' => $transaction]
+                        ]
+                    )->setReferenceValue($transactionId);
 
                     if ($paymentHelper->isAllowedTransaction($transaction, 'cancel')) {
                         // cancel the payment
                         $cancelResult = $paymentService->cancelPayment($transactionId);
-                        $this->getLogger(__METHOD__)->debug('Payever::debug.cancelResponse', $cancelResult);
+
+                        $this->log(
+                            'debug',
+                            __METHOD__,
+                            'Payever::debug.cancelResponse',
+                            'Cancel response',
+                            [
+                                ['cancelResult' => $cancelResult]
+                            ]
+                        )->setReferenceValue($transactionId);
+
                         if ($cancelResult['call']['status'] == 'success') {
                             $payment->status = $paymentHelper->mapStatus($cancelResult['result']['status']);
                             // update the cancelled payment
                             $paymentContract->updatePayment($payment);
                         }
                     } else {
-                        $this->getLogger(__METHOD__)->debug(
+                        $this->log(
+                            'debug',
+                            __METHOD__,
                             'Payever::debug.cancelResponse',
-                            'Cancel payever payment is not allowed!'
-                        );
+                            'Payever::debug.cancelResponse: Cancel payever payment is not allowed!',
+                            []
+                        )->setReferenceValue($transactionId);
+
                         throw new Exception('Cancel payever payment is not allowed!');
                     }
                 }

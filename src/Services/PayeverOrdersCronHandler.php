@@ -3,6 +3,7 @@
 namespace Payever\Services;
 
 use Payever\Helper\PayeverHelper;
+use Payever\Traits\Logger;
 use Plenty\Modules\Authorization\Services\AuthHelper;
 use Plenty\Modules\Cron\Contracts\CronHandler;
 use Plenty\Modules\Order\Contracts\OrderRepositoryContract;
@@ -11,7 +12,7 @@ use Plenty\Plugin\Log\Loggable;
 
 class PayeverOrdersCronHandler extends CronHandler
 {
-    use Loggable;
+    use Logger;
 
     /**
      * @var AuthHelper
@@ -70,7 +71,17 @@ class PayeverOrdersCronHandler extends CronHandler
     {
         $now = date(\DateTime::W3C);
         $dateTo = date(\DateTime::W3C, strtotime('-8 hour', strtotime($now)));
-        $this->getLogger(__METHOD__)->debug('Payever::debug.cancelingOrdersDateTo', $dateTo);
+
+        $this->log(
+            'debug',
+            __METHOD__,
+            'Payever::debug.cancelingOrdersDateTo',
+            'Canceling Orders Date To',
+            [
+                'dateTo' => $dateTo,
+            ]
+        );
+
         $this->orderRepositoryContract->setFilters([
             'statusFrom' => PayeverHelper::PLENTY_ORDER_PROCESSING,
             'statusTo' => PayeverHelper::PLENTY_ORDER_PROCESSING,
@@ -87,9 +98,12 @@ class PayeverOrdersCronHandler extends CronHandler
                     $orderModel->id
                 );
 
-                $this->getLogger(__METHOD__)->debug(
+                $this->log(
+                    'debug',
+                    __METHOD__,
                     'Payever::debug.autoOrderCanceling',
-                    sprintf('Order #%s has been cancelled', $orderModel->id)
+                    sprintf('Order #%s has been cancelled', $orderModel->id),
+                    []
                 );
             }
         }

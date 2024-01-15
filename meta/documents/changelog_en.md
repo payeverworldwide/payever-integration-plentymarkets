@@ -1,5 +1,8 @@
 # Release Notes for payever
 
+## v2.9.0 (2023-12-27)
+- Added Santander Installment Belgium payment options
+
 ## v2.8.0 (2023-04-06)
 - Added IVY, iDEAL, Santander Installments Finland payment options
 

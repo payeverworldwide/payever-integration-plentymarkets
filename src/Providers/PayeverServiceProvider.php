@@ -2,15 +2,23 @@
 
 namespace Payever\Providers;
 
+use Payever\Contracts\ActionHistoryRepositoryContract;
+use Payever\Contracts\OrderTotalItemRepositoryContract;
+use Payever\Contracts\OrderTotalRepositoryContract;
+use Payever\Repositories\ActionHistoryRepository;
+use Payever\Repositories\OrderTotalItemRepository;
+use Payever\Repositories\OrderTotalRepository;
 use Plenty\Log\Services\ReferenceContainer;
 use Plenty\Log\Exceptions\ReferenceTypeException;
 use Payever\Contracts\PendingPaymentRepositoryContract;
+use Payever\Contracts\LogRepositoryContract;
 use Payever\Helper\PayeverHelper;
 use Payever\Procedures\CancelEventProcedure;
 use Payever\Procedures\RefundEventProcedure;
 use Payever\Procedures\ReturnEventProcedure;
 use Payever\Procedures\ShippingEventProcedure;
 use Payever\Repositories\PendingPaymentRepository;
+use Payever\Repositories\LogRepository;
 use Payever\Services\PayeverCronHandler;
 use Payever\Services\PayeverOrdersCronHandler;
 use Payever\Services\PayeverService;
@@ -55,6 +63,22 @@ class PayeverServiceProvider extends ServiceProvider
         $this->getApplication()->singleton(
             PendingPaymentRepositoryContract::class,
             PendingPaymentRepository::class
+        );
+        $this->getApplication()->singleton(
+            LogRepositoryContract::class,
+            LogRepository::class
+        );
+        $this->getApplication()->singleton(
+            OrderTotalRepositoryContract::class,
+            OrderTotalRepository::class
+        );
+        $this->getApplication()->singleton(
+            OrderTotalItemRepositoryContract::class,
+            OrderTotalItemRepository::class
+        );
+        $this->getApplication()->singleton(
+            ActionHistoryRepositoryContract::class,
+            ActionHistoryRepository::class
         );
     }
 

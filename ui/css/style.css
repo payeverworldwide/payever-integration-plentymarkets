@@ -1,0 +1,42 @@
+.payever-logo__wrap {
+    margin-bottom: 20px
+}
+.payever-logo {
+    height: 50px
+}
+.payever-btn {
+    width: 200px!important;
+    vertical-align: middle;
+}
+.payever-btn span {
+    font-size: 18px;
+    color: #fff;
+    vertical-align: top;
+}
+.payever-btn.in-progress {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.payever-message {
+    padding: 5px;
+}
+.payever-message.is-success {
+    color: green;
+}
+.payever-message.is-error {
+    color: darkred;
+}
+
+.order-info {
+    margin-top: 0.2em;
+}
+
+.order-info td {
+    padding: 0.4em;
+    font-weight: bold;
+    border: 1px solid #636671;
+}
+
+.order-info tr td:first-child {
+    font-weight: bold !important;
+}

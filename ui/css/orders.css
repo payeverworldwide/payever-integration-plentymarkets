@@ -1,0 +1,122 @@
+.orders-table {
+    margin-top: 0.5em;
+}
+
+.orders-table, .items-table {
+    width: 100%;
+}
+
+.orders-table td, .items-table td {
+    padding: 1em;
+    border: 1px solid black;
+}
+
+span.action-name {
+    color: inherit;
+    font-weight: inherit;
+}
+
+.modal {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.modal__content {
+    position: relative;
+    flex-basis: 800px;
+    min-height: 200px;
+    padding: 1em;
+    background-color: #ffffff;
+    border-radius: 1em;
+}
+
+.modal__close-btn {
+    position: absolute;
+    right: 1em;
+    top: 1em;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.modal__close-btn:before, .modal__close-btn:after {
+    display: block;
+    content: '';
+    border-radius: 4px;
+    width: 16px;
+    height: 2px;
+    background-color: #282c34;
+    position: absolute;
+    top: 50%;
+}
+
+.modal__close-btn:before {
+    transform: rotateZ(-45deg);
+}
+
+.modal__close-btn:after {
+    transform: rotateZ(45deg);
+}
+
+.transactions {
+    color: #746bc0;
+    font-weight: bold;
+    margin-top: 0.4em;
+}
+
+.order-id {
+    font-size: inherit;
+    color: inherit;
+}
+
+#amount-input {
+    font-size: 18px;
+}
+
+.pagination {
+    display: inline-block;
+    margin: 1em 0 0;
+}
+
+.pagination a {
+    color: black;
+    float: left;
+    padding: 8px 16px;
+    text-decoration: none;
+    width: auto;
+    cursor: pointer;
+}
+
+.pagination a.active {
+    background-color: #677ed5;
+    color: white;
+    border-radius: 5px;
+}
+
+.pagination a:hover:not(.active) {
+    background-color: #ddd;
+    border-radius: 5px;
+}
+
+.items-count {
+    margin-top: 1em;
+}
+
+.items-count select {
+    padding: 0.3em;
+    font-weight: bold;
+}
+
+#pe-error-msg {
+    margin-top: 0.5em;
+    color: #de4141;
+    font-weight: 500;
+    font-size: 16px;
+}

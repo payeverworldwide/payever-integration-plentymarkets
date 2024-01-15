@@ -5,8 +5,11 @@ namespace Payever\Services;
 use Exception;
 use IO\Models\LocalizedOrder;
 use IO\Services\OrderService;
+use Payever\Contracts\OrderTotalItemRepositoryContract;
+use Payever\Contracts\OrderTotalRepositoryContract;
 use Payever\Contracts\PendingPaymentRepositoryContract;
 use Payever\Helper\PayeverHelper;
+use Payever\Traits\Logger;
 use Plenty\Modules\Account\Address\Contracts\AddressRepositoryContract;
 use Plenty\Modules\Account\Address\Models\Address;
 use Plenty\Modules\Account\Contact\Contracts\ContactRepositoryContract;
@@ -29,6 +32,7 @@ use Plenty\Modules\Payment\Models\Payment;
 use Plenty\Modules\Payment\Models\PaymentProperty;
 use Plenty\Plugin\ConfigRepository;
 use Plenty\Plugin\Log\Loggable;
+use Payever\Services\PayeverSdkService;
 
 /**
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
@@ -40,7 +44,7 @@ use Plenty\Plugin\Log\Loggable;
  */
 class PayeverService
 {
-    use Loggable;
+    use Logger;
 
     const MR_SALUTATION = 'mr';
     const MS_SALUTATION = 'ms';
@@ -51,6 +55,10 @@ class PayeverService
 
     const PLENTY_FEMALE_SALUTATION = 'female';
     const PLENTY_MALE_SALUTATION = 'male';
+
+    const ACTION_CANCEL = 'cancel';
+    const ACTION_REFUND = 'refund';
+    const ACTION_SHIPPING_GOODS = 'shipping_goods';
 
     /**
      * @var AuthHelper
@@ -153,6 +161,26 @@ class PayeverService
     private $returnType = '';
 
     /**
+     * @var OrderTotalRepositoryContract
+     */
+    private OrderTotalRepositoryContract $orderTotalRepository;
+
+    /**
+     * @var OrderTotalItemRepositoryContract
+     */
+    private OrderTotalItemRepositoryContract $orderTotalItemRepository;
+
+    /**
+     * @var PayeverHelper
+     */
+    private PayeverHelper $paymentHelper;
+
+    /**
+     * @var PaymentRepositoryContract
+     */
+    private PaymentRepositoryContract $paymentContract;
+
+    /**
      * @param AuthHelper $authHelper
      * @param AccountService $accountService
      * @param CountryRepositoryContract $countryRepository
@@ -171,6 +199,10 @@ class PayeverService
      * @param BasketItemRepositoryContract $basketItemRepository
      * @param PendingPaymentRepositoryContract $pendingPaymentRepository
      * @param Checkout $checkout
+     * @param OrderTotalRepositoryContract $orderTotalRepository
+     * @param OrderTotalItemRepositoryContract $orderTotalItemRepository
+     * @param PayeverHelper $paymentHelper
+     * @param PaymentRepositoryContract $paymentContract
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
@@ -191,7 +223,11 @@ class PayeverService
         BasketRepositoryContract $basketRepository,
         BasketItemRepositoryContract $basketItemRepository,
         PendingPaymentRepositoryContract $pendingPaymentRepository,
-        Checkout $checkout
+        Checkout $checkout,
+        OrderTotalRepositoryContract $orderTotalRepository,
+        OrderTotalItemRepositoryContract $orderTotalItemRepository,
+        PayeverHelper $paymentHelper,
+        PaymentRepositoryContract $paymentContract,
     ) {
         $this->authHelper = $authHelper;
         $this->accountService = $accountService;
@@ -211,6 +247,10 @@ class PayeverService
         $this->basketItemRepository = $basketItemRepository;
         $this->pendingPaymentRepository = $pendingPaymentRepository;
         $this->checkout = $checkout;
+        $this->orderTotalRepository = $orderTotalRepository;
+        $this->orderTotalItemRepository = $orderTotalItemRepository;
+        $this->paymentHelper = $paymentHelper;
+        $this->paymentContract = $paymentContract;
     }
 
     /**
@@ -239,7 +279,7 @@ class PayeverService
     public function isSubmitMethod(string $method): bool
     {
         if ($this->config->has('Payever.' . $method . '.redirect_method')) {
-            return (bool) $this->config->get('Payever.' . $method . '.redirect_method');
+            return (bool)$this->config->get('Payever.' . $method . '.redirect_method');
         }
 
         return false;
@@ -278,7 +318,7 @@ class PayeverService
         return [
             'city' => $address->town,
             'email' => $address->email,
-            'salutation' => $this->getSalutation((string) $address->gender),
+            'salutation' => $this->getSalutation((string)$address->gender),
             'last_name' => $address->lastName,
             'first_name' => $address->firstName,
             'phone' => $address->phone,
@@ -340,7 +380,7 @@ class PayeverService
                 case self::IFRAME_MODE:
                     $this->returnType = 'htmlContent';
                     $paymentContent = <<<HTML
-<iframe sandbox="allow-same-origin allow-forms allow-top-navigation allow-scripts allow-modals allow-popups"
+<iframe allow="payment" sandbox="allow-same-origin allow-forms allow-top-navigation allow-scripts allow-modals allow-popups"
  style="width: 100%; height: 700px" frameborder="0" src="$redirectUrl"></iframe>
 HTML;
                     break;
@@ -362,8 +402,13 @@ HTML;
             $this->returnType = 'errorCode';
             $paymentContent = $exception->getMessage();
 
-            $this->getLogger('PayeverService::preparePayeverPayment')
-                ->error('Payever::debug.createPaymentResponse', $exception->getMessage());
+            $this->log(
+                'error',
+                'PayeverService::preparePayeverPayment',
+                'Payever::debug.createPaymentResponse',
+                'Exception: ' . $exception->getMessage(),
+                []
+            );
         }
 
         return $paymentContent;
@@ -391,9 +436,6 @@ HTML;
         }
 
         $orderId = $orderId ?? md5($basket->id . $method . time());
-
-        $apiVersion = $this->payeverHelper->getApiVersion();
-
         $paymentParameters = [
             'amount' => round(($basket->basketAmount - $feeAmount), 2), // basketAmount
             'fee' => round(($basket->shippingAmount - $feeAmount), 2),
@@ -414,17 +456,26 @@ HTML;
         $paymentParameters['billing_address'] = $address;
         $paymentParameters['force_redirect'] = $this->isSubmitMethod($method);
 
-        $this->getLogger('PayeverService::processCreatePaymentRequest')
-             ->setReferenceType('payeverLog')
-             ->debug('Payever::debug.paymentParameters', $paymentParameters);
+        $this->log(
+            'debug',
+            __METHOD__,
+            'Payever::debug.paymentParameters',
+            'Payment request',
+            ['paymentParameters' => $paymentParameters]
+        );
 
         $paymentResponse = $this->sdkService->call(
             'createPaymentV2Request',
             ['payment_parameters' => $paymentParameters]
         );
-        $this->getLogger('PayeverService::processCreatePaymentRequest')
-             ->setReferenceType('payeverLog')
-             ->debug('Payever::debug.createPaymentResponse', $paymentResponse);
+
+        $this->log(
+            'debug',
+            __METHOD__,
+            'Payever::debug.processCreatePaymentRequest',
+            'createPaymentV2Request Response',
+            ['paymentResponse' => $paymentResponse]
+        );
 
         $pendingPayment = $this->pendingPaymentRepository->getByOrderId($orderId);
         if (!$pendingPayment) {
@@ -432,12 +483,14 @@ HTML;
             $pendingPayment->orderId = $orderId;
             $pendingPayment->payeverPaymentId = $payeverPaymentId;
             $pendingPayment->data = $basket->toArray();
-            $this->getLogger('PayeverService::processCreatePaymentRequest')
-                ->setReferenceType('payeverLog')
-                ->debug(
-                    'Payever::debug.checkoutDebug',
-                    ['pendingPaymentToPersist' => $pendingPayment]
-                );
+
+            $this->log(
+                'debug',
+                __METHOD__,
+                'Payever::debug.checkoutDebug',
+                'Pending payment',
+                ['pendingPaymentToPersist' => $pendingPayment]
+            );
 
             $this->pendingPaymentRepository->persist($pendingPayment);
         }
@@ -454,12 +507,13 @@ HTML;
         if (count($basket->basketItems) == 0) {
             $pendingPayment = $this->pendingPaymentRepository->getByOrderId($orderId);
             if ($pendingPayment) {
-                $this->getLogger('PayeverService::prepareBasket')
-                    ->setReferenceType('payeverLog')
-                    ->debug(
-                        'Payever::debug.checkoutDebug',
-                        sprintf('Pending payment for order %s is loaded', $orderId)
-                    );
+                $this->log(
+                    'debug',
+                    __METHOD__,
+                    'Payever::debug.checkoutDebug',
+                    sprintf('Pending payment for order %s is loaded', $orderId),
+                    []
+                )->setReferenceValue($orderId);
 
                 $sessionId = $basket->sessionId;
                 $data = $pendingPayment->data;
@@ -506,12 +560,14 @@ HTML;
      */
     public function placeOrder($executePayment = true)
     {
-        $this->getLogger('PayeverService::placeOrder')
-            ->setReferenceType('payeverLog')
-            ->debug(
-                'Payever::debug.placeOrderCalling',
-                "PlaceOrder was called, with executePayment = $executePayment"
-            );
+        $this->log(
+            'debug',
+            __METHOD__,
+            'Payever::debug.placeOrderCalling',
+            sprintf('PlaceOrder was called, with executePayment = %s', $executePayment),
+            []
+        );
+
         $orderData = $this->getOrderService()->placeOrder();
 
         if ($executePayment) {
@@ -550,6 +606,44 @@ HTML;
             throw new Exception('Creating payment has been declined');
         }
 
+        $this->log(
+            'debug',
+            __METHOD__ . ' $orderData',
+            'Payever::debug.processOrderPaymentAfterResponse',
+            'Process order payment',
+            $orderData
+        );
+
+        $this->log(
+            'debug',
+            __METHOD__ . ' $basket',
+            'Payever::debug.basic',
+            'Basket data',
+            $basket
+        );
+
+        $this->log(
+            'debug',
+            __METHOD__ . ' $createPaymentResponse',
+            'Payever::debug.basic',
+            'Create Payment Response',
+            $createPaymentResponse
+        );
+
+        $orderTotal = $this->orderTotalRepository->create($orderData->order->id);
+
+        foreach ($orderData->order->orderItems as $orderItem) {
+            $this->orderTotalItemRepository->create($orderItem);
+        }
+
+        $this->log(
+            'debug',
+            __METHOD__ . ' $orderTotal',
+            'Payever::debug.orderTotal',
+            'Order total',
+            ['orderTotal' => $orderTotal]
+        );
+
         return $createPaymentResponse['redirect_url'];
     }
 
@@ -582,9 +676,14 @@ HTML;
         $executeResponse = [];
         if (!empty($paymentId)) {
             $retrievePayment = $this->sdkService->call('retrievePaymentRequest', ['payment_id' => $paymentId]);
-            $this->getLogger('PayeverService::pluginExecutePayment')
-                ->setReferenceType('payeverLog')
-                ->debug('Payever::debug.executePaymentRetrieve', $retrievePayment);
+
+            $this->log(
+                'debug',
+                __METHOD__,
+                'Payever::debug.executePaymentRetrieve',
+                'Retrieve payment',
+                ['retrievePayment' => $retrievePayment]
+            );
 
             if (!empty($retrievePayment['error'])) {
                 $this->returnType = 'errorCode';
@@ -612,16 +711,26 @@ HTML;
             }
         } else {
             $this->returnType = 'errorCode';
-            $this->getLogger('PayeverService::pluginExecutePayment')
-                ->setReferenceType('payeverLog')
-                ->error('Payever::debug.Error', 'The payment ID is lost!');
+
+            $this->log(
+                'error',
+                __METHOD__,
+                'Payever::debug.Error',
+                'The payment ID is lost!',
+                []
+            );
 
             return 'The payment ID is lost!';
         }
 
-        $this->getLogger('PayeverService::pluginExecutePayment')
-            ->setReferenceType('payeverLog')
-            ->debug('Payever::debug.executePaymentResponse', $executeResponse);
+        $this->log(
+            'debug',
+            __METHOD__,
+            'Payever::debug.executePaymentResponse',
+            'pluginExecutePayment Response',
+            ['executeResponse' => $executeResponse]
+        );
+
         // Check for errors
         // @codeCoverageIgnoreStart
         if (is_array($executeResponse) && !empty($executeResponse['error'])) {
@@ -662,9 +771,9 @@ HTML;
                 $basketItem = [
                     'name' => utf8_encode($itemText->first()->name1),
                     'price' => $basketItemPrice,
-                    'quantity' => (int) $basketItem->quantity,
-                    'identifier' => (string) $basketItem->variationId,
-                    'vatRate' => (float) $basketItem->vat,
+                    'quantity' => (int)$basketItem->quantity,
+                    'identifier' => (string)$basketItem->variationId,
+                    'vatRate' => (float)$basketItem->vat,
                     'description' => '',
                     'thumbnail' => '',
                     'url' => '',
@@ -684,9 +793,9 @@ HTML;
      */
     public function originExecutePayment(array $payeverPayment)
     {
-        $mopId = (int) $this->payeverHelper->getPaymentMopId($payeverPayment['payment_type']);
+        $mopId = (int)$this->payeverHelper->getPaymentMopId($payeverPayment['payment_type']);
         if (!$this->getCreatedPlentyPayment($payeverPayment, $mopId)) {
-            $this->paymentMethodRepository->executePayment($mopId, (int) $payeverPayment['reference']);
+            $this->paymentMethodRepository->executePayment($mopId, (int)$payeverPayment['reference']);
         }
     }
 
@@ -736,9 +845,14 @@ HTML;
     public function handlePayeverPayment(string $paymentId): array
     {
         $retrievePayment = $this->sdkService->call('retrievePaymentRequest', ['payment_id' => $paymentId]);
-        $this->getLogger('PayeverService::handlePayeverPayment')
-            ->setReferenceType('payeverLog')
-            ->debug('Payever::debug.getPaymentDetails', $retrievePayment);
+
+        $this->log(
+            'debug',
+            __METHOD__,
+            'Payever::debug.getPaymentDetails',
+            'RetrievePayment Response',
+            ['retrievePayment' => $retrievePayment]
+        );
 
         return $retrievePayment['result'] ?? [];
     }
@@ -749,7 +863,7 @@ HTML;
      */
     public function createAndUpdatePlentyPayment(array $payeverPayment)
     {
-        $mopId = (int) $this->payeverHelper->getPaymentMopId($payeverPayment['payment_type']);
+        $mopId = (int)$this->payeverHelper->getPaymentMopId($payeverPayment['payment_type']);
         $plentyPayment = $this->getCreatedPlentyPayment($payeverPayment, $mopId);
         if (!$plentyPayment) {
             $payeverPaymentData = $this->pluginExecutePayment($payeverPayment['id']);
@@ -762,7 +876,7 @@ HTML;
             $plentyPayment = $this->createPlentyPayment($payeverPaymentData, $mopId);
         }
 
-        $orderId = (int) $payeverPayment['reference'];
+        $orderId = (int)$payeverPayment['reference'];
         if (!$this->isAssignedPlentyPayment($orderId, $mopId)) {
             if ($plentyPayment instanceof Payment) {
                 // Assign the payment to an order in plentymarkets
@@ -885,12 +999,13 @@ HTML;
                     PaymentProperty::TYPE_TRANSACTION_ID
                 );
 
-                $this->getLogger('PayeverService::assignPlentyPaymentToPlentyOrder')
-                    ->setReferenceType('payeverLog')
-                    ->debug(
-                        'Payever::debug.assignPlentyPaymentToPlentyOrder',
-                        'Transaction ' . $transactionId . ' was assigned to the order #' . $orderId
-                    );
+                $this->log(
+                    'debug',
+                    __METHOD__,
+                    'Payever::debug.assignPlentyPaymentToPlentyOrder',
+                    'Transaction ' . $transactionId . ' was assigned to the order #' . $orderId,
+                    ['transactionId' => $transactionId, 'orderId' => $orderId]
+                );
             }
         );
 
@@ -908,7 +1023,7 @@ HTML;
         try {
             $statusId = $this->payeverHelper->mapOrderStatus($paymentStatus);
             $this->authHelper->processUnguarded(
-                function () use ($orderId, $statusId) {
+                function () use ($orderId, $statusId, $paymentStatus) {
                     //unguarded
                     $order = $this->orderRepository->findOrderById($orderId);
                     if (!is_null($order) && $order instanceof Order) {
@@ -916,17 +1031,48 @@ HTML;
                             'statusId' => (float)$statusId,
                         ];
                         $this->orderRepository->updateOrder($status, $orderId);
-                        $this->getLogger('PayeverService::updateOrderStatus')->debug(
+
+                        $this->log(
+                            'debug',
+                            __METHOD__,
                             'Payever::debug.updateOrderStatus',
-                            'Status of order ' . $orderId . ' was changed to ' . $statusId
+                            'Status of order ' . $orderId . ' was changed to ' . $statusId,
+                            ['statusId' => $statusId, 'orderId' => $orderId]
                         );
+
+                        $orderTotal = $this->orderTotalRepository->getByOrderId($orderId);
+
+                        if (
+                            PayeverHelper::PLENTY_ORDER_SUCCESS == $statusId
+                            && $orderTotal->capturedTotal == 0
+                            && $paymentStatus !== PayeverHelper::STATUS_ACCEPTED
+                        ) {
+                            $orderTotalItems = $this->orderTotalItemRepository->getByOrderId($orderId);
+
+                            $amount = 0;
+                            foreach ($orderTotalItems as $orderTotalItem) {
+                                $amount += $orderTotalItem->totalPrice;
+
+                                $orderTotalItem->qtyCaptured = $orderTotalItem->quantity;
+
+                                $this->orderTotalItemRepository->persist($orderTotalItem);
+                            }
+
+                            $orderTotal->capturedTotal = $amount;
+
+                            $this->orderTotalRepository->persist($orderTotal);
+                        }
                     }
                 }
             );
         } catch (Exception $exception) {
-            $this->getLogger('PayeverService::updateOrderStatus')
-                ->setReferenceType('payeverLog')
-                ->error('Payever::updateOrderStatus', $exception);
+            $this->log(
+                'error',
+                __METHOD__,
+                'Payever::debug.updateOrderStatus',
+                'Exception: ' . $exception,
+                []
+            );
         }
     }
 
@@ -942,6 +1088,20 @@ HTML;
         return $this->sdkService->call(
             'refundPaymentRequest',
             ['transaction_id' => $transactionId, 'amount' => $amount]
+        );
+    }
+
+    /**
+     * @param string $transactionId
+     * @param array $items
+     * @param float|null $deliveryFee
+     * @return mixed
+     */
+    public function refundItemsPayment(string $transactionId, array $items, float $deliveryFee = null): mixed
+    {
+        return $this->sdkService->call(
+            'refundItemsPaymentRequest',
+            ['transaction_id' => $transactionId, 'items' => $items, 'deliveryFee' => $deliveryFee]
         );
     }
 
@@ -972,6 +1132,20 @@ HTML;
     }
 
     /**
+     * @param string $transactionId
+     * @param array $items
+     * @param float|null $deliveryFee
+     * @return mixed
+     */
+    public function cancelItemsPayment(string $transactionId, array $items, float $deliveryFee = null): mixed
+    {
+        return $this->sdkService->call(
+            'cancelItemsPaymentRequest',
+            ['transaction_id' => $transactionId, 'items' => $items, 'deliveryFee' => $deliveryFee]
+        );
+    }
+
+    /**
      * Capture the given payment
      *
      * @param string $transactionId Transaction ID
@@ -982,35 +1156,35 @@ HTML;
      * @param string|null $carrier Carrier
      * @param string|null $trackingNumber Tracking number
      * @param string|null $trackingUrl Tracking url
-     * @return bool|mixed
+     * @return array|null
      */
     public function shippingGoodsPayment(
         string $transactionId,
-               $amount,
+        $amount,
         array $paymentItems,
-               $deliveryFee,
-               $reason,
-               $carrier,
-               $trackingNumber,
-               $trackingUrl
-    ) {
-        $this->getLogger('ShippingEventProcedure::run')
-            ->setReferenceType('payeverLog')
-            ->setReferenceValue($transactionId)
-            ->debug(
-                'Payever::debug.shippingPaymentRequest',
-                [
-                    'transactionId' => $transactionId,
-                    'amount' => $amount,
-                    'paymentItems' => $paymentItems,
-                    'deliveryFee' => $deliveryFee,
-                    'reason' => $reason,
-                    'carrier' => $carrier,
-                    'trackingNumber' => $trackingNumber,
-                    'trackingUrl' => $trackingUrl,
-                    'shippingDate' => date('Y-m-d\TH:i:sO')
-                ]
-            );
+        $deliveryFee,
+        $reason,
+        $carrier,
+        $trackingNumber,
+        $trackingUrl
+    ): array|null {
+        $this->log(
+            'debug',
+            'ShippingEventProcedure::run',
+            'Payever::debug.shippingPaymentRequest',
+            'Shipping Payment Request',
+            [
+                'transactionId' => $transactionId,
+                'amount' => $amount,
+                'paymentItems' => $paymentItems,
+                'deliveryFee' => $deliveryFee,
+                'reason' => $reason,
+                'carrier' => $carrier,
+                'trackingNumber' => $trackingNumber,
+                'trackingUrl' => $trackingUrl,
+                'shippingDate' => date('Y-m-d\TH:i:sO')
+            ]
+        )->setReferenceValue($transactionId);
 
         return $this->sdkService->call(
             'shippingPaymentRequest',
@@ -1049,5 +1223,164 @@ HTML;
         $this->orderService = $orderService;
 
         return $this;
+    }
+
+    /**
+     * @param $transactionId
+     * @param $transactionAction
+     * @param bool $throwException
+     * @return bool|array|null
+     */
+    public function isActionAllowed($transactionId, $transactionAction, bool $throwException = true): bool|array|null
+    {
+        return $this->sdkService->call('isActionAllowed', [
+            'transactionId' => $transactionId,
+            'transactionAction' => $transactionAction,
+            'throwException' => $throwException
+        ]);
+    }
+
+    /**
+     * @param $transactionId
+     * @param $transactionAction
+     * @param bool $throwException
+     * @return bool|array|null
+     */
+    public function isPartialActionAllowed(
+        $transactionId,
+        $transactionAction,
+        bool $throwException = true
+    ): bool|array|null {
+        return $this->sdkService->call('isPartialActionAllowed', [
+            'transactionId' => $transactionId,
+            'transactionAction' => $transactionAction,
+            'throwException' => $throwException
+        ]);
+    }
+
+    /**
+     * @param $orderId
+     * @return array|null
+     */
+    public function getActions($orderId): array|null
+    {
+        // todo: handle if payever payment more than 1
+        $payments = $this->paymentContract->getPaymentsByOrderId($orderId);
+
+        $actions = [];
+        foreach ($payments as $payment) {
+            if (!$this->paymentHelper->isPayeverPaymentMopId($payment->mopId)) {
+                continue;
+            }
+
+            $transactionId = $this->paymentHelper->getPaymentPropertyValue(
+                $payment,
+                PaymentProperty::TYPE_TRANSACTION_ID
+            );
+
+            if (empty($transactionId)) {
+                continue;
+            }
+
+            $transaction = $this->getTransaction($transactionId);
+
+            $actions = $transaction['result']['actions'];
+        }
+
+        return $actions;
+    }
+
+    /**
+     * Get required actions: cancel, refund, shipping_goods
+     * @param $orderId
+     * @return array
+     */
+    public function getRequiredActions($orderId): array
+    {
+        $actions = $this->getActions($orderId);
+
+        $requiredActions = [];
+        foreach ($actions as $action) {
+            if (
+                $action['action'] === self::ACTION_CANCEL
+                || $action['action'] === self::ACTION_REFUND
+                || $action['action'] === self::ACTION_SHIPPING_GOODS
+            ) {
+                $requiredActions[] = $action;
+            }
+        }
+
+        return $requiredActions;
+    }
+
+    /**
+     * @param $orderId
+     * @return string[]
+     */
+    public function getTransactionsId($orderId): array
+    {
+        $payments = $this->paymentContract->getPaymentsByOrderId($orderId);
+
+        $transactions = [];
+        foreach ($payments as $payment) {
+            if (!$this->paymentHelper->isPayeverPaymentMopId($payment->mopId)) {
+                continue;
+            }
+
+            $transactionId = $this->paymentHelper->getPaymentPropertyValue(
+                $payment,
+                PaymentProperty::TYPE_TRANSACTION_ID
+            );
+
+            if (empty($transactionId)) {
+                continue;
+            }
+
+            $transactions[] = $transactionId;
+        }
+
+        return $transactions;
+    }
+
+    /**
+     * @param $orderId
+     * @param bool $onlyWithTransactionId
+     * @return Payment[]
+     */
+    public function getPayeverPaymentsByOrderId($orderId, bool $onlyWithTransactionId = true): array
+    {
+        $payments = $this->paymentContract->getPaymentsByOrderId($orderId);
+
+        $payeverPayments = [];
+        foreach ($payments as $payment) {
+            if (!$this->paymentHelper->isPayeverPaymentMopId($payment->mopId)) {
+                continue;
+            }
+
+            $transactionId = $this->paymentHelper->getPaymentPropertyValue(
+                $payment,
+                PaymentProperty::TYPE_TRANSACTION_ID
+            );
+
+            if ($onlyWithTransactionId && empty($transactionId)) {
+                continue;
+            }
+
+            $payeverPayments[] = $payment;
+        }
+
+        return $payeverPayments;
+    }
+
+    /**
+     * @param Payment $payment
+     * @return string
+     */
+    public function getPaymentTransactionId(Payment $payment): string
+    {
+        return $this->paymentHelper->getPaymentPropertyValue(
+            $payment,
+            PaymentProperty::TYPE_TRANSACTION_ID
+        );
     }
 }

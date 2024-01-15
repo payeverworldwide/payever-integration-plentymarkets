@@ -5,13 +5,14 @@ namespace Payever\Services\Payment\Notification;
 use Payever\Helper\PayeverHelper;
 use Payever\Services\Lock\StorageLock;
 use Payever\Services\PayeverService;
+use Payever\Traits\Logger;
 use Plenty\Plugin\ConfigRepository;
 use Plenty\Plugin\Http\Request;
 use Plenty\Plugin\Log\Loggable;
 
 class NotificationRequestProcessor
 {
-    use Loggable;
+    use Logger;
 
     const NOTIFICATION_LOCK_SECONDS = 30;
     const HEADER_SIGNATURE = 'X-PAYEVER-SIGNATURE';
@@ -42,29 +43,39 @@ class NotificationRequestProcessor
     private $payeverHelper;
 
     /**
+     * @var NotificationActionHandler
+     */
+    private NotificationActionHandler $notificationActionHandler;
+
+    /**
      * @param Request $request
      * @param ConfigRepository $config
      * @param StorageLock $lock
      * @param PayeverService $payeverService
      * @param PayeverHelper $payeverHelper
+     * @param NotificationActionHandler $notificationHandler
      */
     public function __construct(
         Request $request,
         ConfigRepository $config,
         StorageLock $lock,
         PayeverService $payeverService,
-        PayeverHelper $payeverHelper
+        PayeverHelper $payeverHelper,
+        NotificationActionHandler $notificationHandler
     ) {
         $this->request = $request;
         $this->config = $config;
         $this->lock = $lock;
         $this->payeverService = $payeverService;
         $this->payeverHelper = $payeverHelper;
+        $this->notificationActionHandler = $notificationHandler;
     }
 
     /**
      * @return array
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function processNotification(): array
     {
@@ -77,7 +88,15 @@ class NotificationRequestProcessor
             }
             $payload = \json_decode($payload, true);
             $payeverPayment = $payload['data']['payment'] ?? [];
-            $this->getLogger(__METHOD__)->debug('Payever::debug.notificationDebug', [$payeverPayment]);
+
+            $this->log(
+                'debug',
+                __METHOD__,
+                'Payever::debug.notificationDebug',
+                'Notification debug',
+                ['payeverPayment' => $payeverPayment]
+            );
+
             $notificationTime = array_key_exists('created_at', $payload)
                 ? date('Y-m-d H:i:s', strtotime($payload['created_at']))
                 : false;
@@ -87,7 +106,15 @@ class NotificationRequestProcessor
             }
             $this->lock->acquireLock($paymentId, static::NOTIFICATION_LOCK_SECONDS);
             $payeverStatus = $payeverPayment['status'] ?? null;
-            $this->getLogger(__METHOD__)->debug('Payever::debug.processingPayeverStatus', [$payeverStatus]);
+
+            $this->log(
+                'debug',
+                __METHOD__,
+                'Payever::debug.processingPayeverStatus',
+                'processing payever status',
+                ['payeverStatus' => $payeverStatus]
+            );
+
             if (!empty($payeverPayment['reference']) && is_numeric($payeverPayment['reference'])) {
                 $update = $this->payeverService->createAndUpdatePlentyPayment($payeverPayment);
             } else {
@@ -106,10 +133,44 @@ class NotificationRequestProcessor
                 $update = $this->payeverService->createAndUpdatePlentyPayment($payeverPayment);
                 $message = 'Order was created';
             }
-            $this->getLogger(__METHOD__)->debug('Payever::debug.updatingPlentyPaymentForNotifications', $update);
+
+            $this->log(
+                'debug',
+                __METHOD__,
+                'Payever::debug.updatingPlentyPaymentForNotifications',
+                'updating plenty payment for notifications',
+                [
+                    'update' => $update,
+                    'message' => $message
+                ]
+            );
+
+            // Handle capture/refund/cancel notification
+            if (
+                (isset($payeverPayment['captured_items']) && count($payeverPayment['captured_items']) > 0) ||
+                isset($payeverPayment['refunded_items']) && count($payeverPayment['refunded_items']) > 0 ||
+                isset($payeverPayment['capture_amount']) && $payeverPayment['capture_amount'] > 0  ||
+                isset($payeverPayment['refund_amount']) && $payeverPayment['refund_amount'] > 0 ||
+                isset($payeverPayment['cancel_amount']) && $payeverPayment['cancel_amount'] > 0
+            ) {
+                if ($this->payeverHelper->isLocked(PayeverHelper::ACTION_PREFIX . $paymentId)) {
+                    $this->payeverHelper->waitForUnlock(PayeverHelper::ACTION_PREFIX . $paymentId);
+                }
+
+                $this->notificationActionHandler->handleNotificationAction($payeverPayment);
+            }
         } catch (\Exception $e) {
             $message = $e->getMessage();
-            $this->getLogger(__METHOD__)->critical('Payever::debug.notificationRequestProcessorException', $message);
+
+            $this->log(
+                'debug',
+                __METHOD__,
+                'Payever::debug.notificationRequestProcessorException',
+                'NotificationRequestProcessor exception: ' . $message,
+                [
+                    'exception' => $message
+                ]
+            );
         } finally {
             $paymentId && $this->lock->releaseLock($paymentId);
         }
@@ -117,7 +178,14 @@ class NotificationRequestProcessor
             'result' => $result,
             'message' => $message ?? null,
         ];
-        $this->getLogger(__METHOD__)->debug('Payever::debug.notificationRequestProcessorReturnData', $data);
+
+        $this->log(
+            'debug',
+            __METHOD__,
+            'Payever::debug.notificationRequestProcessorReturnData',
+            'NotificationRequestProcessor return data',
+            $data
+        );
 
         return $data;
     }
@@ -132,11 +200,31 @@ class NotificationRequestProcessor
         $payload = $this->request->getContent();
         if ($signature) {
             $this->assertSignatureValid($paymentId, $signature);
-            $this->getLogger(__METHOD__)->debug('Payever::debug.notificationRequestProcessorSignatureMatches');
+
+            $this->log(
+                'debug',
+                __METHOD__,
+                'Payever::debug.notificationRequestProcessorSignatureMatches',
+                'NotificationRequestProcessor signature matches: ' . $payload,
+                [
+                    'paymentId' => $paymentId,
+                    'payload' => $payload
+                ]
+            );
         } else {
             $rawData = !empty($payload) ? \json_decode($payload, true) : [];
             $payeverPayment = $this->payeverService->handlePayeverPayment($paymentId);
-            $this->getLogger(__METHOD__)->debug('Payever::debug.retrievingPaymentForNotifications', $payeverPayment);
+
+            $this->log(
+                'debug',
+                __METHOD__,
+                'Payever::debug.retrievingPaymentForNotifications',
+                'retrieve payment for notifications',
+                [
+                    'payeverPayment' => $payeverPayment
+                ]
+            );
+
             $notificationDateTime = is_array($rawData) && array_key_exists('created_at', $rawData)
                 ? $rawData['created_at']
                 : null;

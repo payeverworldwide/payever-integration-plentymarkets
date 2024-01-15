@@ -4,7 +4,7 @@
   "icon": "icon-flag_none",
   "menuEntries": [
     {
-      "label": "Payever",
+      "label": "payever Checkout",
       "menu": "system/orders/payment",
       "urlKey": "payever",
       "entryPoint": "index.html",
