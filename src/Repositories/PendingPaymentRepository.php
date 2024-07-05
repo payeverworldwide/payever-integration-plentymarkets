@@ -23,6 +23,7 @@ class PendingPaymentRepository implements PendingPaymentRepositoryContract
 
     /**
      * @inheritDoc
+     * @codeCoverageIgnore
      */
     public function create(): PendingPayment
     {
@@ -35,17 +36,16 @@ class PendingPaymentRepository implements PendingPaymentRepositoryContract
 
     /**
      * @inheritDoc
+     * @codeCoverageIgnore
      */
     public function persist(PendingPayment $pendingPayment): PendingPayment
     {
-        /** @var PendingPayment $result */
-        $result = $this->dataBase->save($pendingPayment);
-
-        return $result;
+        return $this->dataBase->save($pendingPayment);
     }
 
     /**
      * @inheritDoc
+     * @codeCoverageIgnore
      */
     public function delete(PendingPayment $pendingPayment): bool
     {
@@ -62,7 +62,9 @@ class PendingPaymentRepository implements PendingPaymentRepositoryContract
         $query->where('orderId', '=', $orderId);
         $rows = $query->get();
         if (!empty($rows[0]) && $rows[0] instanceof PendingPayment) {
+            // @codeCoverageIgnoreStart
             $result = $rows[0];
+            // @codeCoverageIgnoreEnd
         }
 
         return $result;

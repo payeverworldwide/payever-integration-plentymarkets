@@ -3,12 +3,12 @@
 namespace Payever\Services;
 
 use Payever\Helper\PayeverHelper;
+use Payever\Helper\StatusHelper;
 use Payever\Traits\Logger;
 use Plenty\Modules\Authorization\Services\AuthHelper;
 use Plenty\Modules\Cron\Contracts\CronHandler;
 use Plenty\Modules\Order\Contracts\OrderRepositoryContract;
 use Plenty\Plugin\ConfigRepository;
-use Plenty\Plugin\Log\Loggable;
 
 class PayeverOrdersCronHandler extends CronHandler
 {
@@ -83,8 +83,8 @@ class PayeverOrdersCronHandler extends CronHandler
         );
 
         $this->orderRepositoryContract->setFilters([
-            'statusFrom' => PayeverHelper::PLENTY_ORDER_PROCESSING,
-            'statusTo' => PayeverHelper::PLENTY_ORDER_PROCESSING,
+            'statusFrom' => StatusHelper::PLENTY_ORDER_PROCESSING,
+            'statusTo' => StatusHelper::PLENTY_ORDER_PROCESSING,
             'paymentStatus' => 'unpaid',
             'createdAtTo' => $dateTo,
         ]);
@@ -94,7 +94,7 @@ class PayeverOrdersCronHandler extends CronHandler
             $orderModel = $this->orderRepositoryContract->findOrderById($order['id']);
             if ($this->payeverHelper->isPayeverPaymentMopId($orderModel->methodOfPaymentId)) {
                 $this->orderRepositoryContract->updateOrder(
-                    ['statusId' => (float) PayeverHelper::PLENTY_ORDER_CANCELLED],
+                    ['statusId' => (float) StatusHelper::PLENTY_ORDER_CANCELLED],
                     $orderModel->id
                 );
 

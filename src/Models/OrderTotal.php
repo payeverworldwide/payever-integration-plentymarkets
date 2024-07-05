@@ -196,7 +196,7 @@ class OrderTotal extends Model
      */
     public function getAttribute($key)
     {
-        return;
+        return null;
     }
 
     /**
@@ -204,7 +204,7 @@ class OrderTotal extends Model
      */
     public function getAttributeValue($key)
     {
-        return;
+        return null;
     }
 
     /**
@@ -244,7 +244,7 @@ class OrderTotal extends Model
      */
     public function fromJson($value, $asObject = false)
     {
-        return;
+        return null;
     }
 
     /**
@@ -308,7 +308,7 @@ class OrderTotal extends Model
      */
     public function getOriginal($key = null, $default = null)
     {
-        return;
+        return null;
     }
 
     /**
@@ -396,11 +396,11 @@ class OrderTotal extends Model
      */
     public static function cacheMutatedAttributes($class)
     {
-        return;
+        return null;
     }
 
     public function relationLoaded()
     {
-        return;
+        return null;
     }
 }

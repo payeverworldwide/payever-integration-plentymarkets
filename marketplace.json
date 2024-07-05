@@ -1,0 +1,19 @@
+{
+  "marketplaceName"   : {"de":"payever Checkout","en":"payever Checkout"},
+  "license"           : "GNU AFFERO GENERAL PUBLIC LICENSE",
+  "price"             : 0.00,
+  "shortDescription"  : {
+    "de":"Von Finanzierung & Rechnungs-/Ratenkauf bis hin zu Kreditkartenzahlung, PayPal und andere Wallets, lokale Zahlarten sowie Sofort-Banküberweisung auf Basis von Open-Banking-Technologie – alles ohne zusätzliche Kosten bei einfachster Integration und schnellem Onboarding.",
+    "en":"From Financing & Buy Now Pay Later products to Cards, PayPal and other Wallets, different local payment methods or Open Banking Payments - everything without additional costs and with an easy integration as well as fast onboarding."
+  },
+  "categories"        : ["3519"],
+  "keywords"          : [
+    "payever payment gateway",
+    "plentymarkets",
+    "e-commerce",
+    "plentymarkets free payment gateways",
+    "Credit Card", "Direct Debit",
+    "Sofort Banking",
+    "Santander Installments"
+  ]
+}

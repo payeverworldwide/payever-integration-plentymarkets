@@ -1,6 +1,6 @@
 <?php
 
-use Payever\ExternalIntegration\Payments\Action\ActionDecider;
+use Payever\Sdk\Payments\Action\ActionDecider;
 
 require_once __DIR__ . '/PayeverSdkProvider.php';
 $payeverApi = new PayeverSdkProvider(SdkRestApi::getParam('sdkData'));

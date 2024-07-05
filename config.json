@@ -139,6 +139,76 @@
               }
             ]
           }
+        },
+        "fe_widget_display_on_product": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.feWidgetDisplayOnProductLabel",
+          "options": {
+            "defaultValue": "0",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "fe_widget_display_on_cart": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.feWidgetDisplayOnCartLabel",
+          "options": {
+            "defaultValue": "0",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "fe_widget_theme": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.feWidgetThemeLabel",
+          "options": {
+            "defaultValue": "light",
+            "selectBoxValues": [
+              {
+                "value": "light",
+                "caption": "Config.payeverThemeLight"
+              },
+              {
+                "value": "dark",
+                "caption": "Config.payeverThemeDark"
+              }
+            ]
+          }
+        },
+        "fe_widget_id": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.feWidgetTypeLabel",
+          "options": {
+            "defaultValue": ""
+          }
+        },
+        "fe_widget_checkout_id": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.feWidgetCheckoutIDLabel",
+          "options": {
+            "defaultValue": ""
+          }
         }
       }
     },
@@ -681,321 +751,6 @@
           "label": "Config.payeverAllowedCurrencies",
           "options": {
             "defaultValue": "AUD,CAD,CZK,DKK,EUR,GBP,HKD,HUF,ILS,JPY,MYR,MXN,NOK,NZD,PHP,PLN,SGD,SEK,CHF,TWD,THB,TRY,USD"
-          }
-        }
-      }
-    },
-    "Config.SantanderInvoiceNOTab": {
-      "label": "Config.SantanderInvoiceNOTab",
-      "formFields": {
-        "santander_invoice_no.active": {
-          "type": "selectBox",
-          "required": false,
-          "label": "Config.payeverActiveLabel",
-          "options": {
-            "defaultValue": "0",
-            "selectBoxValues": [
-              {
-                "value": "0",
-                "caption": "Config.payeverPossibleValue0"
-              },
-              {
-                "value": "1",
-                "caption": "Config.payeverPossibleValue1"
-              }
-            ]
-          }
-        },
-        "santander_invoice_no.title": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverTitleLabel",
-          "options": {
-            "defaultValue": "Santander Invoice NO"
-          }
-        },
-        "santander_invoice_no.description": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverDescriptionLabel",
-          "options": {
-            "defaultValue": "Kj&oslash;p n&aring;  - betal etter levering. Fakturaen sendes p&aring;  epost fra Santander Consumer Bank."
-          }
-        },
-        "santander_invoice_no.accept_fee": {
-          "type": "selectBox",
-          "required": false,
-          "label": "Config.payeverAcceptFeeLabel",
-          "options": {
-            "defaultValue": "1",
-            "selectBoxValues": [
-              {
-                "value": "0",
-                "caption": "Config.payeverPossibleValue0"
-              },
-              {
-                "value": "1",
-                "caption": "Config.payeverPossibleValue1"
-              }
-            ]
-          }
-        },
-        "santander_invoice_no.fee": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverFeeLabel",
-          "options": {
-            "defaultValue": "0"
-          }
-        },
-        "santander_invoice_no.variable_fee": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverVariableFeeLabel",
-          "options": {
-            "defaultValue": "0"
-          }
-        },
-        "santander_invoice_no.min_order_total": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverMinOrderTotalLabel",
-          "options": {
-            "defaultValue": "199"
-          }
-        },
-        "santander_invoice_no.max_order_total": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverMaxOrderTotalLabel",
-          "options": {
-            "defaultValue": "20000"
-          }
-        },
-        "santander_invoice_no.allowed_countries": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverAllowedCountries",
-          "options": {
-            "defaultValue": "NO"
-          }
-        },
-        "santander_invoice_no.allowed_currencies": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverAllowedCurrencies",
-          "options": {
-            "defaultValue": "NOK"
-          }
-        }
-      }
-    },
-    "Config.SantanderInvoiceDETab": {
-      "label": "Config.SantanderInvoiceDETab",
-      "formFields": {
-        "santander_invoice_de.active": {
-          "type": "selectBox",
-          "required": false,
-          "label": "Config.payeverActiveLabel",
-          "options": {
-            "defaultValue": "0",
-            "selectBoxValues": [
-              {
-                "value": "0",
-                "caption": "Config.payeverPossibleValue0"
-              },
-              {
-                "value": "1",
-                "caption": "Config.payeverPossibleValue1"
-              }
-            ]
-          }
-        },
-        "santander_invoice_de.title": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverTitleLabel",
-          "options": {
-            "defaultValue": "Santander Invoice Germany"
-          }
-        },
-        "santander_invoice_de.description": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverDescriptionLabel",
-          "options": {
-            "defaultValue": "Simply pay after delivery."
-          }
-        },
-        "santander_invoice_de.accept_fee": {
-          "type": "selectBox",
-          "required": false,
-          "label": "Config.payeverAcceptFeeLabel",
-          "options": {
-            "defaultValue": "1",
-            "selectBoxValues": [
-              {
-                "value": "0",
-                "caption": "Config.payeverPossibleValue0"
-              },
-              {
-                "value": "1",
-                "caption": "Config.payeverPossibleValue1"
-              }
-            ]
-          }
-        },
-        "santander_invoice_de.fee": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverFeeLabel",
-          "options": {
-            "defaultValue": "0"
-          }
-        },
-        "santander_invoice_de.variable_fee": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverVariableFeeLabel",
-          "options": {
-            "defaultValue": "0"
-          }
-        },
-        "santander_invoice_de.min_order_total": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverMinOrderTotalLabel",
-          "options": {
-            "defaultValue": "199"
-          }
-        },
-        "santander_invoice_de.max_order_total": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverMaxOrderTotalLabel",
-          "options": {
-            "defaultValue": "20000"
-          }
-        },
-        "santander_invoice_de.allowed_countries": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverAllowedCountries",
-          "options": {
-            "defaultValue": "DE"
-          }
-        },
-        "santander_invoice_de.allowed_currencies": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverAllowedCurrencies",
-          "options": {
-            "defaultValue": "EUR"
-          }
-        }
-      }
-    },
-    "Config.SantanderFactoringDETab": {
-      "label": "Config.SantanderFactoringDETab",
-      "formFields": {
-        "santander_factoring_de.active": {
-          "type": "selectBox",
-          "required": false,
-          "label": "Config.payeverActiveLabel",
-          "options": {
-            "defaultValue": "0",
-            "selectBoxValues": [
-              {
-                "value": "0",
-                "caption": "Config.payeverPossibleValue0"
-              },
-              {
-                "value": "1",
-                "caption": "Config.payeverPossibleValue1"
-              }
-            ]
-          }
-        },
-        "santander_factoring_de.title": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverTitleLabel",
-          "options": {
-            "defaultValue": "Santander Factoring"
-          }
-        },
-        "santander_factoring_de.description": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverDescriptionLabel",
-          "options": {
-            "defaultValue": "Santander Factoring description."
-          }
-        },
-        "santander_factoring_de.accept_fee": {
-          "type": "selectBox",
-          "required": false,
-          "label": "Config.payeverAcceptFeeLabel",
-          "options": {
-            "defaultValue": "1",
-            "selectBoxValues": [
-              {
-                "value": "0",
-                "caption": "Config.payeverPossibleValue0"
-              },
-              {
-                "value": "1",
-                "caption": "Config.payeverPossibleValue1"
-              }
-            ]
-          }
-        },
-        "santander_factoring_de.fee": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverFeeLabel",
-          "options": {
-            "defaultValue": "0"
-          }
-        },
-        "santander_factoring_de.variable_fee": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverVariableFeeLabel",
-          "options": {
-            "defaultValue": "0"
-          }
-        },
-        "santander_factoring_de.min_order_total": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverMinOrderTotalLabel",
-          "options": {
-            "defaultValue": "20"
-          }
-        },
-        "santander_factoring_de.max_order_total": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverMaxOrderTotalLabel",
-          "options": {
-            "defaultValue": "1000"
-          }
-        },
-        "santander_factoring_de.allowed_countries": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverAllowedCountries",
-          "options": {
-            "defaultValue": "DE"
-          }
-        },
-        "santander_factoring_de.allowed_currencies": {
-          "type": "inputText",
-          "required": false,
-          "label": "Config.payeverAllowedCurrencies",
-          "options": {
-            "defaultValue": "EUR"
           }
         }
       }

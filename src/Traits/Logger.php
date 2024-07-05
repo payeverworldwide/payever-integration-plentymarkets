@@ -46,6 +46,7 @@ trait Logger
         /** @var LogRepository $logRepository */
         $logRepository = pluginApp(LogRepository::class);
         if ($logRepository) {
+            // @codeCoverageIgnoreStart
             /** @var Log $log */
             $log = $logRepository->create();
             $log->level = $level;
@@ -63,6 +64,7 @@ trait Logger
             } catch (\Exception $exception) {
                 // Silence is golden
             }
+            // @codeCoverageIgnoreEnd
         }
 
         return $logger;
@@ -71,6 +73,7 @@ trait Logger
     protected function applyPlentyLog(LoggerContract $logger, $level, $code, $context)
     {
         switch ($level) {
+            default:
             case 'debug':
                 $logger->debug($code, $context);
                 break;

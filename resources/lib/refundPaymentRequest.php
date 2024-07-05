@@ -5,6 +5,11 @@ $payeverApi = new PayeverSdkProvider(SdkRestApi::getParam('sdkData'));
 
 $transactionId = SdkRestApi::getParam('transaction_id');
 $amount = SdkRestApi::getParam('amount');
+$identifier = SdkRestApi::getParam('identifier');
 
-return $payeverApi->getPaymentsApiClient()->refundPaymentRequest($transactionId, $amount)->getResponseEntity()->toArray();
+return $payeverApi
+    ->getPaymentsApiClient()
+    ->refundPaymentRequest($transactionId, $amount, $identifier)
+    ->getResponseEntity()
+    ->toArray();
 

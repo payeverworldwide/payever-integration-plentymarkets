@@ -30,10 +30,8 @@ use Payever\Methods\SwedbankInvoicePaymentMethod;
 use Payever\Repositories\PayeverConfigRepository;
 use Payever\Services\Lock\StorageLock;
 use Plenty\Modules\EventProcedures\Events\EventProceduresTriggered;
-use Plenty\Modules\Helper\Services\WebstoreHelper;
 use Plenty\Modules\Order\Models\Order;
 use Plenty\Modules\Order\Models\OrderType;
-use Plenty\Modules\Payment\Contracts\PaymentRepositoryContract;
 use Plenty\Modules\Payment\Method\Contracts\PaymentMethodRepositoryContract;
 use Plenty\Modules\Payment\Models\Payment;
 use Plenty\Modules\Payment\Models\PaymentProperty;
@@ -50,27 +48,12 @@ class PayeverHelper
 
     const PLUGIN_KEY = 'plenty_payever';
 
-    const STATUS_NEW = 'STATUS_NEW';
-    const STATUS_IN_PROCESS = 'STATUS_IN_PROCESS';
-    const STATUS_ACCEPTED = 'STATUS_ACCEPTED';
-    const STATUS_PAID = 'STATUS_PAID';
-    const STATUS_DECLINED = 'STATUS_DECLINED';
-    const STATUS_REFUNDED = 'STATUS_REFUNDED';
-    const STATUS_FAILED = 'STATUS_FAILED';
-    const STATUS_CANCELLED = 'STATUS_CANCELLED';
-
     const COMMAND_TIMESTAMP_KEY = 'command_timestamp';
     const SANDBOX_URL_CONFIG_KEY = 'sandbox_url';
     const LIVE_URL_CONFIG_KEY = 'live_url';
     const API_VERSION_KEY  = 'api_version';
 
-    const PLENTY_ORDER_SUCCESS = 5;
-    const PLENTY_ORDER_PROCESSING = 3;
-    const PLENTY_ORDER_INPROCESS = 3.3;
-    const PLENTY_ORDER_CANCELLED = 8;
-    const PLENTY_ORDER_RETURN = 9;
-
-    const PLUGIN_VERSION = '3.0.1';
+    const PLUGIN_VERSION = '3.1.0';
 
     const ACTION_PREFIX = "action.";
 
@@ -78,11 +61,6 @@ class PayeverHelper
      * @var PaymentMethodRepositoryContract
      */
     private $paymentMethodRepository;
-
-    /**
-     * @var WebstoreHelper
-     */
-    private $webStoreHelper;
 
     /**
      * @var PayeverConfigRepository
@@ -98,11 +76,6 @@ class PayeverHelper
      * @var \Plenty\Plugin\Translation\Translator
      */
     private $translator;
-
-    /**
-     * @var PaymentRepositoryContract
-     */
-    private PaymentRepositoryContract $paymentContract;
 
     /**
      * @var string[][]
@@ -211,19 +184,6 @@ class PayeverHelper
     ];
 
     /**
-     * @var string[]
-     */
-    private $urlMap = [
-        'success' => '/payment/payever/checkoutSuccess?payment_id=--PAYMENT-ID--',
-        'finish' => '/payment/payever/checkoutFinish',
-        'notice' => '/payment/payever/checkoutNotice?payment_id=--PAYMENT-ID--',
-        'cancel' => '/payment/payever/checkoutCancel?payment_id=--PAYMENT-ID--',
-        'failure' => '/payment/payever/checkoutFailure?payment_id=--PAYMENT-ID--',
-        'iframe' => '/payment/payever/checkoutIframe?method=',
-        'command_endpoint' => '/payment/payever/executeCommand',
-    ];
-
-    /**
      * Methods we should hide if shipping and billing addresses is different
      *
      * @var array
@@ -238,25 +198,19 @@ class PayeverHelper
      * PayeverHelper constructor.
      * @param PaymentMethodRepositoryContract $paymentMethodRepository
      * @param Translator $translator
-     * @param WebstoreHelper $webStoreHelper
      * @param PayeverConfigRepository $payeverConfigRepository
      * @param StorageLock $storageLock
-     * @param PaymentRepositoryContract $paymentContract
      */
     public function __construct(
         PaymentMethodRepositoryContract $paymentMethodRepository,
         Translator $translator,
-        WebstoreHelper $webStoreHelper,
         PayeverConfigRepository $payeverConfigRepository,
-        StorageLock $storageLock,
-        PaymentRepositoryContract $paymentContract,
+        StorageLock $storageLock
     ) {
         $this->paymentMethodRepository = $paymentMethodRepository;
         $this->translator = $translator;
-        $this->webStoreHelper = $webStoreHelper;
         $this->payeverConfigRepository = $payeverConfigRepository;
         $this->storageLock = $storageLock;
-        $this->paymentContract = $paymentContract;
     }
 
     /**
@@ -294,105 +248,13 @@ class PayeverHelper
     {
         $result = [];
         $paymentMethods = $this->paymentMethodRepository->allForPlugin('plenty_payever');
-        if (!is_null($paymentMethods)) {
+        if (!empty($paymentMethods)) {
             foreach ($paymentMethods as $paymentMethod) {
                 $result[$paymentMethod->paymentKey] = $paymentMethod->id;
             }
         }
 
         return $result;
-    }
-
-    /**
-     * @return string
-     */
-    public function getBaseUrl(): string
-    {
-        $webStoreConfig = $this->webStoreHelper->getCurrentWebstoreConfiguration();
-        if (is_null($webStoreConfig)) {
-            return 'error';
-        }
-
-        return (string) $webStoreConfig->domainSsl;
-    }
-
-    /**
-     * @param string $type
-     * @return string
-     */
-    private function getUrl(string $type): string
-    {
-        return $this->getBaseUrl() . $this->urlMap[$type];
-    }
-
-    /**
-     * @return string
-     */
-    public function getCommandEndpoint(): string
-    {
-        return $this->getUrl('command_endpoint');
-    }
-
-    /**
-     * @return string
-     */
-    public function getSuccessURL(): string
-    {
-        return $this->getUrl('success');
-    }
-
-    /**
-     * @param string $paymentId
-     * @return string
-     */
-    public function buildSuccessURL(string $paymentId): string
-    {
-        $baseSuccessUrl = $this->getUrl('success');
-
-        return str_replace('--PAYMENT-ID--', $paymentId, $baseSuccessUrl);
-    }
-
-    /**
-     * @return string
-     */
-    public function getFinishURL(): string
-    {
-        return $this->getUrl('finish');
-    }
-
-    /**
-     * @return string
-     */
-    public function getNoticeURL(): string
-    {
-        return $this->getUrl('notice');
-    }
-
-    /**
-     * @return string
-     */
-    public function getCancelURL(): string
-    {
-        return $this->getUrl('cancel');
-    }
-
-    /**
-     * @return string
-     */
-    public function getFailureURL(): string
-    {
-        return $this->getUrl('failure');
-    }
-
-    /**
-     * @param string $method
-     * @return string
-     */
-    public function getIframeURL(string $method): string
-    {
-        $result = $this->getUrl('iframe');
-
-        return $result . ($result != 'error' ? $method : '');
     }
 
     /**
@@ -442,9 +304,10 @@ class PayeverHelper
     public function getPaymentPropertyValue(Payment $payment, int $propertyTypeConstant): string
     {
         $properties = $payment->properties;
-        if (!$properties) {
+        if (empty($properties)) {
             return '';
         }
+
         /* @var $property PaymentProperty */
         foreach ($properties as $property) {
             if (!($property instanceof PaymentProperty)) {
@@ -459,74 +322,6 @@ class PayeverHelper
     }
 
     /**
-     * Returns the plentymarkets payment status matching the given transaction state.
-     *
-     * @param string $state
-     * @return int|null
-     */
-    public function mapStatus(string $state)
-    {
-        switch ($state) {
-            case self::STATUS_PAID:
-                return Payment::STATUS_CAPTURED;
-            case self::STATUS_ACCEPTED:
-                return Payment::STATUS_APPROVED;
-            case self::STATUS_IN_PROCESS:
-                return Payment::STATUS_AWAITING_APPROVAL;
-            case self::STATUS_FAILED:
-            case self::STATUS_CANCELLED:
-                return Payment::STATUS_CANCELED;
-            case self::STATUS_REFUNDED:
-                return Payment::STATUS_REFUNDED;
-            case self::STATUS_DECLINED:
-                return Payment::STATUS_REFUSED;
-            case self::STATUS_NEW:
-                return Payment::STATUS_AWAITING_RENEWAL;
-        }
-    }
-
-    /**
-     * Returns the plentymarkets order status
-     *
-     * @param string $status
-     *
-     * @return int|float|null
-     */
-    public function mapOrderStatus(string $status)
-    {
-        switch ($status) {
-            case self::STATUS_PAID:
-            case self::STATUS_ACCEPTED:
-                return self::PLENTY_ORDER_SUCCESS;
-            case self::STATUS_IN_PROCESS:
-                return self::PLENTY_ORDER_INPROCESS;
-            case self::STATUS_FAILED:
-            case self::STATUS_CANCELLED:
-            case self::STATUS_DECLINED:
-                return self::PLENTY_ORDER_CANCELLED;
-            case self::STATUS_REFUNDED:
-                return self::PLENTY_ORDER_RETURN;
-            case self::STATUS_NEW:
-                return self::PLENTY_ORDER_PROCESSING;
-            default:
-                return null;
-        }
-    }
-
-    /**
-     * @param string $status
-     * @return bool
-     */
-    public function isSuccessfulPaymentStatus(string $status): bool
-    {
-        return in_array($status, [
-            self::STATUS_PAID,
-            self::STATUS_ACCEPTED,
-            self::STATUS_IN_PROCESS,
-        ]);
-    }
-
-    /**
      * Returns current plugin version
      *
      * @return string
@@ -534,15 +329,6 @@ class PayeverHelper
     public function getPluginVersion(): string
     {
         return self::PLUGIN_VERSION;
-    }
-
-    /**
-     * @param mixed $paymentId
-     * @return string
-     */
-    protected function getLockFileName($paymentId): string
-    {
-        return $paymentId . '.lock';
     }
 
     /**
@@ -557,7 +343,7 @@ class PayeverHelper
      * @param string $paymentId
      * @param string|null $fetchDest
      */
-    public function acquireLock(string $paymentId, $fetchDest = null)
+    public function acquireLock(string $paymentId, string $fetchDest = null)
     {
         /**
          * Randomize waiting time before lock to assure no double-lock cases
@@ -611,23 +397,23 @@ class PayeverHelper
                 $orderId = $order->id;
                 break;
             case OrderType::TYPE_CREDIT_NOTE:
-                $originOrders = $order->originOrders;
-                if (!$originOrders->isEmpty() && $originOrders->count() > 0) {
-                    $originOrder = $originOrders->first();
-                    if ($originOrder instanceof Order) {
-                        if ($originOrder->typeId == 1) {
-                            $orderId = $originOrder->id;
-                        } else {
-                            $originOriginOrders = $originOrder->originOrders;
-                            if (is_array($originOriginOrders) && count($originOriginOrders) > 0) {
-                                $originOriginOrder = $originOriginOrders->first();
-                                if ($originOriginOrder instanceof Order) {
-                                    $orderId = $originOriginOrder->id;
-                                }
-                            }
-                        }
+                if ($order->originOrders->isEmpty() && !$order->originOrders->count()) {
+                    return false;
+                }
+                $originOrder = $order->originOrders->first();
+                if ($originOrder instanceof Order) {
+                    if ($originOrder->typeId == 1) {
+                        $orderId = $originOrder->id;
+                    } elseif (
+                        is_array($originOrder->originOrders) &&
+                        count($originOrder->originOrders) > 0 &&
+                        $originOrder->originOrders[0] instanceof Order
+                    ) {
+                        $orderId = $originOrder->originOrders[0]->id;
                     }
                 }
+                break;
+            default:
                 break;
         }
 
@@ -641,7 +427,7 @@ class PayeverHelper
      */
     public function isAllowedTransaction(array $transaction, string $typeTransaction = 'cancel')
     {
-        $result = isset($transaction['result']) ? $transaction['result'] : [];
+        $result = $transaction['result'] ?? [];
 
         if (!empty($result['actions']) && is_object($result['actions'])) {
             $result['actions'] = (array)$result['actions'];
@@ -727,16 +513,6 @@ class PayeverHelper
     public function setCommandTimestamp(int $commandTimestamp)
     {
         $this->payeverConfigRepository->set(self::COMMAND_TIMESTAMP_KEY, (string) $commandTimestamp);
-    }
-
-    /**
-     * Sets command api version
-     *
-     * @param int $apiVersion
-     */
-    public function setApiVersion(int $apiVersion)
-    {
-        $this->payeverConfigRepository->set(self::API_VERSION_KEY, (int) $apiVersion);
     }
 
     /**

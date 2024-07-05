@@ -3,15 +3,15 @@
 require_once __DIR__ . '/PayeverTokenlist.php';
 require_once __DIR__ . '/PluginRegistryInfoProvider.php';
 
-use Payever\ExternalIntegration\Core\ClientConfiguration;
-use Payever\ExternalIntegration\Core\Enum\ChannelSet;
-use Payever\ExternalIntegration\Inventory\InventoryApiClient;
-use Payever\ExternalIntegration\Payments\PaymentsApiClient;
-use Payever\ExternalIntegration\Plugins\PluginsApiClient;
-use Payever\ExternalIntegration\Products\ProductsApiClient;
-use Payever\ExternalIntegration\ThirdParty\ThirdPartyApiClient;
-use Payever\ExternalIntegration\Payments\ThirdPartyPluginsApiClient;
-use Payever\ExternalIntegration\Payments\Action\ActionDecider;
+use Payever\Sdk\Core\ClientConfiguration;
+use Payever\Sdk\Core\Enum\ChannelSet;
+use Payever\Sdk\Inventory\InventoryApiClient;
+use Payever\Sdk\Payments\PaymentsApiClient;
+use Payever\Sdk\Plugins\PluginsApiClient;
+use Payever\Sdk\Products\ProductsApiClient;
+use Payever\Sdk\ThirdParty\ThirdPartyApiClient;
+use Payever\Sdk\Payments\ThirdPartyPluginsApiClient;
+use Payever\Sdk\Payments\Action\ActionDecider;
 
 class PayeverSdkProvider
 {

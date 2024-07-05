@@ -1,5 +1,15 @@
 # Release Notes for payever
 
+## v3.1.0 (2024-07-04)
+- Added payment partial actions
+- Added Santander Installment BE
+- Removed "Santander Factoring" and "Santander Invoice" payment methods
+- Updated payever Sdk
+- Added customer locale to the payment request
+- Added payment pending confirmation message
+- Added codecov integration
+- Updated phpunit tests
+
 ## v2.9.0 (2023-12-27)
 - Added Santander Installment Belgium payment options
 

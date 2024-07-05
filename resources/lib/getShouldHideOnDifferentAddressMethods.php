@@ -1,5 +1,5 @@
 <?php
 
-use Payever\ExternalIntegration\Payments\Enum\PaymentMethod;
+use Payever\Sdk\Payments\Enum\PaymentMethod;
 
 return PaymentMethod::getShouldHideOnDifferentAddressMethods();

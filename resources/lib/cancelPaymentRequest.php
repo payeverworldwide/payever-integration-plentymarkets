@@ -5,4 +5,10 @@ $payeverApi = new PayeverSdkProvider(SdkRestApi::getParam('sdkData'));
 
 $transactionId = SdkRestApi::getParam('transaction_id');
 $amount = SdkRestApi::getParam('amount');
-return $payeverApi->getPaymentsApiClient()->cancelPaymentRequest($transactionId, $amount)->getResponseEntity()->toArray();
+$identifier = SdkRestApi::getParam('identifier');
+
+return $payeverApi
+    ->getPaymentsApiClient()
+    ->cancelPaymentRequest($transactionId, $amount, $identifier)
+    ->getResponseEntity()
+    ->toArray();

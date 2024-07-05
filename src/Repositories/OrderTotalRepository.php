@@ -26,6 +26,7 @@ class OrderTotalRepository implements OrderTotalRepositoryContract
 
     /**
      * @inheritDoc
+     * @codeCoverageIgnore
      */
     public function create($orderId): OrderTotal
     {
@@ -45,17 +46,16 @@ class OrderTotalRepository implements OrderTotalRepositoryContract
 
     /**
      * @inheritDoc
+     * @codeCoverageIgnore
      */
     public function persist(OrderTotal $orderTotal): OrderTotal
     {
-        /** @var OrderTotal $result */
-        $result = $this->dataBase->save($orderTotal);
-
-        return $result;
+        return $this->dataBase->save($orderTotal);
     }
 
     /**
      * @inheritDoc
+     * @codeCoverageIgnore
      */
     public function delete(OrderTotal $orderTotal): bool
     {
@@ -72,7 +72,9 @@ class OrderTotalRepository implements OrderTotalRepositoryContract
         $query->where('orderId', '=', $orderId);
         $rows = $query->get();
         if (!empty($rows[0]) && $rows[0] instanceof OrderTotal) {
+            // @codeCoverageIgnoreStart
             $result = $rows[0];
+            // @codeCoverageIgnoreEnd
         }
 
         return $result;

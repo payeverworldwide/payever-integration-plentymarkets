@@ -49,74 +49,78 @@ class AbstractPaymentMethod extends PaymentMethodService
         BasketRepositoryContract $basketRepositoryContract,
         PayeverSdkService $sdkService
     ): bool {
-        $activeKey = 'Payever.' . $this->getMethodCode() . '.active';
-        if ($configRepository->get($activeKey) != 1) {
+        try {
+            $activeKey = 'Payever.' . $this->getMethodCode() . '.active';
+            if ($configRepository->get($activeKey) != 1) {
+                throw new \BadMethodCallException('Payment method is not active.');
+            }
+
+            /** @var Basket $basket */
+            $basket = $basketRepositoryContract->load();
+
+            /**
+             * Check hiding logic
+             */
+            $isPaymentMethodHidden = $this->isBasketAddressesDifferent($basket) &&
+                in_array($this->getMethodCode(), $sdkService->call('getShouldHideOnDifferentAddressMethods', []));
+
+            if ($isPaymentMethodHidden) {
+                throw new \BadMethodCallException('Billing and shipping address is not equal.');
+            }
+
+            /**
+             * Check currency
+             */
+            $allowedCurrenciesKey = 'Payever.' . $this->getMethodCode() . '.allowed_currencies';
+            $allowedCurrencies = explode(",", $configRepository->get($allowedCurrenciesKey));
+
+            if (
+                !in_array($basket->currency, $allowedCurrencies) &&
+                !in_array('all', $allowedCurrencies)
+            ) {
+                throw new \BadMethodCallException('Currency not allowed.');
+            }
+
+            /**
+             * Check the minimum amount
+             */
+            $minAmountKey = 'Payever.' . $this->getMethodCode() . '.min_order_total';
+            if (
+                $configRepository->get($minAmountKey) > 0.00 &&
+                $basket->basketAmount <= $configRepository->get($minAmountKey)
+            ) {
+                throw new \BadMethodCallException('Minimum order total is not correct.');
+            }
+
+            /**
+             * Check the maximum amount
+             */
+            $maxAmountKey = 'Payever.' . $this->getMethodCode() . '.max_order_total';
+            if (
+                $configRepository->get($maxAmountKey) > 0.00 &&
+                $configRepository->get($maxAmountKey) <= $basket->basketAmount
+            ) {
+                return throw new \BadMethodCallException('Maximum order total is correct.');
+            }
+
+            /**
+             * Check country
+             * @var CountryRepositoryContract $countryRepo
+             */
+            $countryRepo = pluginApp(CountryRepositoryContract::class);
+            $country = $countryRepo->findIsoCode($basket->shippingCountryId, 'iso_code_2');
+
+            $allowedCountriesKey = 'Payever.' . $this->getMethodCode() . '.allowed_countries';
+            $allowedCountries = explode(',', $configRepository->get($allowedCountriesKey));
+
+            if (!in_array($country, $allowedCountries) && !in_array('all', $allowedCountries)) {
+                throw new \BadMethodCallException('Country not allowed.');
+            }
+
+            return true;
+        } catch (\Exception $e) {
             return false;
         }
-
-        /** @var Basket $basket */
-        $basket = $basketRepositoryContract->load();
-
-        /**
-         * Check hiding logic
-         */
-        $isPaymentMethodHidden = $this->isBasketAddressesDifferent($basket)
-            ? in_array($this->getMethodCode(), $sdkService->call('getShouldHideOnDifferentAddressMethods', []))
-            : false;
-        if ($isPaymentMethodHidden) {
-            return false;
-        }
-
-        /**
-         * Check currency
-         */
-        $allowedCurrenciesKey = 'Payever.' . $this->getMethodCode() . '.allowed_currencies';
-        $allowedCurrencies = explode(",", $configRepository->get($allowedCurrenciesKey));
-
-        if (
-            !in_array($basket->currency, $allowedCurrencies)
-            && !in_array('all', $allowedCurrencies)
-        ) {
-            return false;
-        }
-
-        /**
-         * Check the minimum amount
-         */
-        $minAmountKey = 'Payever.' . $this->getMethodCode() . '.min_order_total';
-        if (
-            $configRepository->get($minAmountKey) > 0.00 &&
-            $basket->basketAmount <= $configRepository->get($minAmountKey)
-        ) {
-            return false;
-        }
-
-        /**
-         * Check the maximum amount
-         */
-        $maxAmountKey = 'Payever.' . $this->getMethodCode() . '.max_order_total';
-        if (
-            $configRepository->get($maxAmountKey) > 0.00 &&
-            $configRepository->get($maxAmountKey) <= $basket->basketAmount
-        ) {
-            return false;
-        }
-
-        /**
-         * Check country
-         * @var CountryRepositoryContract $countryRepo
-         */
-        $countryRepo = pluginApp(CountryRepositoryContract::class);
-        $country = $countryRepo->findIsoCode($basket->shippingCountryId, 'iso_code_2');
-
-        $allowedCountriesKey = 'Payever.' . $this->getMethodCode() . '.allowed_countries';
-        $allowedCountries = explode(',', $configRepository->get($allowedCountriesKey));
-
-        if (!in_array($country, $allowedCountries) && !in_array('all', $allowedCountries)) {
-            return false;
-        }
-
-        return true;
     }
 
     /**

@@ -23,7 +23,7 @@ class ConfigController extends Controller
     /**
      * @var Request
      */
-    private $request;
+    private Request $request;
 
     /**
      * @var Response
@@ -33,17 +33,17 @@ class ConfigController extends Controller
     /**
      * @var ConfigurationRepositoryContract
      */
-    private $config;
+    private ConfigurationRepositoryContract $config;
 
     /**
      * @var PayeverHelper
      */
-    private $payeverHelper;
+    private PayeverHelper $payeverHelper;
 
     /**
      * @var PayeverSdkService
      */
-    private $sdkService;
+    private PayeverSdkService $sdkService;
 
     /**
      * @param Request $request
@@ -57,6 +57,7 @@ class ConfigController extends Controller
         PayeverHelper $payeverHelper,
         PayeverSdkService $sdkService
     ) {
+        parent::__construct();
         $this->request = $request;
         $this->response = pluginApp(Response::class);
         $this->config = $config;

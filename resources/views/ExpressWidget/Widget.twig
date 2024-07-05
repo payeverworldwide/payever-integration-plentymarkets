@@ -1,0 +1,13 @@
+{% if (services.template.isCurrentTemplate('tpl.item') or services.template.isCurrentTemplate('tpl.basket')) %}
+    <div class="payever-widget-wrapper">
+        <div class="payever-widget-finexp" {{ widgetAttributes | raw }}></div>
+        <script type="application/javascript">
+            const script = document.createElement('script');
+            script.src = '{{ widgetJsUrl }}';
+            script.onload = function () {
+                PayeverPaymentWidgetLoader.init('.payever-widget-finexp');
+            };
+            document.head.appendChild(script);
+        </script>
+    </div>
+{% endif %}

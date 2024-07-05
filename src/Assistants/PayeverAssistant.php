@@ -18,6 +18,8 @@ class PayeverAssistant extends WizardProvider
 {
     const WIZARD_KEY = 'payment-payeverAssistant-assistant';
 
+    const DEFAULT_MAX_VALUE = '100000';
+
     /**
      * @var WebstoreRepositoryContract
      */
@@ -131,7 +133,7 @@ class PayeverAssistant extends WizardProvider
                                 ],
                                 'slug' => [
                                     'type' => 'text',
-                                    'defaultValue' => 'payever',
+                                    'defaultValue' => '815c5953-6881-11e7-9835-52540073a0b6',
                                     'options' => [
                                         'name' => 'Assistant.slugLabel',
                                         'required' => true,
@@ -230,7 +232,6 @@ class PayeverAssistant extends WizardProvider
                                     'options' => [
                                         'name' => 'Assistant.orderBeforePaymentLabel',
                                         'required' => true,
-
                                         'listBoxValues' => [
                                             [
                                                 'caption' => 'Assistant.payeverPossibleValue0',
@@ -250,6 +251,86 @@ class PayeverAssistant extends WizardProvider
                 ],
                 'stepThree' => [
                     'title' => 'Assistant.stepThreeTitle',
+                    'sections' => [
+                        [
+                            'title' => 'Assistant.stepThreeTitle',
+                            'form' => [
+                                'fe_widget_display_on_product' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.feWidgetDisplayOnProductLabel',
+                                        'required' => false,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'fe_widget_display_on_cart' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.feWidgetDisplayOnCartLabel',
+                                        'required' => false,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'fe_widget_theme' => [
+                                    'type' => 'select',
+                                    'defaultValue' => 'light',
+                                    'options' => [
+                                        'name' => 'Assistant.feWidgetThemeLabel',
+                                        'required' => false,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverThemeLight',
+                                                'value' => 'light'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverThemeDark',
+                                                'value' => 'dark'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'fe_widget_id' => [
+                                    'type' => 'text',
+                                    'defaultValue' => 'a6986b03-61d2-4166-96dd-e0193b5fdd19',
+                                    'options' => [
+                                        'name' => 'Assistant.feWidgetTypeLabel',
+                                        'required' => false,
+                                    ]
+                                ],
+                                'fe_widget_checkout_id' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '8ccace98-ff4c-44d8-aa6e-8337ba24cbc1',
+                                    'options' => [
+                                        'name' => 'Assistant.feWidgetCheckoutIDLabel',
+                                        'required' => false,
+                                    ]
+                                ],
+                            ]
+                        ]
+                    ]
+                ],
+                'stepFour' => [
+                    'title' => 'Assistant.stepFourTitle',
                     'sections' => [
                         // Stripe Credit Card
                         [
@@ -334,7 +415,7 @@ class PayeverAssistant extends WizardProvider
                                 ],
                                 'stripe.max_order_total' => [
                                     'type' => 'text',
-                                    'defaultValue' => '100000',
+                                    'defaultValue' => self::DEFAULT_MAX_VALUE,
                                     'options' => [
                                         'name' => 'Assistant.payeverMaxOrderTotalLabel',
                                         'required' => true,
@@ -441,7 +522,7 @@ class PayeverAssistant extends WizardProvider
                                 ],
                                 'stripe_directdebit.max_order_total' => [
                                     'type' => 'text',
-                                    'defaultValue' => '100000',
+                                    'defaultValue' => self::DEFAULT_MAX_VALUE,
                                     'options' => [
                                         'name' => 'Assistant.payeverMaxOrderTotalLabel',
                                         'required' => true,
@@ -548,7 +629,7 @@ class PayeverAssistant extends WizardProvider
                                 ],
                                 'paymill_directdebit.max_order_total' => [
                                     'type' => 'text',
-                                    'defaultValue' => '100000',
+                                    'defaultValue' => self::DEFAULT_MAX_VALUE,
                                     'options' => [
                                         'name' => 'Assistant.payeverMaxOrderTotalLabel',
                                         'required' => true,
@@ -655,7 +736,7 @@ class PayeverAssistant extends WizardProvider
                                 ],
                                 'paymill_creditcard.max_order_total' => [
                                     'type' => 'text',
-                                    'defaultValue' => '100000',
+                                    'defaultValue' => self::DEFAULT_MAX_VALUE,
                                     'options' => [
                                         'name' => 'Assistant.payeverMaxOrderTotalLabel',
                                         'required' => true,
@@ -780,7 +861,7 @@ class PayeverAssistant extends WizardProvider
                                 ],
                                 'paypal.max_order_total' => [
                                     'type' => 'text',
-                                    'defaultValue' => '100000',
+                                    'defaultValue' => self::DEFAULT_MAX_VALUE,
                                     'options' => [
                                         'name' => 'Assistant.payeverMaxOrderTotalLabel',
                                         'required' => true,
@@ -804,328 +885,6 @@ class PayeverAssistant extends WizardProvider
                                 ],
                             ]
                         ],
-                        // Santander Invoice NO
-                        [
-                            'title' => 'Assistant.SantanderInvoiceNOTab',
-                            'description' => 'Assistant.SantanderInvoiceNOTab',
-                            'form' => [
-                                'santander_invoice_no.active' => [
-                                    'type' => 'select',
-                                    'defaultValue' => '1',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverActiveLabel',
-                                        'required' => true,
-                                        'listBoxValues' => [
-                                            [
-                                                'caption' => 'Assistant.payeverPossibleValue0',
-                                                'value' => '0'
-                                            ],
-                                            [
-                                                'caption' => 'Assistant.payeverPossibleValue1',
-                                                'value' => '1'
-                                            ]
-                                        ]
-                                    ]
-                                ],
-                                'santander_invoice_no.title' => [
-                                    'type' => 'text',
-                                    'defaultValue' => 'Santander Invoice NO',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverTitleLabel',
-                                        'required' => true,
-                                    ]
-                                ],
-                                'santander_invoice_no.description' => [
-                                    'type' => 'text',
-                                    'defaultValue' => 'Kjøp nå  - betal etter levering. Fakturaen sendes på  epost fra Santander Consumer Bank.', //phpcs:ignore
-                                    'options' => [
-                                        'name' => 'Assistant.payeverDescriptionLabel',
-                                        'required' => false,
-                                    ]
-                                ],
-                                'santander_invoice_no.accept_fee' => [
-                                    'type' => 'select',
-                                    'defaultValue' => '1',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverAcceptFeeLabel',
-                                        'required' => true,
-                                        'listBoxValues' => [
-                                            [
-                                                'caption' => 'Assistant.payeverPossibleValue0',
-                                                'value' => '0'
-                                            ],
-                                            [
-                                                'caption' => 'Assistant.payeverPossibleValue1',
-                                                'value' => '1'
-                                            ]
-                                        ]
-                                    ]
-                                ],
-                                'santander_invoice_no.fee' => [
-                                    'type' => 'text',
-                                    'defaultValue' => '0.25',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverFeeLabel',
-                                        'required' => true,
-                                    ]
-                                ],
-                                'santander_invoice_no.variable_fee' => [
-                                    'type' => 'text',
-                                    'defaultValue' => '0',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverVariableFeeLabel',
-                                        'required' => true,
-                                    ]
-                                ],
-                                'santander_invoice_no.min_order_total' => [
-                                    'type' => 'text',
-                                    'defaultValue' => '0',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverMinOrderTotalLabel',
-                                        'required' => true,
-                                    ]
-                                ],
-                                'santander_invoice_no.max_order_total' => [
-                                    'type' => 'text',
-                                    'defaultValue' => '100000',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverMaxOrderTotalLabel',
-                                        'required' => true,
-                                    ]
-                                ],
-                                'santander_invoice_no.allowed_countries' => [
-                                    'type' => 'checkboxGroup',
-                                    'defaultValue' => ['NO'],
-                                    'options' => [
-                                        'name' => 'Assistant.payeverAllowedCountries',
-                                        'checkboxValues' => $this->getCountriesList(['NO']),
-                                    ]
-                                ],
-                                'santander_invoice_no.allowed_currencies' => [
-                                    'type' => 'checkboxGroup',
-                                    'defaultValue' => ['NOK'],
-                                    'options' => [
-                                        'name' => 'Assistant.payeverAllowedCurrencies',
-                                        'checkboxValues' => $this->getCurrenciesList(['NOK']),
-                                    ]
-                                ],
-                            ]
-                        ],
-                        // Santander Invoice DE
-                        [
-                            'title' => 'Assistant.SantanderInvoiceDETab',
-                            'description' => 'Assistant.SantanderInvoiceDETab',
-                            'form' => [
-                                'santander_invoice_de.active' => [
-                                    'type' => 'select',
-                                    'defaultValue' => '1',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverActiveLabel',
-                                        'required' => true,
-                                        'listBoxValues' => [
-                                            [
-                                                'caption' => 'Assistant.payeverPossibleValue0',
-                                                'value' => '0'
-                                            ],
-                                            [
-                                                'caption' => 'Assistant.payeverPossibleValue1',
-                                                'value' => '1'
-                                            ]
-                                        ]
-                                    ]
-                                ],
-                                'santander_invoice_de.title' => [
-                                    'type' => 'text',
-                                    'defaultValue' => 'Santander Invoice Germany',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverTitleLabel',
-                                        'required' => true,
-                                    ]
-                                ],
-                                'santander_invoice_de.description' => [
-                                    'type' => 'text',
-                                    'defaultValue' => 'Simply pay after delivery.',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverDescriptionLabel',
-                                        'required' => false,
-                                    ]
-                                ],
-                                'santander_invoice_de.accept_fee' => [
-                                    'type' => 'select',
-                                    'defaultValue' => '1',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverAcceptFeeLabel',
-                                        'required' => true,
-                                        'listBoxValues' => [
-                                            [
-                                                'caption' => 'Assistant.payeverPossibleValue0',
-                                                'value' => '0'
-                                            ],
-                                            [
-                                                'caption' => 'Assistant.payeverPossibleValue1',
-                                                'value' => '1'
-                                            ]
-                                        ]
-                                    ]
-                                ],
-                                'santander_invoice_de.fee' => [
-                                    'type' => 'text',
-                                    'defaultValue' => '0.25',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverFeeLabel',
-                                        'required' => true,
-                                    ]
-                                ],
-                                'santander_invoice_de.variable_fee' => [
-                                    'type' => 'text',
-                                    'defaultValue' => '0',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverVariableFeeLabel',
-                                        'required' => true,
-                                    ]
-                                ],
-                                'santander_invoice_de.min_order_total' => [
-                                    'type' => 'text',
-                                    'defaultValue' => '0',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverMinOrderTotalLabel',
-                                        'required' => true,
-                                    ]
-                                ],
-                                'santander_invoice_de.max_order_total' => [
-                                    'type' => 'text',
-                                    'defaultValue' => '100000',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverMaxOrderTotalLabel',
-                                        'required' => true,
-                                    ]
-                                ],
-                                'santander_invoice_de.allowed_countries' => [
-                                    'type' => 'checkboxGroup',
-                                    'defaultValue' => ['DE'],
-                                    'options' => [
-                                        'name' => 'Assistant.payeverAllowedCountries',
-                                        'checkboxValues' => $this->getCountriesList(['DE']),
-                                    ]
-                                ],
-                                'santander_invoice_de.allowed_currencies' => [
-                                    'type' => 'checkboxGroup',
-                                    'defaultValue' => ['EUR'],
-                                    'options' => [
-                                        'name' => 'Assistant.payeverAllowedCurrencies',
-                                        'checkboxValues' => $this->getCurrenciesList(['EUR']),
-                                    ]
-                                ],
-                            ]
-                        ],
-                        // Santander Factoring
-                        [
-                            'title' => 'Assistant.SantanderFactoringDETab',
-                            'description' => 'Assistant.SantanderFactoringDETab',
-                            'form' => [
-                                'santander_factoring_de.active' => [
-                                    'type' => 'select',
-                                    'defaultValue' => '1',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverActiveLabel',
-                                        'required' => true,
-                                        'listBoxValues' => [
-                                            [
-                                                'caption' => 'Assistant.payeverPossibleValue0',
-                                                'value' => '0'
-                                            ],
-                                            [
-                                                'caption' => 'Assistant.payeverPossibleValue1',
-                                                'value' => '1'
-                                            ]
-                                        ]
-                                    ]
-                                ],
-                                'santander_factoring_de.title' => [
-                                    'type' => 'text',
-                                    'defaultValue' => 'Santander Factoring',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverTitleLabel',
-                                        'required' => true,
-                                    ]
-                                ],
-                                'santander_factoring_de.description' => [
-                                    'type' => 'text',
-                                    'defaultValue' => 'Santander Factoring description.',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverDescriptionLabel',
-                                        'required' => false,
-                                    ]
-                                ],
-                                'santander_factoring_de.accept_fee' => [
-                                    'type' => 'select',
-                                    'defaultValue' => '1',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverAcceptFeeLabel',
-                                        'required' => true,
-                                        'listBoxValues' => [
-                                            [
-                                                'caption' => 'Assistant.payeverPossibleValue0',
-                                                'value' => '0'
-                                            ],
-                                            [
-                                                'caption' => 'Assistant.payeverPossibleValue1',
-                                                'value' => '1'
-                                            ]
-                                        ]
-                                    ]
-                                ],
-                                'santander_factoring_de.fee' => [
-                                    'type' => 'text',
-                                    'defaultValue' => '0.25',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverFeeLabel',
-                                        'required' => true,
-                                    ]
-                                ],
-                                'santander_factoring_de.variable_fee' => [
-                                    'type' => 'text',
-                                    'defaultValue' => '0',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverVariableFeeLabel',
-                                        'required' => true,
-                                    ]
-                                ],
-                                'santander_factoring_de.min_order_total' => [
-                                    'type' => 'text',
-                                    'defaultValue' => '0',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverMinOrderTotalLabel',
-                                        'required' => true,
-                                    ]
-                                ],
-                                'santander_factoring_de.max_order_total' => [
-                                    'type' => 'text',
-                                    'defaultValue' => '100000',
-                                    'options' => [
-                                        'name' => 'Assistant.payeverMaxOrderTotalLabel',
-                                        'required' => true,
-                                    ]
-                                ],
-                                'santander_factoring_de.allowed_countries' => [
-                                    'type' => 'checkboxGroup',
-                                    'defaultValue' => ['DE'],
-                                    'options' => [
-                                        'name' => 'Assistant.payeverAllowedCountries',
-                                        'checkboxValues' => $this->getCountriesList(['DE']),
-                                    ]
-                                ],
-                                'santander_factoring_de.allowed_currencies' => [
-                                    'type' => 'checkboxGroup',
-                                    'defaultValue' => ['EUR'],
-                                    'options' => [
-                                        'name' => 'Assistant.payeverAllowedCurrencies',
-                                        'checkboxValues' => $this->getCurrenciesList(['EUR']),
-                                    ]
-                                ],
-                            ]
-                        ],
-                        // Santander Factoring
                         [
                             'title' => 'Assistant.SantanderInstallmentTab',
                             'description' => 'Assistant.SantanderInstallmentTab',
@@ -1208,7 +967,7 @@ class PayeverAssistant extends WizardProvider
                                 ],
                                 'santander_installment.max_order_total' => [
                                     'type' => 'text',
-                                    'defaultValue' => '100000',
+                                    'defaultValue' => self::DEFAULT_MAX_VALUE,
                                     'options' => [
                                         'name' => 'Assistant.payeverMaxOrderTotalLabel',
                                         'required' => true,
@@ -1333,7 +1092,7 @@ class PayeverAssistant extends WizardProvider
                                 ],
                                 'santander_installment_at.max_order_total' => [
                                     'type' => 'text',
-                                    'defaultValue' => '100000',
+                                    'defaultValue' => self::DEFAULT_MAX_VALUE,
                                     'options' => [
                                         'name' => 'Assistant.payeverMaxOrderTotalLabel',
                                         'required' => true,
@@ -1458,7 +1217,7 @@ class PayeverAssistant extends WizardProvider
                                 ],
                                 'santander_installment_be.max_order_total' => [
                                     'type' => 'text',
-                                    'defaultValue' => '100000',
+                                    'defaultValue' => self::DEFAULT_MAX_VALUE,
                                     'options' => [
                                         'name' => 'Assistant.payeverMaxOrderTotalLabel',
                                         'required' => true,
@@ -1690,7 +1449,7 @@ class PayeverAssistant extends WizardProvider
                                 ],
                                 'santander_installment_dk.max_order_total' => [
                                     'type' => 'text',
-                                    'defaultValue' => '100000',
+                                    'defaultValue' => self::DEFAULT_MAX_VALUE,
                                     'options' => [
                                         'name' => 'Assistant.payeverMaxOrderTotalLabel',
                                         'required' => true,
@@ -1797,7 +1556,7 @@ class PayeverAssistant extends WizardProvider
                                 ],
                                 'santander_installment_no.max_order_total' => [
                                     'type' => 'text',
-                                    'defaultValue' => '100000',
+                                    'defaultValue' => self::DEFAULT_MAX_VALUE,
                                     'options' => [
                                         'name' => 'Assistant.payeverMaxOrderTotalLabel',
                                         'required' => true,
@@ -1904,7 +1663,7 @@ class PayeverAssistant extends WizardProvider
                                 ],
                                 'santander_installment_se.max_order_total' => [
                                     'type' => 'text',
-                                    'defaultValue' => '100000',
+                                    'defaultValue' => self::DEFAULT_MAX_VALUE,
                                     'options' => [
                                         'name' => 'Assistant.payeverMaxOrderTotalLabel',
                                         'required' => true,
@@ -2029,7 +1788,7 @@ class PayeverAssistant extends WizardProvider
                                 ],
                                 'sofort.max_order_total' => [
                                     'type' => 'text',
-                                    'defaultValue' => '100000',
+                                    'defaultValue' => self::DEFAULT_MAX_VALUE,
                                     'options' => [
                                         'name' => 'Assistant.payeverMaxOrderTotalLabel',
                                         'required' => true,
@@ -2138,7 +1897,7 @@ class PayeverAssistant extends WizardProvider
                                 ],
                                 'payex_faktura.max_order_total' => [
                                     'type' => 'text',
-                                    'defaultValue' => '100000',
+                                    'defaultValue' => self::DEFAULT_MAX_VALUE,
                                     'options' => [
                                         'name' => 'Assistant.payeverMaxOrderTotalLabel',
                                         'required' => true,
@@ -2245,7 +2004,7 @@ class PayeverAssistant extends WizardProvider
                                 ],
                                 'payex_creditcard.max_order_total' => [
                                     'type' => 'text',
-                                    'defaultValue' => '100000',
+                                    'defaultValue' => self::DEFAULT_MAX_VALUE,
                                     'options' => [
                                         'name' => 'Assistant.payeverMaxOrderTotalLabel',
                                         'required' => true,
@@ -2352,7 +2111,7 @@ class PayeverAssistant extends WizardProvider
                                 ],
                                 'instant_payment.max_order_total' => [
                                     'type' => 'text',
-                                    'defaultValue' => '100000',
+                                    'defaultValue' => self::DEFAULT_MAX_VALUE,
                                     'options' => [
                                         'name' => 'Assistant.payeverMaxOrderTotalLabel',
                                         'required' => true,
@@ -2709,7 +2468,7 @@ class PayeverAssistant extends WizardProvider
                                 ],
                                 'swedbank_creditcard.max_order_total' => [
                                     'type' => 'text',
-                                    'defaultValue' => '100000',
+                                    'defaultValue' => self::DEFAULT_MAX_VALUE,
                                     'options' => [
                                         'name' => 'Assistant.payeverMaxOrderTotalLabel',
                                         'required' => true,
@@ -2925,7 +2684,7 @@ class PayeverAssistant extends WizardProvider
                                 ],
                                 'ideal.max_order_total' => [
                                     'type' => 'text',
-                                    'defaultValue' => '100000',
+                                    'defaultValue' => self::DEFAULT_MAX_VALUE,
                                     'options' => [
                                         'name' => 'Assistant.payeverMaxOrderTotalLabel',
                                         'required' => true,
@@ -3110,7 +2869,7 @@ class PayeverAssistant extends WizardProvider
 
             /** Sort the array for better usability. */
             usort($this->webstoreValues, function ($a, $b) {
-                return ($a['value'] <=> $b['value']);
+                return $a['value'] <=> $b['value'];
             });
         }
 
@@ -3171,17 +2930,13 @@ class PayeverAssistant extends WizardProvider
         $results = [];
         $currenciesList = $this->currencyRepository->getCurrencyList();
         foreach ($currenciesList as $currency) {
-            if (is_array($currencies) && in_array($currency->currency, $currencies)) {
-                $results[] = [
-                    'caption' => $currency->currency,
-                    'value' => $currency->currency
-                ];
-            } else {
-                $results[] = [
-                    'caption' => $currency->currency,
-                    'value' => $currency->currency
-                ];
+            if (is_array($currencies) && !in_array($currency->currency, $currencies)) {
+                continue;
             }
+            $results[] = [
+                'caption' => $currency->currency,
+                'value' => $currency->currency
+            ];
         }
 
         return $results;

@@ -3,18 +3,19 @@
 namespace Payever\Services\Payment\Notification;
 
 use Payever\Helper\PayeverHelper;
+use Payever\Helper\PaymentActionManager;
 use Payever\Services\Lock\StorageLock;
 use Payever\Services\PayeverService;
+use Payever\Services\Processor\CheckoutProcessor;
+use Payever\Services\Processor\OrderProcessor;
 use Payever\Traits\Logger;
 use Plenty\Plugin\ConfigRepository;
 use Plenty\Plugin\Http\Request;
-use Plenty\Plugin\Log\Loggable;
 
 class NotificationRequestProcessor
 {
     use Logger;
 
-    const NOTIFICATION_LOCK_SECONDS = 30;
     const HEADER_SIGNATURE = 'X-PAYEVER-SIGNATURE';
 
     /**
@@ -43,9 +44,24 @@ class NotificationRequestProcessor
     private $payeverHelper;
 
     /**
+     * @var OrderProcessor
+     */
+    private $orderProcessor;
+
+    /**
+     * @var CheckoutProcessor
+     */
+    private $checkoutProcessor;
+
+    /**
      * @var NotificationActionHandler
      */
     private NotificationActionHandler $notificationActionHandler;
+
+    /**
+     * @var PaymentActionManager
+     */
+    private PaymentActionManager $paymentActionManager;
 
     /**
      * @param Request $request
@@ -53,7 +69,10 @@ class NotificationRequestProcessor
      * @param StorageLock $lock
      * @param PayeverService $payeverService
      * @param PayeverHelper $payeverHelper
+     * @param OrderProcessor $orderProcessor
+     * @param CheckoutProcessor $checkoutProcessor
      * @param NotificationActionHandler $notificationHandler
+     * @param PaymentActionManager $paymentActionManager
      */
     public function __construct(
         Request $request,
@@ -61,31 +80,34 @@ class NotificationRequestProcessor
         StorageLock $lock,
         PayeverService $payeverService,
         PayeverHelper $payeverHelper,
-        NotificationActionHandler $notificationHandler
+        OrderProcessor $orderProcessor,
+        CheckoutProcessor $checkoutProcessor,
+        NotificationActionHandler $notificationHandler,
+        PaymentActionManager $paymentActionManager
     ) {
         $this->request = $request;
         $this->config = $config;
         $this->lock = $lock;
         $this->payeverService = $payeverService;
         $this->payeverHelper = $payeverHelper;
+        $this->orderProcessor = $orderProcessor;
+        $this->checkoutProcessor = $checkoutProcessor;
         $this->notificationActionHandler = $notificationHandler;
+        $this->paymentActionManager = $paymentActionManager;
     }
 
     /**
      * @return array
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * @SuppressWarnings(PHPMD.NPathComplexity)
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function processNotification(): array
     {
         $result = 'error';
-        $paymentId = null;
         try {
             $payload = $this->getRequestPayload();
             if (!$payload) {
                 throw new \RuntimeException('Got empty notification payload', 20);
             }
+
             $payload = \json_decode($payload, true);
             $payeverPayment = $payload['data']['payment'] ?? [];
 
@@ -100,65 +122,55 @@ class NotificationRequestProcessor
             $notificationTime = array_key_exists('created_at', $payload)
                 ? date('Y-m-d H:i:s', strtotime($payload['created_at']))
                 : false;
+
             $paymentId = $payeverPayment['id'] ?? null;
             if (!$payeverPayment || !$paymentId) {
                 throw new \UnexpectedValueException('Notification entity is invalid', 21);
             }
-            $this->lock->acquireLock($paymentId, static::NOTIFICATION_LOCK_SECONDS);
-            $payeverStatus = $payeverPayment['status'] ?? null;
 
             $this->log(
                 'debug',
                 __METHOD__,
                 'Payever::debug.processingPayeverStatus',
                 'processing payever status',
-                ['payeverStatus' => $payeverStatus]
+                ['payeverStatus' => $payeverPayment['status']]
             );
 
-            if (!empty($payeverPayment['reference']) && is_numeric($payeverPayment['reference'])) {
-                $update = $this->payeverService->createAndUpdatePlentyPayment($payeverPayment);
-            } else {
-                $update = $this->payeverService->updatePlentyPayment(
-                    $paymentId,
-                    $payeverStatus,
-                    $notificationTime
-                );
+            // Check if action was already processed before
+            if (isset($payload['data']['action'])) {
+                $this->checkPaymentAction($payload, $payeverPayment);
             }
-            $result = 'success';
-            $message = 'Order was updated';
-            if (!$update && $this->payeverHelper->isSuccessfulPaymentStatus($payeverPayment['status'])) {
-                $this->payeverService->prepareBasket($payeverPayment['reference']);
-                $orderData = $this->payeverService->placeOrder();
-                $payeverPayment['reference'] = $orderData->order->id;
-                $update = $this->payeverService->createAndUpdatePlentyPayment($payeverPayment);
-                $message = 'Order was created';
-            }
+
+            // Get or create order
+            $orderId = $this->checkoutProcessor->processCheckout($paymentId, null, $notificationTime);
 
             $this->log(
                 'debug',
                 __METHOD__,
                 'Payever::debug.updatingPlentyPaymentForNotifications',
                 'updating plenty payment for notifications',
-                [
-                    'update' => $update,
-                    'message' => $message
-                ]
+                ['orderId' => $orderId]
             );
 
             // Handle capture/refund/cancel notification
-            if (
-                (isset($payeverPayment['captured_items']) && count($payeverPayment['captured_items']) > 0) ||
-                isset($payeverPayment['refunded_items']) && count($payeverPayment['refunded_items']) > 0 ||
-                isset($payeverPayment['capture_amount']) && $payeverPayment['capture_amount'] > 0  ||
-                isset($payeverPayment['refund_amount']) && $payeverPayment['refund_amount'] > 0 ||
-                isset($payeverPayment['cancel_amount']) && $payeverPayment['cancel_amount'] > 0
-            ) {
-                if ($this->payeverHelper->isLocked(PayeverHelper::ACTION_PREFIX . $paymentId)) {
-                    $this->payeverHelper->waitForUnlock(PayeverHelper::ACTION_PREFIX . $paymentId);
-                }
-
-                $this->notificationActionHandler->handleNotificationAction($payeverPayment);
+            if ($this->payeverHelper->isLocked(PayeverHelper::ACTION_PREFIX . $paymentId)) {
+                $this->payeverHelper->waitForUnlock(PayeverHelper::ACTION_PREFIX . $paymentId);
             }
+
+            $this->notificationActionHandler->handleNotificationAction($payeverPayment, $orderId);
+
+            if (isset($payload['data']['action'])) {
+                $this->paymentActionManager->addAction(
+                    $orderId,
+                    $payload['data']['action']['unique_identifier'],
+                    $payload['data']['action']['type'],
+                    $payload['data']['action']['source'],
+                    $payload['data']['action']['amount']
+                );
+            }
+
+            $result = 'success';
+            $message = 'Order was updated';
         } catch (\Exception $e) {
             $message = $e->getMessage();
 
@@ -168,16 +180,12 @@ class NotificationRequestProcessor
                 'Payever::debug.notificationRequestProcessorException',
                 'NotificationRequestProcessor exception: ' . $message,
                 [
-                    'exception' => $message
+                    'exception' => $message,
                 ]
             );
-        } finally {
-            $paymentId && $this->lock->releaseLock($paymentId);
         }
-        $data = [
-            'result' => $result,
-            'message' => $message ?? null,
-        ];
+
+        $data = ['result' => $result, 'message' => $message];
 
         $this->log(
             'debug',
@@ -208,7 +216,7 @@ class NotificationRequestProcessor
                 'NotificationRequestProcessor signature matches: ' . $payload,
                 [
                     'paymentId' => $paymentId,
-                    'payload' => $payload
+                    'payload' => $payload,
                 ]
             );
         } else {
@@ -221,15 +229,12 @@ class NotificationRequestProcessor
                 'Payever::debug.retrievingPaymentForNotifications',
                 'retrieve payment for notifications',
                 [
-                    'payeverPayment' => $payeverPayment
+                    'payeverPayment' => $payeverPayment,
                 ]
             );
 
-            $notificationDateTime = is_array($rawData) && array_key_exists('created_at', $rawData)
-                ? $rawData['created_at']
-                : null;
             $payload = \json_encode([
-                'created_at' => $notificationDateTime,
+                'created_at' => $rawData['created_at'] ?? null,
                 'data' => [
                     'payment' => $payeverPayment,
                 ],
@@ -237,6 +242,26 @@ class NotificationRequestProcessor
         }
 
         return $payload;
+    }
+
+    /**
+     * @param array $payload
+     * @param array $payeverPayment
+     * @return void
+     */
+    private function checkPaymentAction(array $payload, array $payeverPayment)
+    {
+        $orderId = $this->orderProcessor->getPlentyOrderByPayeverPayment($payeverPayment);
+        if ($orderId) {
+            $processedNotice = $this->paymentActionManager->isActionExists(
+                $orderId,
+                $payload['data']['action']['unique_identifier'],
+            );
+
+            if ($processedNotice) {
+                throw new \UnexpectedValueException('Notification rejected: notification already processed', 21);
+            }
+        }
     }
 
     /**

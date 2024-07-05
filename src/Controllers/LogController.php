@@ -7,6 +7,7 @@ use Plenty\Plugin\Controller;
 use Payever\Services\LogService;
 use Plenty\Plugin\Http\Request;
 use Plenty\Plugin\Http\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class LogController extends Controller
 {
@@ -16,7 +17,7 @@ class LogController extends Controller
     /**
      * @var Request
      */
-    private $request;
+    private Request $request;
 
     /**
      * @var Response
@@ -26,16 +27,15 @@ class LogController extends Controller
     /**
      * @var LogService
      */
-    private $logService;
+    private LogService $logService;
 
     /**
      * @var PayeverSdkService
      */
-    private $sdkService;
+    private PayeverSdkService $sdkService;
 
     /**
      * @param Request $request
-     * @param Response $response
      * @param LogService $logService
      * @param PayeverSdkService $sdkService
      */
@@ -44,6 +44,7 @@ class LogController extends Controller
         LogService $logService,
         PayeverSdkService $sdkService
     ) {
+        parent::__construct();
         $this->request = $request;
         $this->response = pluginApp(Response::class);
         $this->logService = $logService;
@@ -53,9 +54,9 @@ class LogController extends Controller
     /**
      * Show logs.
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return SymfonyResponse
      */
-    public function showLogs()
+    public function showLogs(): SymfonyResponse
     {
         if (!$this->isAuthorized()) {
             return $this->response->json('Access denied.', 401);
@@ -72,9 +73,9 @@ class LogController extends Controller
     /**
      * Download logs.
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return SymfonyResponse
      */
-    public function downloadLogs()
+    public function downloadLogs(): SymfonyResponse
     {
         if (!$this->isAuthorized()) {
             return $this->response->make(

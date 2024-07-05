@@ -3,7 +3,7 @@
   "marketplaceName"   : {"de":"payever Checkout","en":"payever Checkout"},
   "namespace"         : "Payever",
   "type"              : "payment",
-  "version"           : "3.0.1",
+  "version"           : "3.1.0",
   "license"           : "GNU AFFERO GENERAL PUBLIC LICENSE",
   "isClosedSource"    : false,
   "pluginIcon"        : "icon_plugin_xs.png",
@@ -28,7 +28,20 @@
   "email"             : "service@getpayever.com",
   "serviceProvider"   : "Payever\\Providers\\PayeverServiceProvider",
   "containers"        : [],
-  "dataProviders"     : [],
+  "dataProviders": [
+    {
+      "key": "Payever\\Providers\\DataProviders\\PayeverExpressWidgetCartProvider",
+      "name": "express widget for the cart page",
+      "description": "Block to integrate the payever express widget on the cart page",
+      "defaultLayoutContainer": "Ceres::BasketTotals.AfterTotalSum"
+    },
+    {
+      "key": "Payever\\Providers\\DataProviders\\PayeverExpressWidgetProductProvider",
+      "name": "express widget for the product page",
+      "description": "Block to integrate the payever express widget on the product page",
+      "defaultLayoutContainer": "Ceres::SingleItem.AfterAddToBasket"
+    }
+  ],
   "javaScriptFiles"   : [],
   "require"           : {
     "IO": ">5.0.45",
@@ -38,7 +51,10 @@
     "php": ">=7.3 <8.1"
   },
   "dependencies": {
-    "payever/sdk-php": "4.1.1"
+    "payever/core-sdk-php": "1.2.0",
+    "payever/plugins-sdk-php": "1.2.1",
+    "payever/payments-sdk-php": "1.5.0",
+    "payever/products-sdk-php": "1.1.0"
   },
   "runOnBuild"        : [
     "Payever\\Migrations\\CreatePayeverPaymentMethods11",
@@ -47,6 +63,7 @@
     "Payever\\Migrations\\CreateLogTable",
     "Payever\\Migrations\\CreateOrderTotalTable",
     "Payever\\Migrations\\CreateOrderTotalItemTable",
-    "Payever\\Migrations\\CreateActionHistoryTable"
+    "Payever\\Migrations\\CreateActionHistoryTable",
+    "Payever\\Migrations\\CreatePaymentActionTable"
   ]
 }

@@ -1,0 +1,56 @@
+{% extends getPartial('page-design') %}
+{% import "Ceres::PageDesign.Macros.LayoutContainer" as LayoutContainer %}
+
+{% block PartialHead %}
+    {% embed getPartial('page-metadata') %}
+        {% block title trans("Payever::Frontend.pendingOrderTitle") %}
+    {% endembed %}
+{% endblock %}
+
+{% block PageBody %}
+    <div class="page-content myaccount container-max mt-3">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="h2">{{ trans("Ceres::Template.orderConfirmationThanks") }}</h1>
+                <p>{{ trans("Payever::Frontend.pendingOrderReceived") }}</p>
+                <p>
+                    {{ trans("Payever::Frontend.pendingOrderProcessed") }}
+                    <br/>
+                    {{ trans("Payever::Frontend.pendingOrderConfirmation") }}
+                </p>
+            </div>
+        </div>
+
+        <div class="order-status-loader">
+            <div id="payment-checker">
+                <p id="payever-status-message">{{ trans("Payever::Frontend.pendingLoaderMsg") }}</p>
+                <div id="payever-loading-animation" class="payever-loading-animation">
+                    <div class="payever-loader">&nbsp;</div>
+                </div>
+            </div>
+
+            <script type="application/javascript">
+                document.addEventListener('DOMContentLoaded', function () {
+                    window.PayeverPendingStatusChecker.checkStatus('{{ statusUrl }}');
+                });
+            </script>
+        </div>
+        <br>
+
+        {% include "Ceres::Checkout.OrderDetails" with { orderData: data } %}
+
+        <hr>
+        <div class="row">
+            {% set loggedIn = frontend.Account.getIsAccountLoggedIn %}
+            <div class="col-6 col-md-4 {% if loggedIn %}offset-md-2{% else %}offset-3 offset-md-4{% endif %}">
+                <a v-waiting-animation-infinite href="{{ homepageURL }}" type="" class="btn btn-primary btn-block bg-primary">
+                    <i class="fa fa-home" aria-hidden="true"></i>
+                    {{ trans("Ceres::Template.orderConfirmationHomepage") }}
+                </a>
+            </div>
+        </div>
+
+    </div>
+    <link rel="stylesheet" href="{{ plugin_path('Payever') }}/css/loader.css">
+    <script type="text/javascript" src="{{ plugin_path('Payever') }}/js/status.js"></script>
+{% endblock %}

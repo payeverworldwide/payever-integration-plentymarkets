@@ -1,5 +1,15 @@
 # Release Informationen für payever
 
+## v3.1.0 (2024-07-04)
+- Teilzahlungsaktionen hinzugefügt
+- Santander Installment BE hinzugefügt
+- Zahlungsmethoden „Santander Factoring“ und „Santander Invoice“ entfernt
+- payever Sdk aktualisiert
+- Kundengebietsschema zur Zahlungsanforderung hinzugefügt
+- Nachricht „Zahlung ausstehend“ zur Bestätigung hinzugefügt
+- Codecov-Integration hinzugefügt
+- PHPUnit-Tests aktualisiert
+
 ## v2.9.0 (2023-12-27)
 - Santander Ratenkredit Belgium Zahlungsoptionen hinzugefügt
 

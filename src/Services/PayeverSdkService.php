@@ -3,6 +3,7 @@
 namespace Payever\Services;
 
 use Payever\Helper\PayeverHelper;
+use Payever\Helper\RoutesHelper;
 use Plenty\Modules\Plugin\Libs\Contracts\LibraryCallContract;
 use Plenty\Plugin\ConfigRepository;
 
@@ -24,15 +25,26 @@ class PayeverSdkService
     private $payeverHelper;
 
     /**
+     * @var RoutesHelper
+     */
+    private $routesHelper;
+
+    /**
      * @param LibraryCallContract $libCall
      * @param ConfigRepository $config
      * @param PayeverHelper $payeverHelper
+     * @param RoutesHelper $routesHelper
      */
-    public function __construct(LibraryCallContract $libCall, ConfigRepository $config, PayeverHelper $payeverHelper)
-    {
+    public function __construct(
+        LibraryCallContract $libCall,
+        ConfigRepository $config,
+        PayeverHelper $payeverHelper,
+        RoutesHelper $routesHelper
+    ) {
         $this->libCall = $libCall;
         $this->config = $config;
         $this->payeverHelper = $payeverHelper;
+        $this->routesHelper = $routesHelper;
     }
 
     /**
@@ -47,14 +59,14 @@ class PayeverSdkService
                 'clientId' => $this->config->get('Payever.clientId'),
                 'clientSecret' => $this->config->get('Payever.clientSecret'),
                 'slug' => $this->config->get('Payever.slug'),
-                'environment' => $this->config->get('Payever.environment')
+                'environment' => $this->config->get('Payever.environment'),
             ];
         }
 
         $parameters['sdkData']['customSandboxUrl'] = $this->payeverHelper->getCustomSandboxUrl();
         $parameters['sdkData']['customLiveUrl'] = $this->payeverHelper->getCustomLiveUrl();
-        $parameters['sdkData']['host'] = $this->payeverHelper->getBaseUrl();
-        $parameters['sdkData']['commandEndpoint'] = $this->payeverHelper->getCommandEndpoint();
+        $parameters['sdkData']['host'] = $this->routesHelper->getBaseUrl();
+        $parameters['sdkData']['commandEndpoint'] = $this->routesHelper->getCommandEndpoint();
         $parameters['sdkData']['pluginVersion'] = $this->payeverHelper->getPluginVersion();
 
         return $this->libCall->call('Payever::' . $method, $parameters);

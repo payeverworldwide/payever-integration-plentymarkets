@@ -178,6 +178,8 @@ class OrderItemsManager
                 $compactItem['totalByAction'] = $item->unitPrice * $item->qtyCaptured;
                 $compactItem['availableQtyByAction'] = $item->quantity - $item->qtyCaptured - $item->qtyCancelled;
                 break;
+            default:
+                break;
         }
 
         return $compactItem;
@@ -308,7 +310,7 @@ class OrderItemsManager
             $orderTotalItems[$idx] = $orderTotalItem;
         }
 
-        if (count($orderTotalItems) === 0) {
+        if (empty($orderTotalItems)) {
             return false;
         }
 

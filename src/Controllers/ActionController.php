@@ -3,26 +3,19 @@
 namespace Payever\Controllers;
 
 use Exception;
-use Payever\Contracts\ActionHistoryRepositoryContract;
-use Payever\Contracts\OrderTotalItemRepositoryContract;
-use Payever\Contracts\OrderTotalRepositoryContract;
-use Payever\Helper\OrderItemsManager;
 use Payever\Helper\PayeverHelper;
+use Payever\Helper\PaymentActionManager;
+use Payever\Models\PaymentAction;
 use Payever\Services\PayeverService;
 use Payever\Services\Payment\PaymentActionService;
 use Plenty\Modules\Order\Contracts\OrderRepositoryContract;
-use Plenty\Modules\Order\Shipping\Contracts\ParcelServicePresetRepositoryContract;
-use Plenty\Modules\Order\Shipping\Package\Contracts\OrderShippingPackageRepositoryContract;
-use Plenty\Modules\Payment\Contracts\PaymentRepositoryContract;
-use Plenty\Modules\Payment\Method\Contracts\PaymentMethodRepositoryContract;
 use Plenty\Plugin\Controller;
 use Plenty\Plugin\Http\Request;
 use Plenty\Plugin\Http\Response;
 use Plenty\Plugin\Log\Loggable;
 
 /**
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * Class ActionController
  */
 class ActionController extends Controller
 {
@@ -37,6 +30,8 @@ class ActionController extends Controller
     const ACTION_SHIPPING_AMOUNT = "shipping_amount";
     const ACTION_REFUND_AMOUNT = "refund_amount";
     const ACTION_CANCEL_AMOUNT = "cancel_amount";
+
+    const LOGGER_CODE = 'Payever::debug.actionsHandler';
 
     /**
      * @var Request
@@ -54,54 +49,19 @@ class ActionController extends Controller
     private OrderRepositoryContract $orderRepository;
 
     /**
-     * @var PaymentMethodRepositoryContract
-     */
-    private PaymentMethodRepositoryContract $paymentMethodRepository;
-
-    /**
-     * @var OrderTotalRepositoryContract
-     */
-    private OrderTotalRepositoryContract $orderTotalRepository;
-
-    /**
-     * @var OrderTotalItemRepositoryContract
-     */
-    private OrderTotalItemRepositoryContract $orderTotalItemRepository;
-
-    /**
      * @var PayeverHelper
      */
     private PayeverHelper $paymentHelper;
 
     /**
-     * @var PaymentRepositoryContract
+     * @var PaymentActionManager
      */
-    private PaymentRepositoryContract $paymentContract;
+    private PaymentActionManager $paymentActionManager;
 
     /**
      * @var PayeverService
      */
     private PayeverService $paymentService;
-
-    /**
-     * @var OrderItemsManager
-     */
-    private OrderItemsManager $orderItemsManager;
-
-    /**
-     * @var ActionHistoryRepositoryContract
-     */
-    private ActionHistoryRepositoryContract $actionHistoryRepository;
-
-    /**
-     * @var OrderShippingPackageRepositoryContract
-     */
-    private OrderShippingPackageRepositoryContract $orderShippingPackageRepository;
-
-    /**
-     * @var ParcelServicePresetRepositoryContract
-     */
-    private ParcelServicePresetRepositoryContract $parcelServicePresetRepository;
 
     /**
      * @var PaymentActionService
@@ -111,47 +71,25 @@ class ActionController extends Controller
     /**
      * @param Request $request
      * @param OrderRepositoryContract $orderRepository
-     * @param PaymentMethodRepositoryContract $paymentMethodRepository
-     * @param OrderTotalRepositoryContract $orderTotalRepository
-     * @param OrderTotalItemRepositoryContract $orderTotalItemRepository
      * @param PayeverHelper $paymentHelper
-     * @param PaymentRepositoryContract $paymentContract
      * @param PayeverService $paymentService
-     * @param OrderItemsManager $orderItemsManager
-     * @param ActionHistoryRepositoryContract $actionHistoryRepository
-     * @param OrderShippingPackageRepositoryContract $orderShippingPackageRepository
-     * @param ParcelServicePresetRepositoryContract $parcelServicePresetRepository
-     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+     * @param PaymentActionService $actionService
      */
     public function __construct(
         Request $request,
         OrderRepositoryContract $orderRepository,
-        PaymentMethodRepositoryContract $paymentMethodRepository,
-        OrderTotalRepositoryContract $orderTotalRepository,
-        OrderTotalItemRepositoryContract $orderTotalItemRepository,
         PayeverHelper $paymentHelper,
-        PaymentRepositoryContract $paymentContract,
+        PaymentActionManager $paymentActionManager,
         PayeverService $paymentService,
-        OrderItemsManager $orderItemsManager,
-        ActionHistoryRepositoryContract $actionHistoryRepository,
-        OrderShippingPackageRepositoryContract $orderShippingPackageRepository,
-        ParcelServicePresetRepositoryContract $parcelServicePresetRepository,
         PaymentActionService $actionService
     ) {
         parent::__construct();
         $this->request = $request;
         $this->response = pluginApp(Response::class);
         $this->orderRepository = $orderRepository;
-        $this->paymentMethodRepository = $paymentMethodRepository;
-        $this->orderTotalRepository = $orderTotalRepository;
-        $this->orderTotalItemRepository = $orderTotalItemRepository;
         $this->paymentHelper = $paymentHelper;
-        $this->paymentContract = $paymentContract;
+        $this->paymentActionManager = $paymentActionManager;
         $this->paymentService = $paymentService;
-        $this->orderItemsManager = $orderItemsManager;
-        $this->actionHistoryRepository = $actionHistoryRepository;
-        $this->orderShippingPackageRepository = $orderShippingPackageRepository;
-        $this->parcelServicePresetRepository = $parcelServicePresetRepository;
         $this->actionService = $actionService;
     }
 
@@ -162,7 +100,7 @@ class ActionController extends Controller
     {
         $this->getLogger(__METHOD__)
             ->setReferenceType('payeverLog')
-            ->debug('Payever::debug.actionsHandler', $this->request->all());
+            ->debug(self::LOGGER_CODE, $this->request->all());
 
         $orderId = $this->request->get('order_id');
         $action = $this->request->get('action');
@@ -175,14 +113,14 @@ class ActionController extends Controller
 
         $this->getLogger(__METHOD__ . ' $payments')
             ->setReferenceType('payeverLog')
-            ->debug('Payever::debug.actionsHandler', $payments);
+            ->debug(self::LOGGER_CODE, $payments);
 
         foreach ($payments as $payment) {
             $transactionId = $this->paymentService->getPaymentTransactionId($payment);
 
             $this->getLogger(__METHOD__ . ' [START]')
                 ->setReferenceType('payeverLog')
-                ->debug('Payever::debug.actionsHandler', [
+                ->debug(self::LOGGER_CODE, [
                     'action' => $action,
                     'transactionId' => $transactionId,
                     'order' => $order
@@ -190,25 +128,40 @@ class ActionController extends Controller
 
             $this->paymentHelper->lockAndBlock(PayeverHelper::ACTION_PREFIX . $transactionId);
 
+            $identifier = $this->paymentActionManager->generateIdentifier();
+            $this->paymentActionManager->addAction(
+                $order->id,
+                $identifier,
+                $action,
+                PaymentAction::SOURCE_EXTERNAL,
+                $amount
+            );
+
             switch ($action) {
                 case self::ACTION_SHIPPING:
-                    $this->actionService->shipGoodsTransaction($order, $transactionId, $items);
+                    $this->actionService->shipGoodsTransaction($order, $transactionId, $items, $identifier);
                     break;
                 case self::ACTION_REFUND:
-                    $this->actionService->refundItemTransaction($order, $transactionId, $items);
+                    $this->actionService->refundItemTransaction($order, $transactionId, $items, $identifier);
                     break;
                 case self::ACTION_CANCEL:
-                    $this->actionService->cancelItemTransaction($order, $transactionId, $items);
+                    $this->actionService->cancelItemTransaction($order, $transactionId, $items, $identifier);
                     break;
                 case self::ACTION_SHIPPING_AMOUNT:
-                    $this->actionService->shippingTransaction($order, $transactionId, $amount);
+                    $this->actionService->shippingTransaction($order, $transactionId, $amount, $identifier);
                     break;
                 case self::ACTION_REFUND_AMOUNT:
-                    $this->actionService->refundTransaction($order, $transactionId, $amount);
+                    $this->actionService->refundTransaction($order, $transactionId, $amount, $identifier);
                     break;
                 case self::ACTION_CANCEL_AMOUNT:
-                    $this->actionService->cancelTransaction($order, $transactionId, $amount);
+                    $this->actionService->cancelTransaction($order, $transactionId, $amount, $identifier);
                     break;
+                default:
+                    $this->getLogger(__METHOD__ . ' [SKIP]')
+                        ->setReferenceType('payeverLog')
+                        ->debug(self::LOGGER_CODE, [
+                            'action' => $action,
+                        ]);
             }
 
             $this->paymentHelper->unlock(PayeverHelper::ACTION_PREFIX . $transactionId);

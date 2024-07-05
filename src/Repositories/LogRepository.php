@@ -23,6 +23,7 @@ class LogRepository implements LogRepositoryContract
 
     /**
      * @inheritDoc
+     * @codeCoverageIgnore
      */
     public function create(): Log
     {
@@ -35,17 +36,16 @@ class LogRepository implements LogRepositoryContract
 
     /**
      * @inheritDoc
+     * @codeCoverageIgnore
      */
     public function persist(Log $log): Log
     {
-        /** @var Log $result */
-        $result = $this->dataBase->save($log);
-
-        return $result;
+        return $this->dataBase->save($log);
     }
 
     /**
      * @inheritDoc
+     * @codeCoverageIgnore
      */
     public function delete(Log $log): bool
     {

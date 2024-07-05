@@ -38,22 +38,18 @@ declare(strict_types=1);
 
 namespace Payever\Services\Payment;
 
-use Exception;
 use Payever\Contracts\ActionHistoryRepositoryContract;
 use Payever\Helper\OrderItemsManager;
 use Payever\Helper\PayeverHelper;
 use Payever\Models\ActionHistory;
 use Payever\Services\PayeverService;
+use Payever\Services\Processor\OrderProcessor;
+use Payever\Services\Processor\PaymentProcessor;
 use Plenty\Modules\Order\Models\Order;
 use Plenty\Plugin\Log\Loggable;
 
 /**
- * @SuppressWarnings(PHPMD.ExcessiveClassLength)
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- * @SuppressWarnings(PHPMD.ExcessiveParameterList)
- * @SuppressWarnings(PHPMD.TooManyFields)
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * Class PaymentActionService
  */
 class PaymentActionService
 {
@@ -63,43 +59,75 @@ class PaymentActionService
     const ACTION_REFUND = 'refund';
     const ACTION_SHIPPING_GOODS = 'shipping_goods';
 
+    const LOGGER_CANCEL_CODE = 'Payever::debug.paymentActionCancel';
+    const LOGGER_REFUND_CODE = 'Payever::debug.paymentActionRefund';
+    const LOGGER_SHIPPING_CODE = 'Payever::debug.paymentActionShipping';
+
+    /**
+     * @var PayeverService
+     */
     private PayeverService $paymentService;
+
+    /**
+     * @var PayeverHelper
+     */
     private PayeverHelper $paymentHelper;
+
+    /**
+     * @var OrderProcessor
+     */
+    private OrderProcessor $orderProcessor;
+
+    /**
+     * @var PaymentProcessor
+     */
+    private PaymentProcessor $paymentProcessor;
+
+    /**
+     * @var OrderItemsManager
+     */
     private OrderItemsManager $orderItemsManager;
+
+    /**
+     * @var ActionHistoryRepositoryContract
+     */
     private ActionHistoryRepositoryContract $actionHistoryRepository;
 
     public function __construct(
         PayeverService $paymentService,
         PayeverHelper $paymentHelper,
+        OrderProcessor $orderProcessor,
+        PaymentProcessor $paymentProcessor,
         OrderItemsManager $orderItemsManager,
         ActionHistoryRepositoryContract $actionHistoryRepository
     ) {
         $this->paymentService = $paymentService;
         $this->paymentHelper = $paymentHelper;
+        $this->orderProcessor = $orderProcessor;
+        $this->paymentProcessor = $paymentProcessor;
         $this->orderItemsManager = $orderItemsManager;
         $this->actionHistoryRepository = $actionHistoryRepository;
     }
 
-    public function shipGoodsTransaction(Order $order, $transactionId, array $items): void
+    public function shipGoodsTransaction(Order $order, $transactionId, array $items, string $identifier = null): void
     {
         try {
-            if (count($items) === 0) {
-                throw new Exception('Product items are missing.');
+            if (empty($items)) {
+                throw new \InvalidArgumentException('Product items for shipping are missing.');
             }
 
             $isAllowActionResponse = $this->paymentService
                 ->isActionAllowed($transactionId, self::ACTION_SHIPPING_GOODS);
             if (!empty($isAllowActionResponse['error'])) {
                 $message = $this->paymentHelper->retrieveErrorMessageFromSdkResponse($isAllowActionResponse);
-                throw new Exception($message);
+                throw new \BadMethodCallException($message);
             }
 
             $isPartialAllowActionResponse = $this->paymentService
                 ->isPartialActionAllowed($transactionId, self::ACTION_SHIPPING_GOODS);
             if (!empty($isPartialAllowActionResponse['error'])) {
-                $message = $this->paymentHelper
-                    ->retrieveErrorMessageFromSdkResponse($isPartialAllowActionResponse);
-                throw new Exception($message);
+                $message = $this->paymentHelper->retrieveErrorMessageFromSdkResponse($isPartialAllowActionResponse);
+                throw new \BadMethodCallException($message);
             }
 
             $amount = $this->orderItemsManager->getPaymentAmountByItems($items, true);
@@ -108,10 +136,10 @@ class PaymentActionService
 
             $this->getLogger(__METHOD__)
                 ->setReferenceType('payeverLog')
-                ->debug('Payever::debug.paymentActionShipping', [
+                ->debug(self::LOGGER_SHIPPING_CODE, [
                     'amount' => $amount,
                     'paymentItems' => $paymentItems,
-                    'deliveryFee' => $deliveryFee
+                    'deliveryFee' => $deliveryFee,
                 ]);
 
             $shippingResult = $this->paymentService->shippingGoodsPayment(
@@ -122,60 +150,58 @@ class PaymentActionService
                 'Shipping goods',
                 null,
                 null,
-                null
+                null,
+                $identifier
             );
 
             if (!empty($shippingResult['error'])) {
                 $message = $this->paymentHelper->retrieveErrorMessageFromSdkResponse($shippingResult);
-                throw new Exception($message);
+                throw new \BadMethodCallException($message);
             }
 
             $this->getLogger(__METHOD__)
                 ->setReferenceType('payeverLog')
-                ->debug('Payever::debug.paymentActionShipping', [
+                ->debug(self::LOGGER_SHIPPING_CODE, [
                     'shippingResult' => $shippingResult,
                 ]);
 
             $status = $shippingResult['call']['status'];
 
-            if ($status === 'success') {
-                $orderTotal = $this->orderItemsManager->shipOrderItems($order->id, $items);
-
-                if (isset($shippingResult['result']['status'])) {
-                    $this->paymentService
-                        ->updatePlentyPayment($transactionId, $shippingResult['result']['status']);
-                }
-
-                // Save in history
-                $actionHistory = $this->actionHistoryRepository->create();
-                $actionHistory->setAction(self::ACTION_SHIPPING_GOODS);
-                $actionHistory->setOrderId($order->id);
-                $actionHistory->setSource(ActionHistory::SOURCE_ADMIN);
-                $actionHistory->setAmount($amount);
-                $actionHistory->setTimestamp(time());
-                $this->actionHistoryRepository->persist($actionHistory);
-
-                $this->getLogger(__METHOD__ . ' [SUCCESS] ' . self::ACTION_SHIPPING_GOODS)
-                    ->setReferenceType('payeverLog')
-                    ->debug('Payever::debug.paymentActionShipping', $orderTotal);
+            if ($status !== 'success') {
+                return;
             }
+
+            $orderTotal = $this->orderItemsManager->shipOrderItems($order->id, $items);
+
+            if (isset($shippingResult['result']['status'])) {
+                // Updated the plenty order status by payever payment
+                $this->orderProcessor->updatePlentyOrderStatus($order->id, $shippingResult['result']['status']);
+                $this->paymentProcessor->updatePlentyPaymentStatus($transactionId, $shippingResult['result']['status']);
+            }
+
+            // Save in history
+            $this->addActionHistory($order, $amount, self::ACTION_SHIPPING_GOODS);
+
+            $this->getLogger(__METHOD__ . ' [SHIPPING SUCCESS] ' . self::ACTION_SHIPPING_GOODS)
+                ->setReferenceType('payeverLog')
+                ->debug(self::LOGGER_SHIPPING_CODE, $orderTotal);
         } catch (\Exception $exception) {
-            throw new \RuntimeException(sprintf('Shipping request failed: %s', $exception->getMessage()));
+            throw new \BadMethodCallException(sprintf('Shipping request failed: %s', $exception->getMessage()));
         }
     }
 
-    public function refundItemTransaction(Order $order, $transactionId, array $items): void
+    public function refundItemTransaction(Order $order, $transactionId, array $items, string $identifier = null): void
     {
         try {
-            if (count($items) === 0) {
-                throw new Exception('Product items are missing.');
+            if (empty($items)) {
+                throw new \InvalidArgumentException('Product items for refund are missing.');
             }
 
             $isAllowActionResponse = $this->paymentService
                 ->isActionAllowed($transactionId, self::ACTION_REFUND);
             if (!empty($isAllowActionResponse['error'])) {
                 $message = $this->paymentHelper->retrieveErrorMessageFromSdkResponse($isAllowActionResponse);
-                throw new Exception($message);
+                throw new \BadMethodCallException($message);
             }
 
             $isPartialAllowActionResponse = $this->paymentService
@@ -183,7 +209,7 @@ class PaymentActionService
             if (!empty($isPartialAllowActionResponse['error'])) {
                 $message = $this->paymentHelper
                     ->retrieveErrorMessageFromSdkResponse($isPartialAllowActionResponse);
-                throw new Exception($message);
+                throw new \BadMethodCallException($message);
             }
 
             $paymentItems = $this->orderItemsManager->getPaymentItemsForAction($items);
@@ -198,65 +224,61 @@ class PaymentActionService
 
             $this->getLogger(__METHOD__)
                 ->setReferenceType('payeverLog')
-                ->debug('Payever::debug.paymentActionRefund', [
+                ->debug(self::LOGGER_REFUND_CODE, [
                     'paymentItems' => $paymentItems,
-                    'deliveryFee' => $deliveryFee
+                    'deliveryFee' => $deliveryFee,
                 ]);
 
             $refundResult = $this->paymentService
-                ->refundItemsPayment($transactionId, $paymentItems, $deliveryFee);
+                ->refundItemsPayment($transactionId, $paymentItems, $deliveryFee, $identifier);
 
             if (!empty($refundResult['error'])) {
                 $message = $this->paymentHelper->retrieveErrorMessageFromSdkResponse($refundResult);
-                throw new Exception($message);
+                throw new \BadMethodCallException($message);
             }
 
             $this->getLogger(__METHOD__)
                 ->setReferenceType('payeverLog')
-                ->debug('Payever::debug.paymentActionRefund', [
+                ->debug(self::LOGGER_REFUND_CODE, [
                     'refundResult' => $refundResult,
                 ]);
 
             $status = $refundResult['call']['status'];
 
-            if ($status === 'success') {
-                $orderTotal = $this->orderItemsManager->refundOrderItems($order->id, $items);
-
-                if (isset($refundResult['result']['status'])) {
-                    $this->paymentService
-                        ->updatePlentyPayment($transactionId, $refundResult['result']['status']);
-                }
-
-                // Save in history
-                $actionHistory = $this->actionHistoryRepository->create();
-                $actionHistory->setAction(self::ACTION_REFUND);
-                $actionHistory->setOrderId($order->id);
-                $actionHistory->setSource(ActionHistory::SOURCE_ADMIN);
-                $actionHistory->setAmount($amount);
-                $actionHistory->setTimestamp(time());
-                $this->actionHistoryRepository->persist($actionHistory);
-
-                $this->getLogger(__METHOD__ . ' [SUCCESS] ' . self::ACTION_REFUND)
-                    ->setReferenceType('payeverLog')
-                    ->debug('Payever::debug.paymentActionRefund', $orderTotal);
+            if ($status !== 'success') {
+                return;
             }
+
+            $orderTotal = $this->orderItemsManager->refundOrderItems($order->id, $items);
+
+            if (isset($refundResult['result']['status'])) {
+                $this->orderProcessor->updatePlentyOrderStatus($order->id, $refundResult['result']['status']);
+                $this->paymentProcessor->updatePlentyPaymentStatus($transactionId, $refundResult['result']['status']);
+            }
+
+            // Save in history
+            $this->addActionHistory($order, $amount, self::ACTION_REFUND);
+
+            $this->getLogger(__METHOD__ . ' [REFUND SUCCESS] ' . self::ACTION_REFUND)
+                ->setReferenceType('payeverLog')
+                ->debug(self::LOGGER_REFUND_CODE, $orderTotal);
         } catch (\Exception $exception) {
-            throw new \RuntimeException(sprintf('Items Refund request failed: %s', $exception->getMessage()));
+            throw new \BadMethodCallException(sprintf('Items Refund request failed: %s', $exception->getMessage()));
         }
     }
 
-    public function cancelItemTransaction(Order $order, $transactionId, array $items): void
+    public function cancelItemTransaction(Order $order, $transactionId, array $items, string $identifier = null): void
     {
         try {
-            if (count($items) === 0) {
-                throw new Exception('Product items are missing.');
+            if (empty($items)) {
+                throw new \InvalidArgumentException('Product items for cancellation are missing.');
             }
 
             $isAllowActionResponse = $this->paymentService
                 ->isActionAllowed($transactionId, self::ACTION_CANCEL);
             if (!empty($isAllowActionResponse['error'])) {
                 $message = $this->paymentHelper->retrieveErrorMessageFromSdkResponse($isAllowActionResponse);
-                throw new Exception($message);
+                throw new \BadMethodCallException($message);
             }
 
             $isPartialAllowActionResponse = $this->paymentService
@@ -264,7 +286,7 @@ class PaymentActionService
             if (!empty($isPartialAllowActionResponse['error'])) {
                 $message = $this->paymentHelper
                     ->retrieveErrorMessageFromSdkResponse($isPartialAllowActionResponse);
-                throw new Exception($message);
+                throw new \BadMethodCallException($message);
             }
 
             $paymentItems = $this->orderItemsManager->getPaymentItemsForAction($items);
@@ -279,66 +301,62 @@ class PaymentActionService
 
             $this->getLogger(__METHOD__)
                 ->setReferenceType('payeverLog')
-                ->debug('Payever::debug.paymentActionCancel', [
+                ->debug(self::LOGGER_CANCEL_CODE, [
                     'paymentItems' => $paymentItems,
-                    'deliveryFee' => $deliveryFee
+                    'deliveryFee' => $deliveryFee,
                 ]);
 
             $cancelResult = $this->paymentService
-                ->cancelItemsPayment($transactionId, $paymentItems, $deliveryFee);
+                ->cancelItemsPayment($transactionId, $paymentItems, $deliveryFee, $identifier);
 
             if (!empty($cancelResult['error'])) {
                 $message = $this->paymentHelper->retrieveErrorMessageFromSdkResponse($cancelResult);
-                throw new Exception($message);
+                throw new \BadMethodCallException($message);
             }
 
             $this->getLogger(__METHOD__)
                 ->setReferenceType('payeverLog')
-                ->debug('Payever::debug.paymentActionCancel', [
+                ->debug(self::LOGGER_CANCEL_CODE, [
                     'cancelResult' => $cancelResult,
                 ]);
 
             $status = $cancelResult['call']['status'];
 
-            if ($status === 'success') {
-                $orderTotal = $this->orderItemsManager->cancelOrderItems($order->id, $items);
-
-                if (isset($cancelResult['result']['status'])) {
-                    $this->paymentService
-                        ->updatePlentyPayment($transactionId, $cancelResult['result']['status']);
-                }
-
-                // Save in history
-                $actionHistory = $this->actionHistoryRepository->create();
-                $actionHistory->setAction(self::ACTION_CANCEL);
-                $actionHistory->setOrderId($order->id);
-                $actionHistory->setSource(ActionHistory::SOURCE_ADMIN);
-                $actionHistory->setAmount($amount);
-                $actionHistory->setTimestamp(time());
-                $this->actionHistoryRepository->persist($actionHistory);
-
-                $this->getLogger(__METHOD__ . ' [SUCCESS] ' . self::ACTION_CANCEL)
-                    ->setReferenceType('payeverLog')
-                    ->debug('Payever::debug.paymentActionCancel', $orderTotal);
+            if ($status !== 'success') {
+                return;
             }
+
+            $orderTotal = $this->orderItemsManager->cancelOrderItems($order->id, $items);
+
+            if (isset($cancelResult['result']['status'])) {
+                $this->orderProcessor->updatePlentyOrderStatus($order->id, $cancelResult['result']['status']);
+                $this->paymentProcessor->updatePlentyPaymentStatus($transactionId, $cancelResult['result']['status']);
+            }
+
+            // Save in history
+            $this->addActionHistory($order, $amount, self::ACTION_CANCEL);
+
+            $this->getLogger(__METHOD__ . ' [CANCEL SUCCESS] ' . self::ACTION_CANCEL)
+                ->setReferenceType('payeverLog')
+                ->debug(self::LOGGER_CANCEL_CODE, $orderTotal);
         } catch (\Exception $exception) {
-            throw new \RuntimeException(sprintf('Items Cancel request failed: %s', $exception->getMessage()));
+            throw new \BadMethodCallException(sprintf('Items Cancel request failed: %s', $exception->getMessage()));
         }
     }
 
-    public function shippingTransaction(Order $order, $transactionId, $amount): void
+    public function shippingTransaction(Order $order, $transactionId, $amount, string $identifier = null): void
     {
         try {
             $isAllowActionResponse = $this->paymentService
                 ->isActionAllowed($transactionId, self::ACTION_SHIPPING_GOODS);
             if (!empty($isAllowActionResponse['error'])) {
                 $message = $this->paymentHelper->retrieveErrorMessageFromSdkResponse($isAllowActionResponse);
-                throw new Exception($message);
+                throw new \BadMethodCallException($message);
             }
 
             $this->getLogger(__METHOD__)
                 ->setReferenceType('payeverLog')
-                ->debug('Payever::debug.paymentActionShipping', [
+                ->debug(self::LOGGER_SHIPPING_CODE, [
                     'amount' => $amount,
                 ]);
 
@@ -350,168 +368,177 @@ class PaymentActionService
                 'Ship amount',
                 null,
                 null,
-                null
+                null,
+                $identifier
             );
 
             if (!empty($shippingResult['error'])) {
                 $message = $this->paymentHelper->retrieveErrorMessageFromSdkResponse($shippingResult);
-                throw new Exception($message);
+                throw new \BadMethodCallException($message);
             }
 
             $this->getLogger(__METHOD__ . ' $shippingResult')
                 ->setReferenceType('payeverLog')
-                ->debug('Payever::debug.paymentActionShipping', [
+                ->debug(self::LOGGER_SHIPPING_CODE, [
                     'shippingResult' => $shippingResult,
                 ]);
 
             $status = $shippingResult['call']['status'];
 
-            if ($status === 'success') {
-                $orderTotal = $this->orderItemsManager->addCapturedAmount($order->id, $amount, true);
-
-                if (isset($shippingResult['result']['status'])) {
-                    $this->paymentService
-                        ->updatePlentyPayment($transactionId, $shippingResult['result']['status']);
-                }
-
-                // Save in history
-                $actionHistory = $this->actionHistoryRepository->create();
-                $actionHistory->setAction(self::ACTION_SHIPPING_GOODS);
-                $actionHistory->setOrderId($order->id);
-                $actionHistory->setSource(ActionHistory::SOURCE_ADMIN);
-                $actionHistory->setAmount($amount);
-                $actionHistory->setTimestamp(time());
-                $this->actionHistoryRepository->persist($actionHistory);
-
-                $this->getLogger(__METHOD__ . ' [SUCCESS] ' . self::ACTION_SHIPPING_GOODS)
-                    ->setReferenceType('payeverLog')
-                    ->debug('Payever::debug.paymentActionShipping', $orderTotal);
+            if ($status !== 'success') {
+                return;
             }
+
+            $orderTotal = $this->orderItemsManager->addCapturedAmount($order->id, $amount, true);
+
+            if (isset($shippingResult['result']['status'])) {
+                $this->orderProcessor->updatePlentyOrderStatus($order->id, $shippingResult['result']['status']);
+                $this->paymentProcessor->updatePlentyPaymentStatus($transactionId, $shippingResult['result']['status']);
+            }
+
+            // Save in history
+            $this->addActionHistory($order, $amount, self::ACTION_SHIPPING_GOODS);
+
+            $this->getLogger(__METHOD__ . ' [SHIPPING SUCCESS] ' . self::ACTION_SHIPPING_GOODS)
+                ->setReferenceType('payeverLog')
+                ->debug(self::LOGGER_SHIPPING_CODE, $orderTotal);
         } catch (\Exception $exception) {
-            throw new \RuntimeException(sprintf('Shipping goods action failed: %s', $exception->getMessage()));
+            throw new \BadMethodCallException(sprintf('Shipping goods action failed: %s', $exception->getMessage()));
         }
     }
 
-    public function refundTransaction(Order $order, $transactionId, $amount): void
+    public function refundTransaction(Order $order, $transactionId, $amount, string $identifier = null): void
     {
         try {
             $isAllowActionResponse = $this->paymentService
                 ->isActionAllowed($transactionId, self::ACTION_REFUND);
             if (!empty($isAllowActionResponse['error'])) {
                 $message = $this->paymentHelper->retrieveErrorMessageFromSdkResponse($isAllowActionResponse);
-                throw new Exception($message);
+                throw new \BadMethodCallException($message);
             }
 
             $this->getLogger(__METHOD__)
                 ->setReferenceType('payeverLog')
-                ->debug('Payever::debug.paymentActionRefund', [
+                ->debug(self::LOGGER_REFUND_CODE, [
                     'transactionId' => $transactionId,
                     'amount' => $amount,
                 ]);
 
 
-            $refundResult = $this->paymentService->refundPayment($transactionId, $amount);
+            $refundResult = $this->paymentService->refundPayment($transactionId, $amount, $identifier);
 
             if (!empty($refundResult['error'])) {
                 $message = $this->paymentHelper->retrieveErrorMessageFromSdkResponse($refundResult);
-                throw new Exception($message);
+                throw new \BadMethodCallException($message);
             }
 
             $this->getLogger(__METHOD__ . ' $refundResult')
                 ->setReferenceType('payeverLog')
-                ->debug('Payever::debug.paymentActionRefund', [
+                ->debug(self::LOGGER_REFUND_CODE, [
                     'refundResult' => $refundResult,
                 ]);
 
             $status = $refundResult['call']['status'];
 
-            if ($status === 'success') {
-                $orderTotal = $this->orderItemsManager->addRefundedAmount($order->id, $amount, true);
-
-                if (isset($refundResult['result']['status'])) {
-                    $this->paymentService
-                        ->updatePlentyPayment($transactionId, $refundResult['result']['status']);
-                }
-
-                // Save in history
-                $actionHistory = $this->actionHistoryRepository->create();
-                $actionHistory->setAction(self::ACTION_REFUND);
-                $actionHistory->setOrderId($order->id);
-                $actionHistory->setSource(ActionHistory::SOURCE_ADMIN);
-                $actionHistory->setAmount($amount);
-                $actionHistory->setTimestamp(time());
-                $this->actionHistoryRepository->persist($actionHistory);
-
-                $this->getLogger(__METHOD__ . ' [SUCCESS] ' . self::ACTION_REFUND)
-                    ->setReferenceType('payeverLog')
-                    ->debug('Payever::debug.paymentActionRefund', [
-                        'orderTotal' => $orderTotal,
-                        'actionHistory' => $actionHistory
-                    ]);
+            if ($status !== 'success') {
+                return;
             }
+
+            $orderTotal = $this->orderItemsManager->addRefundedAmount($order->id, $amount, true);
+
+            if (isset($refundResult['result']['status'])) {
+                $this->orderProcessor->updatePlentyOrderStatus($order->id, $refundResult['result']['status']);
+                $this->paymentProcessor->updatePlentyPaymentStatus($transactionId, $refundResult['result']['status']);
+            }
+
+            // Save in history
+            $actionHistory = $this->addActionHistory($order, $amount, self::ACTION_REFUND);
+
+            $this->getLogger(__METHOD__ . ' [REFUND SUCCESS] ' . self::ACTION_REFUND)
+                ->setReferenceType('payeverLog')
+                ->debug(self::LOGGER_REFUND_CODE, [
+                    'orderTotal' => $orderTotal,
+                    'actionHistory' => $actionHistory
+                ]);
         } catch (\Exception $exception) {
-            throw new \RuntimeException(sprintf('Refund request failed: %s', $exception->getMessage()));
+            throw new \BadMethodCallException(sprintf('Refund request failed: %s', $exception->getMessage()));
         }
     }
 
-    public function cancelTransaction(Order $order, $transactionId, $amount): void
+    public function cancelTransaction(Order $order, $transactionId, $amount, string $identifier = null): void
     {
         try {
             $isAllowActionResponse = $this->paymentService
                 ->isActionAllowed($transactionId, self::ACTION_CANCEL);
             if (!empty($isAllowActionResponse['error'])) {
                 $message = $this->paymentHelper->retrieveErrorMessageFromSdkResponse($isAllowActionResponse);
-                throw new Exception($message);
+                throw new \BadMethodCallException($message);
             }
 
             $this->getLogger(__METHOD__)
                 ->setReferenceType('payeverLog')
-                ->debug('Payever::debug.paymentActionCancel', [
+                ->debug(self::LOGGER_CANCEL_CODE, [
                     'transactionId' => $transactionId,
                     'amount' => $amount,
                 ]);
 
-            $cancelResult = $this->paymentService->cancelPayment($transactionId, $amount);
+            $cancelResult = $this->paymentService->cancelPayment($transactionId, $amount, $identifier);
 
             if (!empty($cancelResult['error'])) {
                 $message = $this->paymentHelper->retrieveErrorMessageFromSdkResponse($cancelResult);
-                throw new Exception($message);
+                throw new \BadMethodCallException($message);
             }
 
             $this->getLogger(__METHOD__ . ' $cancelResult')
                 ->setReferenceType('payeverLog')
-                ->debug('Payever::debug.paymentActionCancel', [
+                ->debug(self::LOGGER_CANCEL_CODE, [
                     'cancelResult' => $cancelResult,
                 ]);
 
             $status = $cancelResult['call']['status'];
 
-            if ($status === 'success') {
-                $orderTotal = $this->orderItemsManager->addCancelledAmount($order->id, $amount, true);
-
-                if (isset($cancelResult['result']['status'])) {
-                    $this->paymentService
-                        ->updatePlentyPayment($transactionId, $cancelResult['result']['status']);
-                }
-
-                // Save in history
-                $actionHistory = $this->actionHistoryRepository->create();
-                $actionHistory->setAction(self::ACTION_CANCEL);
-                $actionHistory->setOrderId($order->id);
-                $actionHistory->setSource(ActionHistory::SOURCE_ADMIN);
-                $actionHistory->setAmount($amount);
-                $actionHistory->setTimestamp(time());
-                $this->actionHistoryRepository->persist($actionHistory);
-
-                $this->getLogger(__METHOD__ . ' [SUCCESS] ' . self::ACTION_CANCEL)
-                    ->setReferenceType('payeverLog')
-                    ->debug('Payever::debug.paymentActionCancel', [
-                        'orderTotal' => $orderTotal,
-                        'actionHistory' => $actionHistory
-                    ]);
+            if ($status !== 'success') {
+                return;
             }
+
+            $orderTotal = $this->orderItemsManager->addCancelledAmount($order->id, $amount, true);
+
+            if (isset($cancelResult['result']['status'])) {
+                $this->orderProcessor->updatePlentyOrderStatus($order->id, $cancelResult['result']['status']);
+                $this->paymentProcessor->updatePlentyPaymentStatus($transactionId, $cancelResult['result']['status']);
+            }
+
+            // Save in history
+            $actionHistory = $this->addActionHistory($order, $amount, self::ACTION_CANCEL);
+
+            $this->getLogger(__METHOD__ . ' [CANCEL SUCCESS] ' . self::ACTION_CANCEL)
+                ->setReferenceType('payeverLog')
+                ->debug(self::LOGGER_CANCEL_CODE, [
+                    'orderTotal' => $orderTotal,
+                    'actionHistory' => $actionHistory
+                ]);
         } catch (\Exception $exception) {
-            throw new \RuntimeException(sprintf('Cancel failed: %s', $exception->getMessage()));
+            throw new \BadMethodCallException(sprintf('Cancel failed: %s', $exception->getMessage()));
         }
+    }
+
+    /**
+     * @param Order $order
+     * @param $amount
+     * @param string $action
+     * @return ActionHistory
+     */
+    private function addActionHistory(Order $order, $amount, string $action): ActionHistory
+    {
+        // Save in history
+        $actionHistory = $this->actionHistoryRepository->create();
+        $actionHistory->setAction($action);
+        $actionHistory->setOrderId($order->id);
+        $actionHistory->setSource(ActionHistory::SOURCE_ADMIN);
+        $actionHistory->setAmount($amount);
+        $actionHistory->setTimestamp(time());
+        $this->actionHistoryRepository->persist($actionHistory);
+
+        return $actionHistory;
     }
 }

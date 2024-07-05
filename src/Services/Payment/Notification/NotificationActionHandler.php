@@ -71,10 +71,11 @@ class NotificationActionHandler
     }
 
     /**
-     * @param $notificationPayment
+     * @param array $notificationPayment
+     * @param int $orderId
      * @return void
      */
-    public function handleNotificationAction($notificationPayment): void
+    public function handleNotificationAction(array $notificationPayment, int $orderId): void
     {
         $this->log(
             'debug',
@@ -91,7 +92,7 @@ class NotificationActionHandler
             throw new \UnexpectedValueException('Notification entity is invalid', 21);
         }
 
-        $order = $this->orderRepository->findOrderById($notificationPayment['reference']);
+        $order = $this->orderRepository->findOrderById($orderId);
 
         if (in_array($status, [self::STATUS_REFUNDED, self::STATUS_CANCELLED])) {
             // Handle refund by items
@@ -157,7 +158,7 @@ class NotificationActionHandler
         // Attention: `refunded_items` is historical, so update database. `refund_amount` is not historical.
         foreach ($items as $item) {
             $orderTotalItem = $this->orderItemsManager->getOrderTotalItemsByProductIdentifier(
-                (int) $order->id,
+                (int)$order->id,
                 $item['identifier'],
                 true
             );
@@ -208,7 +209,7 @@ class NotificationActionHandler
         }
 
         $totalAmount = isset($notificationPayment['total_refunded_amount'])
-            ? (float) $notificationPayment['total_refunded_amount'] : null;
+            ? (float)$notificationPayment['total_refunded_amount'] : null;
 
         if ($totalAmount) {
             $orderTotal->setRefundedTotal(round($totalAmount, 2));
@@ -227,7 +228,7 @@ class NotificationActionHandler
                     $amount,
                     $notificationPayment['refund_amount'] ?? null
                 ),
-                'items' => $items
+                'items' => $items,
             ]
         );
     }
@@ -250,7 +251,7 @@ class NotificationActionHandler
             'Handle refund amount action',
             [
                 'notificationPayment' => $notificationPayment,
-                'order' => $order
+                'order' => $order,
             ]
         );
 
@@ -261,16 +262,7 @@ class NotificationActionHandler
                 $notificationPayment['refund_amount']
             )
         ) {
-            $this->log(
-                'debug',
-                __METHOD__,
-                'Payever::debug.notificationPaymentActionRejected',
-                'Payment action was rejected because it was registered before',
-                [
-                    'order' => $order->id,
-                    'amount' => $notificationPayment['refund_amount']
-                ]
-            );
+            $this->addActionInHistoryLog($order, $notificationPayment['refund_amount']);
 
             return;
         }
@@ -281,12 +273,12 @@ class NotificationActionHandler
         $amount = $orderTotal->getRefundedTotal() + $notificationPayment['refund_amount'];
 
         $totalAmount = isset($notificationPayment['total_refunded_amount'])
-            ? (float) $notificationPayment['total_refunded_amount'] : null;
+            ? (float)$notificationPayment['total_refunded_amount'] : null;
+
+        $orderTotal->setRefundedTotal($amount);
 
         if ($totalAmount) {
             $orderTotal->setRefundedTotal(round($totalAmount, 2));
-        } else {
-            $orderTotal->setRefundedTotal($amount);
         }
 
         $orderTotal->setManual(1);
@@ -308,7 +300,7 @@ class NotificationActionHandler
             'Handle refund amount action',
             [
                 'order' => $order->id,
-                'amount' => $amount
+                'amount' => $amount,
             ]
         );
     }
@@ -331,7 +323,7 @@ class NotificationActionHandler
             'Handle cancel amount action',
             [
                 'notificationPayment' => $notificationPayment,
-                'order' => $order
+                'order' => $order,
             ]
         );
 
@@ -342,16 +334,7 @@ class NotificationActionHandler
                 $notificationPayment['cancel_amount']
             )
         ) {
-            $this->log(
-                'debug',
-                __METHOD__,
-                'Payever::debug.notificationPaymentActionRejected',
-                'Payment action was rejected because it was registered before',
-                [
-                    'order' => $order->id,
-                    'amount' => $notificationPayment['cancel_amount']
-                ]
-            );
+            $this->addActionInHistoryLog($order, $notificationPayment['cancel_amount']);
 
             return;
         }
@@ -364,15 +347,9 @@ class NotificationActionHandler
                 $notificationPayment['cancel_amount'] + $notificationPayment['delivery_fee']
             )
         ) {
-            $this->log(
-                'debug',
-                __METHOD__,
-                'Payever::debug.notificationPaymentActionRejected',
-                'Payment action was rejected because it was registered before',
-                [
-                    'order' => $order->id,
-                    'amount' => $notificationPayment['cancel_amount'] + $notificationPayment['delivery_fee']
-                ]
+            $this->addActionInHistoryLog(
+                $order,
+                $notificationPayment['cancel_amount'] + $notificationPayment['delivery_fee']
             );
 
             return;
@@ -384,14 +361,13 @@ class NotificationActionHandler
 
         // Update totals
         $totalAmount = isset($notificationPayment['total_canceled_amount'])
-            ? (float) $notificationPayment['total_canceled_amount'] : null;
+            ? (float)$notificationPayment['total_canceled_amount'] : null;
+
+        $orderTotal->setCancelledTotal($amount);
 
         if ($totalAmount) {
             $orderTotal->setCancelledTotal(round($totalAmount, 2));
-        } else {
-            $orderTotal->setCancelledTotal($amount);
         }
-
         $orderTotal->setManual(1);
         $this->orderTotalRepository->persist($orderTotal);
 
@@ -411,7 +387,7 @@ class NotificationActionHandler
             'Handle cancel amount action',
             [
                 'order' => $order->id,
-                'amount' => $amount
+                'amount' => $amount,
             ]
         );
     }
@@ -435,40 +411,15 @@ class NotificationActionHandler
             'Handle shipping items action',
             [
                 'notificationPayment' => $notificationPayment,
-                'order' => $order
+                'order' => $order,
             ]
         );
 
-        $amount = 0;
-        $items = $notificationPayment['captured_items'];
+        $capturedItems = $notificationPayment['captured_items'];
         $deliveryFee = isset($notificationPayment['delivery_fee']) ?
             round($notificationPayment['delivery_fee'], 2) : 0;
 
-        // Attention: `captured_items` is historical, so update database. `capture_amount` is not historical.
-        foreach ($items as $item) {
-            $orderTotalItem = $this->orderItemsManager->getOrderTotalItemsByProductIdentifier(
-                $order->id,
-                $item['identifier'],
-                true
-            );
-
-            if (!$orderTotalItem) {
-                $this->log(
-                    'debug',
-                    __METHOD__,
-                    'Payever::debug.notificationItemIsNotFound',
-                    'Item is not found',
-                    ['itemIdentifier' => $item['identifier']]
-                );
-
-                continue;
-            }
-
-            $orderTotalItem->setQtyCaptured($item['quantity']);
-            $this->orderTotalItemRepository->persist($orderTotalItem);
-
-            $amount += $item['price'] * $item['quantity'];
-        }
+        $amount = $this->calculateCapturedItems($order, $capturedItems);
 
         // Set historical amount
         $orderTotal = $this->orderItemsManager->getOrderTotal($order->id);
@@ -497,7 +448,7 @@ class NotificationActionHandler
         }
 
         $totalAmount = isset($notificationPayment['total_captured_amount'])
-            ? (float) $notificationPayment['total_captured_amount'] : null;
+            ? (float)$notificationPayment['total_captured_amount'] : null;
 
         if ($totalAmount) {
             $orderTotal->setCapturedTotal(round($totalAmount, 2));
@@ -515,7 +466,7 @@ class NotificationActionHandler
                 $notificationPayment['capture_amount'] ?? null
             ),
             [
-                'items' => $items
+                'items' => $capturedItems,
             ]
         );
     }
@@ -537,7 +488,7 @@ class NotificationActionHandler
             'Handle shipping amount action',
             [
                 'notificationPayment' => $notificationPayment,
-                'order' => $order
+                'order' => $order,
             ]
         );
 
@@ -548,16 +499,7 @@ class NotificationActionHandler
                 $notificationPayment['capture_amount']
             )
         ) {
-            $this->log(
-                'debug',
-                __METHOD__,
-                'Payever::debug.notificationPaymentActionRejected',
-                'Payment action was rejected because it was registered before',
-                [
-                    'order' => $order->id,
-                    'amount' => $notificationPayment['capture_amount']
-                ]
-            );
+            $this->addActionInHistoryLog($order, $notificationPayment['capture_amount']);
 
             return;
         }
@@ -568,12 +510,12 @@ class NotificationActionHandler
 
         // Update totals
         $totalAmount = isset($notificationPayment['total_captured_amount'])
-            ? (float) $notificationPayment['total_captured_amount'] : null;
+            ? (float)$notificationPayment['total_captured_amount'] : null;
+
+        $orderTotal->setCapturedTotal($amount);
 
         if ($totalAmount) {
             $orderTotal->setCapturedTotal(round($totalAmount, 2));
-        } else {
-            $orderTotal->setCapturedTotal($amount);
         }
 
         $orderTotal->setManual(1);
@@ -595,7 +537,64 @@ class NotificationActionHandler
             '[Notification] Captured amount. Amount: ' . $amount,
             [
                 'order' => $order->id,
-                'amount' => $amount
+                'amount' => $amount,
+            ]
+        );
+    }
+
+    /**
+     * @param Order $order
+     * @param array $capturedItems
+     * @return float|int
+     */
+    private function calculateCapturedItems(Order $order, array $capturedItems)
+    {
+        $amount = 0;
+
+        // Attention: `captured_items` is historical, so update database. `capture_amount` is not historical.
+        foreach ($capturedItems as $item) {
+            $orderTotalItem = $this->orderItemsManager->getOrderTotalItemsByProductIdentifier(
+                $order->id,
+                $item['identifier'],
+                true
+            );
+
+            if (!$orderTotalItem) {
+                $this->log(
+                    'debug',
+                    __METHOD__,
+                    'Payever::debug.notificationItemIsNotFound',
+                    'Item is not found',
+                    ['itemIdentifier' => $item['identifier']]
+                );
+
+                continue;
+            }
+
+            $orderTotalItem->setQtyCaptured($item['quantity']);
+            $this->orderTotalItemRepository->persist($orderTotalItem);
+
+            $amount += $item['price'] * $item['quantity'];
+        }
+
+        return $amount;
+    }
+
+    /**
+     * @param Order $order
+     * @param float $amount
+     * @return void
+     */
+    private function addActionInHistoryLog(Order $order, $amount)
+    {
+        $this->log(
+            'debug',
+            __METHOD__,
+            'Payever::debug.notificationPaymentActionRejected',
+            'Payment action was rejected because it was registered before',
+            [
+                'order' => $order->id,
+                'amount' => $amount,
             ]
         );
     }
@@ -606,8 +605,8 @@ class NotificationActionHandler
      */
     private function isRefundedItemsSet($notificationPayment): bool
     {
-        return (isset($notificationPayment['refunded_items'])
-            && count($notificationPayment['refunded_items']) > 0);
+        return isset($notificationPayment['refunded_items'])
+            && count($notificationPayment['refunded_items']) > 0;
     }
 
     /**
@@ -630,8 +629,8 @@ class NotificationActionHandler
      */
     private function isCancelAmountSet($notificationPayment): bool
     {
-        return (isset($notificationPayment['cancel_amount'])
-            && $notificationPayment['cancel_amount'] > 0);
+        return isset($notificationPayment['cancel_amount'])
+            && $notificationPayment['cancel_amount'] > 0;
     }
 
     /**
@@ -640,8 +639,8 @@ class NotificationActionHandler
      */
     private function isCapturedItemsSet($notificationPayment): bool
     {
-        return (isset($notificationPayment['captured_items'])
-            && count($notificationPayment['captured_items']) > 0);
+        return isset($notificationPayment['captured_items'])
+            && count($notificationPayment['captured_items']) > 0;
     }
 
     /**

@@ -1,6 +1,6 @@
 <?php
 
-use Payever\ExternalIntegration\Payments\Http\RequestEntity\PaymentItemEntity;
+use Payever\Sdk\Payments\Http\RequestEntity\PaymentItemEntity;
 
 require_once __DIR__ . '/PayeverSdkProvider.php';
 $payeverApi = new PayeverSdkProvider(SdkRestApi::getParam('sdkData'));
@@ -8,6 +8,7 @@ $payeverApi = new PayeverSdkProvider(SdkRestApi::getParam('sdkData'));
 $transactionId = SdkRestApi::getParam('transaction_id');
 $items = SdkRestApi::getParam('items');
 $deliveryFee = SdkRestApi::getParam('deliveryFee');
+$identifier = SdkRestApi::getParam('identifier');
 
 $paymentItems = [];
 foreach ($items as $item) {
@@ -23,5 +24,6 @@ foreach ($items as $item) {
 
 return $payeverApi
     ->getPaymentsApiClient()
-    ->cancelItemsPaymentRequest($transactionId, $paymentItems, $deliveryFee)
-    ->getResponseEntity()->toArray();
+    ->cancelItemsPaymentRequest($transactionId, $paymentItems, $deliveryFee, $identifier)
+    ->getResponseEntity()
+    ->toArray();

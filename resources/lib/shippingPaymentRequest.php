@@ -1,7 +1,7 @@
 <?php
 
-use Payever\ExternalIntegration\Payments\Http\RequestEntity\ShippingDetailsEntity;
-use Payever\ExternalIntegration\Payments\Http\RequestEntity\ShippingGoodsPaymentRequest;
+use Payever\Sdk\Payments\Http\RequestEntity\ShippingDetailsEntity;
+use Payever\Sdk\Payments\Http\RequestEntity\ShippingGoodsPaymentRequest;
 
 require_once __DIR__ . '/PayeverSdkProvider.php';
 $payeverApi = new PayeverSdkProvider(SdkRestApi::getParam('sdkData'));
@@ -15,6 +15,7 @@ $carrier = SdkRestApi::getParam('carrier');
 $trackingNumber = SdkRestApi::getParam('trackingNumber');
 $trackingUrl = SdkRestApi::getParam('trackingUrl');
 $shippingDate = SdkRestApi::getParam('shippingDate');
+$identifier = SdkRestApi::getParam('identifier');
 
 $shippingGoodsRequestEntity = new ShippingGoodsPaymentRequest();
 $shippingGoodsRequestEntity->setReason($reason);
@@ -63,7 +64,8 @@ if ($carrier) {
     $shippingGoodsRequestEntity->setShippingDetails($shippingDetailsEntity);
 }
 
-return $payeverApi->getPaymentsApiClient()
-    ->shippingGoodsPaymentRequest($transactionId, $shippingGoodsRequestEntity)
+return $payeverApi
+    ->getPaymentsApiClient()
+    ->shippingGoodsPaymentRequest($transactionId, $shippingGoodsRequestEntity, $identifier)
     ->getResponseEntity()
     ->toArray();

@@ -3,12 +3,13 @@
 namespace Payever\Procedures;
 
 use Payever\Helper\PayeverHelper;
+use Payever\Helper\PaymentActionManager;
+use Payever\Models\PaymentAction;
 use Payever\Services\PayeverService;
 use Payever\Traits\Logger;
 use Plenty\Modules\EventProcedures\Events\EventProceduresTriggered;
 use Plenty\Modules\Payment\Contracts\PaymentRepositoryContract;
 use Plenty\Modules\Payment\Models\PaymentProperty;
-use Plenty\Plugin\Log\Loggable;
 
 class ReturnEventProcedure
 {
@@ -19,7 +20,7 @@ class ReturnEventProcedure
      * @param PayeverService $paymentService
      * @param PaymentRepositoryContract $paymentContract
      * @param PayeverHelper $paymentHelper
-     * @throws \Exception
+     * @param PaymentActionManager $paymentActionManager
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
@@ -27,7 +28,8 @@ class ReturnEventProcedure
         EventProceduresTriggered $eventTriggered,
         PayeverService $paymentService,
         PaymentRepositoryContract $paymentContract,
-        PayeverHelper $paymentHelper
+        PayeverHelper $paymentHelper,
+        PaymentActionManager $paymentActionManager
     ) {
         $orderId = false;
         $order = $eventTriggered->getOrder();
@@ -55,7 +57,7 @@ class ReturnEventProcedure
                 []
             )->setReferenceValue($orderId);
 
-            throw new \Exception('Return payever payment failed! The given order is invalid!');
+            throw new \UnexpectedValueException('Return payever payment failed! The given order is invalid!');
         }
 
         $amount = 0;
@@ -67,62 +69,82 @@ class ReturnEventProcedure
 
         $payments = $paymentContract->getPaymentsByOrderId($orderId);
         foreach ($payments as $payment) {
-            if ($paymentHelper->isPayeverPaymentMopId($payment->mopId)) {
-                $transactionId = $paymentHelper->getPaymentPropertyValue(
-                    $payment,
-                    PaymentProperty::TYPE_TRANSACTION_ID
-                );
+            if (!$paymentHelper->isPayeverPaymentMopId($payment->mopId)) {
+                return;
+            }
+
+            $transactionId = $paymentHelper->getPaymentPropertyValue(
+                $payment,
+                PaymentProperty::TYPE_TRANSACTION_ID
+            );
+
+            $this->log(
+                'debug',
+                __METHOD__,
+                'Payever::debug.transactionData',
+                'ReturnEventProcedure: TransactionId: ' . $transactionId,
+                []
+            )->setReferenceValue($orderId);
+
+            if ($transactionId) {
+                $transaction = $paymentService->getTransaction($transactionId);
 
                 $this->log(
                     'debug',
                     __METHOD__,
                     'Payever::debug.transactionData',
-                    'ReturnEventProcedure: TransactionId: ' . $transactionId,
-                    []
-                )->setReferenceValue($orderId);
+                    'Transaction',
+                    [
+                        ['transaction' => $transaction]
+                    ]
+                )->setReferenceValue($transactionId);
 
-                if ($transactionId) {
-                    $transaction = $paymentService->getTransaction($transactionId);
+                // partial cancel
+                if ($paymentHelper->isAllowedTransaction($transaction, 'cancel')) {
+                    $identifier = $paymentActionManager->generateIdentifier();
+                    $paymentActionManager->addAction(
+                        $orderId,
+                        $identifier,
+                        PayeverService::ACTION_CANCEL,
+                        PaymentAction::SOURCE_EXTERNAL,
+                        $amount
+                    );
+
+                    $cancelResult = $paymentService->cancelPayment($transactionId, $amount);
 
                     $this->log(
                         'debug',
                         __METHOD__,
-                        'Payever::debug.transactionData',
-                        'Transaction',
+                        'Payever::debug.cancelResponse',
+                        'Cancel response',
                         [
-                            ['transaction' => $transaction]
+                            ['cancelResult' => $cancelResult]
                         ]
                     )->setReferenceValue($transactionId);
+                }
 
-                    // partial cancel
-                    if ($paymentHelper->isAllowedTransaction($transaction, 'cancel')) {
-                        $cancelResult = $paymentService->cancelPayment($transactionId, $amount);
+                // partial refund
+                if ($paymentHelper->isAllowedTransaction($transaction, 'refund')) {
+                    $identifier = $paymentActionManager->generateIdentifier();
+                    $paymentActionManager->addAction(
+                        $orderId,
+                        $identifier,
+                        PayeverService::ACTION_REFUND,
+                        PaymentAction::SOURCE_EXTERNAL,
+                        $amount
+                    );
 
-                        $this->log(
-                            'debug',
-                            __METHOD__,
-                            'Payever::debug.cancelResponse',
-                            'Cancel response',
-                            [
-                                ['cancelResult' => $cancelResult]
-                            ]
-                        )->setReferenceValue($transactionId);
-                    }
+                    $refundResult = $paymentService->refundPayment($transactionId, $amount, $identifier);
 
-                    // partial refund
-                    if ($paymentHelper->isAllowedTransaction($transaction, 'refund')) {
-                        $refundResult = $paymentService->refundPayment($transactionId, $amount);
-
-                        $this->log(
-                            'debug',
-                            __METHOD__,
-                            'Payever::debug.refundResponse',
-                            'Refund response',
-                            [
-                                ['refundResult' => $refundResult]
-                            ]
-                        )->setReferenceValue($transactionId);
-                    }
+                    $this->log(
+                        'debug',
+                        __METHOD__,
+                        'Payever::debug.refundResponse',
+                        'Refund response',
+                        [
+                            ['refundResult' => $refundResult]
+                        ]
+                    )->setReferenceValue($transactionId);
                 }
             }
         }

@@ -7,10 +7,10 @@ use Plenty\Plugin\Controller;
 use Plenty\Plugin\Http\Request;
 use Plenty\Plugin\Http\Response;
 use Plenty\Plugin\Log\Loggable;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 /**
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * Class OrderController
  */
 class OrderController extends Controller
 {
@@ -34,7 +34,6 @@ class OrderController extends Controller
     /**
      * @param Request $request
      * @param OrderItemsManager $orderItemsManager
-     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         Request $request,
@@ -47,9 +46,9 @@ class OrderController extends Controller
     }
 
     /**
-     * @return array|\Symfony\Component\HttpFoundation\Response
+     * @return SymfonyResponse
      */
-    public function getOrderTotals(): array|\Symfony\Component\HttpFoundation\Response
+    public function getOrderTotals(): SymfonyResponse
     {
         $page = $this->request->get('page');
         $itemsPerPage = $this->request->get('itemsPerPage');
@@ -60,9 +59,9 @@ class OrderController extends Controller
     }
 
     /**
-     * @return array|\Symfony\Component\HttpFoundation\Response
+     * @return SymfonyResponse
      */
-    public function getOrderTotalItems(): array|\Symfony\Component\HttpFoundation\Response
+    public function getOrderTotalItems(): SymfonyResponse
     {
         $orderId = $this->request->get('orderId');
         $action = $this->request->get('action');

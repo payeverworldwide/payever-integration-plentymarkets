@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/PayeverSdkProvider.php';
 
-use Payever\ExternalIntegration\Payments\Http\RequestEntity\CreatePaymentRequest;
+use Payever\Sdk\Payments\Http\RequestEntity\CreatePaymentRequest;
 
 $payeverApi = new PayeverSdkProvider(SdkRestApi::getParam('sdkData'));
 

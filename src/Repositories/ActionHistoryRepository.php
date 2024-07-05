@@ -23,28 +23,25 @@ class ActionHistoryRepository implements ActionHistoryRepositoryContract
 
     /**
      * @inheritDoc
+     * @codeCoverageIgnore
      */
     public function create(): ActionHistory
     {
-        /** @var ActionHistory $actionHistory */
-        $actionHistory = pluginApp(ActionHistory::class);
-
-        return $actionHistory;
+        return pluginApp(ActionHistory::class);
     }
 
     /**
      * @inheritDoc
+     * @codeCoverageIgnore
      */
     public function persist(ActionHistory $actionHistory): ActionHistory
     {
-        /** @var ActionHistory $result */
-        $result = $this->dataBase->save($actionHistory);
-
-        return $result;
+        return $this->dataBase->save($actionHistory);
     }
 
     /**
      * @inheritDoc
+     * @codeCoverageIgnore
      */
     public function delete(ActionHistory $actionHistory): bool
     {
@@ -61,7 +58,9 @@ class ActionHistoryRepository implements ActionHistoryRepositoryContract
         $query->where('orderId', '=', $orderId);
         $rows = $query->get();
         if (!empty($rows[0]) && $rows[0] instanceof ActionHistory) {
+            // @codeCoverageIgnoreStart
             $result = $rows[0];
+            // @codeCoverageIgnoreEnd
         }
 
         return $result;

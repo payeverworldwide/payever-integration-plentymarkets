@@ -23,6 +23,7 @@ class OrderTotalItemRepository implements OrderTotalItemRepositoryContract
 
     /**
      * @inheritDoc
+     * @codeCoverageIgnore
      */
     public function create($orderItem): OrderTotalItem
     {
@@ -53,17 +54,16 @@ class OrderTotalItemRepository implements OrderTotalItemRepositoryContract
 
     /**
      * @inheritDoc
+     * @codeCoverageIgnore
      */
     public function persist(OrderTotalItem $orderTotalItem): OrderTotalItem
     {
-        /** @var OrderTotalItem $result */
-        $result = $this->dataBase->save($orderTotalItem);
-
-        return $result;
+        return $this->dataBase->save($orderTotalItem);
     }
 
     /**
      * @inheritDoc
+     * @codeCoverageIgnore
      */
     public function delete(OrderTotalItem $orderTotalItem): bool
     {

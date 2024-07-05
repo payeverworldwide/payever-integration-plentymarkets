@@ -1,11 +1,11 @@
 <?php
 
-use Payever\ExternalIntegration\Core\Enum\ChannelSet;
-use Payever\ExternalIntegration\Plugins\Enum\PluginCommandNameEnum;
-use Payever\ExternalIntegration\Plugins\Base\PluginRegistryInfoProviderInterface;
+use Payever\Sdk\Core\Enum\ChannelSet;
+use Payever\Sdk\Plugins\Enum\PluginCommandNameEnum;
+use Payever\Sdk\Plugins\Base\PluginRegistryInfoProviderInterface;
 
-class PluginRegistryInfoProvider implements PluginRegistryInfoProviderInterface {
-
+class PluginRegistryInfoProvider implements PluginRegistryInfoProviderInterface
+{
     protected $data;
 
     public function __construct($data)
@@ -16,35 +16,40 @@ class PluginRegistryInfoProvider implements PluginRegistryInfoProviderInterface 
     /**
      * @inheritDoc
      */
-    public function getPluginVersion() {
+    public function getPluginVersion()
+    {
         return $this->data['pluginVersion'];
     }
 
     /**
      * @inheritDoc
      */
-    public function getCmsVersion() {
+    public function getCmsVersion()
+    {
         return 'plentymarkets 7';
     }
 
     /**
      * @inheritDoc
      */
-    public function getHost() {
+    public function getHost()
+    {
         return $this->data['host'];
     }
 
     /**
      * @inheritDoc
      */
-    public function getChannel() {
+    public function getChannel()
+    {
         return ChannelSet::CHANNEL_PLENTYMARKETS;
     }
 
     /**
      * @inheritDoc
      */
-    public function getSupportedCommands() {
+    public function getSupportedCommands()
+    {
         return [
             PluginCommandNameEnum::SET_SANDBOX_HOST,
             PluginCommandNameEnum::SET_LIVE_HOST,
@@ -54,14 +59,16 @@ class PluginRegistryInfoProvider implements PluginRegistryInfoProviderInterface 
     /**
      * @inheritDoc
      */
-    public function getCommandEndpoint() {
+    public function getCommandEndpoint()
+    {
         return $this->data['commandEndpoint'];
     }
 
     /**
      * @inheritDoc
      */
-    public function getBusinessIds() {
+    public function getBusinessIds()
+    {
         return [
             $this->data['slug']
         ];

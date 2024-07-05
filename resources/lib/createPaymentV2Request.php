@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/PayeverSdkProvider.php';
 
-use Payever\ExternalIntegration\Payments\Http\RequestEntity\CreatePaymentV2Request;
+use Payever\Sdk\Payments\Http\RequestEntity\CreatePaymentV2Request;
 
 $payeverApi = new PayeverSdkProvider(SdkRestApi::getParam('sdkData'));
 
@@ -16,6 +16,7 @@ $paymentRequest
     ->setFee($params['fee'])
     ->setOrderId($params['order_id'])
     ->setCurrency($params['currency'])
+    ->setLocale($params['locale'])
     ->setPaymentMethod($params['payment_method'])
     ->setCart(json_encode($params['cart']));
 
@@ -28,7 +29,9 @@ $paymentRequest->setEmail($params['email'])
 $paymentRequest->setShippingAddress(json_encode($params['shipping_address']));
 $paymentRequest->setBillingAddress(json_encode($params['billing_address']));
 
-$paymentRequest->setSuccessUrl($params['success_url'])
+$paymentRequest
+    ->setSuccessUrl($params['success_url'])
+    ->setPendingUrl($params['pending_url'])
     ->setFailureUrl($params['failure_url'])
     ->setCancelUrl($params['cancel_url'])
     ->setNoticeUrl($params['notice_url']);
