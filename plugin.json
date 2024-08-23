@@ -3,7 +3,7 @@
   "marketplaceName"   : {"de":"payever Checkout","en":"payever Checkout"},
   "namespace"         : "Payever",
   "type"              : "payment",
-  "version"           : "3.1.0",
+  "version"           : "3.2.0",
   "license"           : "GNU AFFERO GENERAL PUBLIC LICENSE",
   "isClosedSource"    : false,
   "pluginIcon"        : "icon_plugin_xs.png",
@@ -51,13 +51,14 @@
     "php": ">=7.3 <8.1"
   },
   "dependencies": {
-    "payever/core-sdk-php": "1.2.0",
-    "payever/plugins-sdk-php": "1.2.1",
-    "payever/payments-sdk-php": "1.5.0",
-    "payever/products-sdk-php": "1.1.0"
+    "payever/core-sdk-php": "2.0.0",
+    "payever/plugins-sdk-php": "2.0.0",
+    "payever/payments-sdk-php": "2.2.0",
+    "payever/products-sdk-php": "2.0.0",
+    "psr/log": "^1 || ^2 || ^3"
   },
   "runOnBuild"        : [
-    "Payever\\Migrations\\CreatePayeverPaymentMethods11",
+    "Payever\\Migrations\\CreatePayeverPaymentMethods12",
     "Payever\\Migrations\\CreatePayeverConfigTable",
     "Payever\\Migrations\\CreatePendingPaymentTable",
     "Payever\\Migrations\\CreateLogTable",

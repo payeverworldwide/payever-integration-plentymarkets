@@ -84,6 +84,8 @@ class ConfigController extends Controller
             'fee' => 'fixed_fee',
             'min_order_total' => 'min',
             'max_order_total' => 'max',
+            'is_submit_method' => 'is_submit_method',
+            'is_b2b_method' => 'is_b2b_method',
         ];
 
         $apiParameters = [];

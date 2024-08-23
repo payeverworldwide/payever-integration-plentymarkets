@@ -50,6 +50,8 @@ class PayeverService
     const ACTION_CANCEL = 'cancel';
     const ACTION_REFUND = 'refund';
     const ACTION_SHIPPING_GOODS = 'shipping_goods';
+    const API_V2 = 2;
+    const API_V3 = 3;
 
     /**
      * @var AccountService
@@ -158,6 +160,7 @@ class PayeverService
      * @param PayeverHelper $paymentHelper
      * @param PaymentRepositoryContract $paymentContract
      * @param RoutesHelper $routesHelper
+     *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
@@ -219,10 +222,36 @@ class PayeverService
      * @param string $method
      * @return bool
      */
-    public function isSubmitMethod(string $method): bool
+    public function isRedirectMethod(string $method): bool
     {
         if ($this->config->has('Payever.' . $method . '.redirect_method')) {
             return (bool)$this->config->get('Payever.' . $method . '.redirect_method');
+        }
+
+        return false;
+    }
+
+    /**
+     * @param string $method
+     * @return bool
+     */
+    public function isSubmitMethod(string $method): bool
+    {
+        if ($this->config->has('Payever.' . $method . '.is_submit_method')) {
+            return (bool)$this->config->get('Payever.' . $method . '.is_submit_method');
+        }
+
+        return false;
+    }
+
+    /**
+     * @param string $method
+     * @return bool
+     */
+    public function isB2BMethod(string $method): bool
+    {
+        if ($this->config->has('Payever.' . $method . '.is_b2b_method')) {
+            return (bool)$this->config->get('Payever.' . $method . '.is_b2b_method');
         }
 
         return false;
@@ -297,7 +326,7 @@ class PayeverService
                 // @codeCoverageIgnoreEnd
             }
 
-            $checkoutMode = $this->isSubmitMethod($method)
+            $checkoutMode = $this->isRedirectMethod($method)
                 ? self::REDIRECT_MODE
                 : $this->config->get('Payever.redirect_to_payever');
             switch ($checkoutMode) {
@@ -346,10 +375,25 @@ HTML;
      * @param Basket $basket
      * @param string $method
      * @param null $orderId
+     * @param string $shippingProvider
+     * @param string $shippingProfileName
      * @return mixed
      */
-    public function processCreatePaymentRequest(Basket $basket, string $method, $orderId = null)
+    public function processCreatePaymentRequest(
+        Basket $basket,
+        string $method,
+        $orderId = null,
+        string $shippingProvider= '',
+        string $shippingProfileName = ''
+    )
     {
+        $this->log(
+            'info',
+            __METHOD__,
+            'Payever::debug.processCreatePaymentRequest',
+            'createPaymentRequest start'
+        );
+
         $contactId = $this->accountService->getAccountContactId();
         $feeAmount = $this->getFeeAmount($basket->basketAmount, $method);
 
@@ -379,11 +423,14 @@ HTML;
             'failure_url' => $this->routesHelper->getFailureURL(),
             'cancel_url' => $this->routesHelper->getCancelURL(),
             'notice_url' => $this->routesHelper->getNoticeURL(),
+            'shipping_method' => $shippingProvider,
+            'shipping_title' => $shippingProvider . ' - ' . $shippingProfileName,
+            'client_ip' => $this->payeverHelper->getClientIP()
         ];
         $payeverPaymentId = '';
 
         $paymentParameters['billing_address'] = $billingAddress;
-        $paymentParameters['force_redirect'] = $this->isSubmitMethod($method);
+        $paymentParameters['force_redirect'] = $this->isRedirectMethod($method);
 
         $this->log(
             'debug',
@@ -393,16 +440,13 @@ HTML;
             ['paymentParameters' => $paymentParameters]
         );
 
-        $paymentResponse = $this->sdkService->call(
-            'createPaymentV2Request',
-            ['payment_parameters' => $paymentParameters]
-        );
+        $paymentResponse = $this->createPayment($method, $paymentParameters);
 
         $this->log(
             'debug',
             __METHOD__,
             'Payever::debug.processCreatePaymentRequest',
-            'createPaymentV2Request Response',
+            'createPaymentRequest Response',
             ['paymentResponse' => $paymentResponse]
         );
 
@@ -451,7 +495,9 @@ HTML;
         $createPaymentResponse = $this->processCreatePaymentRequest(
             $basket,
             $method,
-            $orderData->order->id
+            $orderData->order->id,
+            $orderData->shippingProvider,
+            $orderData->shippingProfileName
         );
 
         if (!empty($createPaymentResponse['error'])) {
@@ -537,7 +583,9 @@ HTML;
 
                 $basketItem = [
                     'name' => utf8_encode($itemText->first()->name1),
-                    'price' => $basketItemPrice,
+					'price' => $basketItemPrice,
+                    'unit_price' => $basketItemPrice,
+                    'total_amount' => $basketItemPrice * (int) $basketItem->quantity,
                     'quantity' => (int)$basketItem->quantity,
                     'identifier' => (string)$basketItem->variationId,
                     'vatRate' => (float)$basketItem->vat,
@@ -917,6 +965,33 @@ HTML;
         return $this->paymentHelper->getPaymentPropertyValue(
             $payment,
             PaymentProperty::TYPE_TRANSACTION_ID
+        );
+    }
+
+    /**
+     * @param $method
+     * @param $paymentParameters
+     * @return mixed
+     */
+    private function createPayment($method, $paymentParameters)
+    {
+        if (self::API_V2 === (int)$this->config->get('Payever.api_version')) {
+            return $this->sdkService->call(
+                'createPaymentV2Request',
+                ['payment_parameters' => $paymentParameters]
+            );
+        }
+
+        if ($this->isSubmitMethod($method)) {
+            return $this->sdkService->call(
+                'submitPaymentV3Request',
+                ['payment_parameters' => $paymentParameters]
+            );
+        }
+
+        return $this->sdkService->call(
+            'createPaymentV3Request',
+            ['payment_parameters' => $paymentParameters]
         );
     }
 }

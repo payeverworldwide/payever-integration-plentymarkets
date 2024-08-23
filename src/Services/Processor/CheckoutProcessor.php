@@ -118,7 +118,7 @@ class CheckoutProcessor
                 __METHOD__,
                 'Payever::debug::placingOrderError',
                 'Exception: ' . $e->getMessage(),
-                [$e]
+                [$e->getMessage(), $e->getTraceAsString()]
             )->setReferenceValue($paymentId);
 
             throw $e;

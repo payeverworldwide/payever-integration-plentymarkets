@@ -8,6 +8,10 @@ use Payever\Methods\IdealPaymentMethod;
 use Payever\Methods\SantanderinstfiPaymentMethod;
 use Payever\Methods\ZiniaBnplPaymentMethod;
 use Payever\Methods\ZiniaBnplDePaymentMethod;
+use Payever\Methods\ZiniaInstallmentPaymentMethod;
+use Payever\Methods\ZiniaInstallmentDePaymentMethod;
+use Payever\Methods\ZiniaSliceThreePaymentMethod;
+use Payever\Methods\ZiniaSliceThreeDePaymentMethod;
 use Payever\Methods\PayexcreditcardPaymentMethod;
 use Payever\Methods\PayexfakturaPaymentMethod;
 use Payever\Methods\PaymillcreditcardPaymentMethod;
@@ -53,7 +57,7 @@ class PayeverHelper
     const LIVE_URL_CONFIG_KEY = 'live_url';
     const API_VERSION_KEY  = 'api_version';
 
-    const PLUGIN_VERSION = '3.1.0';
+    const PLUGIN_VERSION = '3.2.0';
 
     const ACTION_PREFIX = "action.";
 
@@ -172,6 +176,22 @@ class PayeverHelper
         'ZINIA_BNPL_DE' => [
             'class' => ZiniaBnplDePaymentMethod::class,
             'name' => 'Zinia BNPL DE',
+        ],
+        'ZINIA_INSTALLMENT' => [
+            'class' => ZiniaInstallmentPaymentMethod::class,
+            'name' => 'Zinia Installment',
+        ],
+        'ZINIA_INSTALLMENT_DE' => [
+            'class' => ZiniaInstallmentDePaymentMethod::class,
+            'name' => 'Zinia Installment DE',
+        ],
+        'ZINIA_SLICE_THREE' => [
+            'class' => ZiniaSliceThreePaymentMethod::class,
+            'name' => 'Zinia Slice Three',
+        ],
+        'ZINIA_SLICE_THREE_DE' => [
+            'class' => ZiniaSliceThreeDePaymentMethod::class,
+            'name' => 'Zinia Slice Three DE',
         ],
         'IVY' => [
             'class' => IvyPaymentMethod::class,
@@ -530,5 +550,34 @@ class PayeverHelper
         }
 
         return $message;
+    }
+
+    public function getClientIP()
+    {
+        if (isset($_SERVER['HTTP_CLIENT_IP'])) {
+            return $_SERVER['HTTP_CLIENT_IP'];
+        }
+
+        if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            return $_SERVER['HTTP_X_FORWARDED_FOR'];
+        }
+
+        if (isset($_SERVER['HTTP_X_FORWARDED'])) {
+            return $_SERVER['HTTP_X_FORWARDED'];
+        }
+
+        if (isset($_SERVER['HTTP_FORWARDED_FOR'])) {
+            return $_SERVER['HTTP_FORWARDED_FOR'];
+        }
+
+        if (isset($_SERVER['HTTP_FORWARDED'])) {
+            return $_SERVER['HTTP_FORWARDED'];
+        }
+
+        if (isset($_SERVER['REMOTE_ADDR'])) {
+            return $_SERVER['REMOTE_ADDR'];
+        }
+
+        return false;
     }
 }

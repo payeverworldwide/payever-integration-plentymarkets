@@ -70,7 +70,13 @@ trait Logger
         return $logger;
     }
 
-    protected function applyPlentyLog(LoggerContract $logger, $level, $code, $context)
+    /**
+     * @param LoggerContract $logger
+     * @param string $level
+     * @param string $code
+     * @param mixed|null $context
+     */
+    protected function applyPlentyLog($logger, $level, $code, $context)
     {
         switch ($level) {
             default:

@@ -2385,6 +2385,506 @@ class PayeverAssistant extends WizardProvider
                                 ],
                             ]
                         ],
+                        // Zinia Installment
+                        [
+                            'title' => 'Assistant.ZiniaInstallmentTab',
+                            'description' => 'Assistant.ZiniaInstallmentTab',
+                            'form' => [
+                                'zinia_installment.active' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverActiveLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'zinia_installment.title' => [
+                                    'type' => 'text',
+                                    'defaultValue' => 'Zinia installment NL',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverTitleLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_installment.description' => [
+                                    'type' => 'text',
+                                    'defaultValue' => 'Zinia installment NL', //phpcs:ignore
+                                    'options' => [
+                                        'name' => 'Assistant.payeverDescriptionLabel',
+                                        'required' => false,
+                                    ]
+                                ],
+                                'zinia_installment.redirect_method' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverRedirectMethod',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'zinia_installment.accept_fee' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAcceptFeeLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'zinia_installment.fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_installment.variable_fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverVariableFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_installment.min_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '50',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMinOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_installment.max_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '750',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMaxOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_installment.allowed_countries' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['NL'],
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCountries',
+                                        'checkboxValues' => $this->getCountriesList(['NL']),
+                                    ]
+                                ],
+                                'zinia_installment.allowed_currencies' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['EUR'],
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCurrencies',
+                                        'checkboxValues' => $this->getCurrenciesList(['EUR']),
+                                    ]
+                                ],
+                            ]
+                        ],
+                        // Zinia Installment DE
+                        [
+                            'title' => 'Assistant.ZiniaInstallmentDETab',
+                            'description' => 'Assistant.ZiniaInstallmentDETab',
+                            'form' => [
+                                'zinia_installment_de.active' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverActiveLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'zinia_installment_de.title' => [
+                                    'type' => 'text',
+                                    'defaultValue' => 'Zinia installment DE',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverTitleLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_installment_de.description' => [
+                                    'type' => 'text',
+                                    'defaultValue' => 'Zinia installment DE', //phpcs:ignore
+                                    'options' => [
+                                        'name' => 'Assistant.payeverDescriptionLabel',
+                                        'required' => false,
+                                    ]
+                                ],
+                                'zinia_installment_de.redirect_method' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverRedirectMethod',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'zinia_installment_de.accept_fee' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAcceptFeeLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'zinia_installment_de.fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_installment_de.variable_fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverVariableFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_installment_de.min_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '50',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMinOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_installment_de.max_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '750',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMaxOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_installment_de.allowed_countries' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['DE'],
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCountries',
+                                        'checkboxValues' => $this->getCountriesList(['DE']),
+                                    ]
+                                ],
+                                'zinia_installment_de.allowed_currencies' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['EUR'],
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCurrencies',
+                                        'checkboxValues' => $this->getCurrenciesList(['EUR']),
+                                    ]
+                                ],
+                            ]
+                        ],
+                        // Zinia Slice Three
+                        [
+                            'title' => 'Assistant.ZiniaSliceThreeTab',
+                            'description' => 'Assistant.ZiniaSliceThreeTab',
+                            'form' => [
+                                'zinia_slice_three.active' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverActiveLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'zinia_slice_three.title' => [
+                                    'type' => 'text',
+                                    'defaultValue' => 'Zinia slice in 3 NL',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverTitleLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_slice_three.description' => [
+                                    'type' => 'text',
+                                    'defaultValue' => 'Zinia slice in 3 NL',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverDescriptionLabel',
+                                        'required' => false,
+                                    ]
+                                ],
+                                'zinia_slice_three.redirect_method' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverRedirectMethod',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'zinia_slice_three.accept_fee' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAcceptFeeLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'zinia_slice_three.fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_slice_three.variable_fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverVariableFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_slice_three.min_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '50',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMinOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_slice_three.max_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '750',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMaxOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_slice_three.allowed_countries' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['NL'],
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCountries',
+                                        'checkboxValues' => $this->getCountriesList(['NL']),
+                                    ]
+                                ],
+                                'zinia_slice_three.allowed_currencies' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['EUR'],
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCurrencies',
+                                        'checkboxValues' => $this->getCurrenciesList(['EUR']),
+                                    ]
+                                ],
+                            ]
+                        ],
+                        // Zinia Slice Three DE
+                        [
+                            'title' => 'Assistant.ZiniaSliceThreeDETab',
+                            'description' => 'Assistant.ZiniaSliceThreeDETab',
+                            'form' => [
+                                'zinia_slice_three_de.active' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverActiveLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'zinia_slice_three_de.title' => [
+                                    'type' => 'text',
+                                    'defaultValue' => 'Zinia slice in 3 DE',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverTitleLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_slice_three_de.description' => [
+                                    'type' => 'text',
+                                    'defaultValue' => 'Zinia slice in 3 DE',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverDescriptionLabel',
+                                        'required' => false,
+                                    ]
+                                ],
+                                'zinia_slice_three_de.redirect_method' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverRedirectMethod',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'zinia_slice_three_de.accept_fee' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAcceptFeeLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'zinia_slice_three_de.fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_slice_three_de.variable_fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverVariableFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_slice_three_de.min_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '50',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMinOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_slice_three_de.max_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '750',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMaxOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_slice_three_de.allowed_countries' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['DE'],
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCountries',
+                                        'checkboxValues' => $this->getCountriesList(['DE']),
+                                    ]
+                                ],
+                                'zinia_slice_three_de.allowed_currencies' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['EUR'],
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCurrencies',
+                                        'checkboxValues' => $this->getCurrenciesList(['EUR']),
+                                    ]
+                                ],
+                            ]
+                        ],
                         // Swedbank Credit Card
                         [
                             'title' => 'Assistant.SwedbankCreditCardTab',

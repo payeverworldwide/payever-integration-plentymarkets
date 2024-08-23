@@ -3,7 +3,7 @@
 namespace Payever\Methods;
 
 /**
- * Class OpenbankPaymentMethod
+ * Class ZiniaBnplDePaymentMethod
  * @package Payever\Methods
  */
 class ZiniaBnplDePaymentMethod extends AbstractPaymentMethod
