@@ -4,6 +4,16 @@
 
 This is the official **payever** plugin developed by payever GmbH. Integrate the payment method **payever** in your plentymarkets 7 online store.
 
+## Shop installation 
+- Get demo shop from https://www.plentymarkets.com/ or use our's.
+
+## Plugin installation and Configuation
+- use Guide.pdf
+
+## Dev docs
+- https://developers.plentymarkets.com/en-gb/developers/main/tutorial/getting-started.html
+- dev tools https://developers.plentymarkets.com/en-gb/plentydevtool/main/plentydevtool-introduction.html
+
 ## Requirements
 
 This is a plugin for [plentymarkets 7](https://www.plentymarkets.com). A layout plugin is required in order to integrate this payment method in your online store. We recommend using the plentymarkets plugin [Ceres](https://github.com/plentymarkets/plugin-ceres).
@@ -47,3 +57,16 @@ The gateway will add all payment options that are enabled in the payever account
 ## License
 
 This project is licensed under the GNU AFFERO GENERAL PUBLIC LICENSE - see the [LICENSE.md](/LICENSE.md) file for details.
+
+
+## Testing
+
+### Unittest
+- simple unittest `./vendor/bin/phpunit -c phpunit.xml`
+- HTML codecov report (xdebug php module require) `php -d xdebug.mode=coverage ./vendor/bin/phpunit -c ./phpunit.xml --coverage-html /var/www/html/clover`
+
+### Phpmd https://phpmd.org/documentation/
+- `./vendor/bin/phpmd src/ text ./phpmd.xml`
+
+### Phpcs
+- `./vendor/bin/phpcs --standard=./phpcs.xml src/`

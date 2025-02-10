@@ -24,6 +24,7 @@ class CancelEventProcedure
      * @param PayeverHelper $paymentHelper
      * @param PaymentActionManager $paymentActionManager
      * @SuppressWarnings(PHPMD.StaticAccess)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function run(
         EventProceduresTriggered $eventTriggered,

@@ -123,6 +123,10 @@ class ConfigController extends Controller
             $updatedConfig[$methodConfigKey] = $updatedConfig[$methodConfigKey] ?? 0;
         }
 
+        $isB2bSearchActive = (int) $this->sdkService->call('isB2bSearchActiveRequest', $apiParameters);
+
+        $updatedConfig[PayeverHelper::COMPANY_SEARCH_CONFIG_KEY] = $isB2bSearchActive;
+
         return $this->response->json([
             'result' => $updatedConfig,
             'errors' => !empty($paymentOptions['error'])

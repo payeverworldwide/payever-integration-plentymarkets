@@ -37,17 +37,24 @@ class PaymentController extends Controller
         Twig $twig
     ) {
         try {
+            $iframeUrl = $sessionStorage->getPlugin()->getValue('payever_iframe_url');
+
             if ($sessionStorage->getPlugin()->getValue('payever_order_before_payment')) {
                 $method = (string)$request->get('method');
                 $iframeUrl = $payeverService->processOrderPayment($method);
-            } else {
-                $iframeUrl = $sessionStorage->getPlugin()->getValue('payever_iframe_url');
             }
+
         } catch (Exception $exception) {
             $response = pluginApp(Response::class);
             $notificationService->warn($exception->getMessage());
 
             return $response->redirectTo('checkout');
+        }
+
+        if ($payeverService->isSubmitMethod($method)) {
+            $response = pluginApp(Response::class);
+
+            return $response->redirectTo($iframeUrl);
         }
 
         return $twig->render('Payever::Checkout.Iframe', ['iframe_url' => $iframeUrl]);

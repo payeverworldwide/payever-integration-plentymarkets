@@ -138,7 +138,8 @@ function payeverUpdateConfig(pluginSetId, updateSourceCallback) {
             incrementId = payeverConfig.slice().sort(function (a, b) { return a.id > b.id; }).shift().id;
 
         $.each(payeverConfig, function (index, item) {
-            if (syncResult.hasOwnProperty(item.key) && item.value != syncResult[item.key]) {
+
+            if (syncResult.hasOwnProperty(item.key) && item.value !== syncResult[item.key]) {
                 if (!item.id) {
                     payeverConfig[index].id = ++incrementId;
                 }
@@ -191,7 +192,8 @@ function payeverSetupSandbox() {
                 "environment": "0",
                 "clientId": "1454_2ax8i5chkvggc8w00g8g4sk80ckswkw0c8k8scss40o40ok4sk",
                 "clientSecret": "22uvxi05qlgk0wo8ws8s44wo8ccg48kwogoogsog4kg4s8k8k",
-                "slug": "payever"
+                "slug": "payever",
+                "is_company_search_on": 0
             }
         }
     });

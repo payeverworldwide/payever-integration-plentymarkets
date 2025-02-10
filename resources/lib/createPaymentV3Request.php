@@ -1,13 +1,12 @@
 <?php
 
+require_once __DIR__ . '/constants.php';
 require_once __DIR__ . '/PayeverSdkProvider.php';
 
 use Payever\Sdk\Payments\Http\MessageEntity\PurchaseEntity;
 use Payever\Sdk\Payments\Http\MessageEntity\ShippingOptionEntity;
 use Payever\Sdk\Payments\Http\RequestEntity\CreatePaymentV3Request;
-
-const CUSTOMER_PERSON_ACCOUNT_TYPE = 'person';
-const CUSTOMER_ORGANIZATION_ACCOUNT_TYPE = 'organization';
+use Payever\Sdk\Payments\Http\MessageEntity\CompanyEntity;
 
 $payeverApi = new PayeverSdkProvider(SdkRestApi::getParam('sdkData'));
 
@@ -25,8 +24,12 @@ $customerEntity->setType(CUSTOMER_PERSON_ACCOUNT_TYPE)
     ->setPhone($params['phone'])
     ->setEmail($params['email']);
 
+
 if (isset($params['company'])) {
+    // company require for "organization" type
     $customerEntity->setType(CUSTOMER_ORGANIZATION_ACCOUNT_TYPE);
+    $companyEntity = new CompanyEntity($params['company']);
+    $paymentRequest->setCompany($companyEntity);
 }
 
 $urlsEntity = new \Payever\Sdk\Payments\Http\MessageEntity\UrlsEntity();
@@ -65,6 +68,10 @@ $shippingOptionEntity->setName($params['shipping_title'])
     ->setTaxRate(0);
 
 $paymentRequest->setShippingOption($shippingOptionEntity);
+
+if (!$paymentRequest->isValid()) {
+    throw new \Exception("Request not valid:" . json_encode($paymentRequest->toArray()));
+}
 
 return $payeverApi
     ->getPaymentsApiClient()

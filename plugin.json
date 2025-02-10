@@ -3,7 +3,7 @@
   "marketplaceName"   : {"de":"payever Checkout","en":"payever Checkout"},
   "namespace"         : "Payever",
   "type"              : "payment",
-  "version"           : "3.2.0",
+  "version"           : "3.3.0",
   "license"           : "GNU AFFERO GENERAL PUBLIC LICENSE",
   "isClosedSource"    : false,
   "pluginIcon"        : "icon_plugin_xs.png",
@@ -40,6 +40,12 @@
       "name": "express widget for the product page",
       "description": "Block to integrate the payever express widget on the product page",
       "defaultLayoutContainer": "Ceres::SingleItem.AfterAddToBasket"
+    },
+    {
+      "key"           :"Payever\\Providers\\DataProviders\\CompanySearchContainer",
+      "name"          :"company search on address form",
+      "description"   :"Display company search on address form",
+      "defaultLayoutContainer" :"Ceres::Checkout.AfterScriptsLoaded"
     }
   ],
   "javaScriptFiles"   : [],
@@ -51,20 +57,21 @@
     "php": ">=7.3 <8.1"
   },
   "dependencies": {
-    "payever/core-sdk-php": "2.0.0",
+    "payever/core-sdk-php": "2.1.0",
     "payever/plugins-sdk-php": "2.0.0",
-    "payever/payments-sdk-php": "2.2.0",
+    "payever/payments-sdk-php": "2.5.0",
     "payever/products-sdk-php": "2.0.0",
     "psr/log": "^1 || ^2 || ^3"
   },
   "runOnBuild"        : [
-    "Payever\\Migrations\\CreatePayeverPaymentMethods12",
+    "Payever\\Migrations\\CreatePayeverPaymentMethods13",
     "Payever\\Migrations\\CreatePayeverConfigTable",
     "Payever\\Migrations\\CreatePendingPaymentTable",
     "Payever\\Migrations\\CreateLogTable",
     "Payever\\Migrations\\CreateOrderTotalTable",
     "Payever\\Migrations\\CreateOrderTotalItemTable",
     "Payever\\Migrations\\CreateActionHistoryTable",
-    "Payever\\Migrations\\CreatePaymentActionTable"
+    "Payever\\Migrations\\CreatePaymentActionTable",
+    "Payever\\Migrations\\CreateCustomerCompanyAddressTable"
   ]
 }

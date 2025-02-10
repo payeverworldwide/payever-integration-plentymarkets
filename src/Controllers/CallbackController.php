@@ -6,6 +6,7 @@ use IO\Services\NotificationService;
 use IO\Services\OrderService;
 use Payever\Helper\RoutesHelper;
 use Payever\Helper\StatusHelper;
+use Payever\Services\PayeverSdkService;
 use Payever\Services\PayeverService;
 use Payever\Services\Payment\FailureStatusHandler;
 use Payever\Services\Processor\CheckoutProcessor;
@@ -26,6 +27,11 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 class CallbackController extends Controller
 {
     use Logger;
+
+    /**
+     * Prefix for Santander methods
+     */
+    const SANTANDER_PREFIX = 'santander';
 
     /**
      * @var PayeverService
@@ -53,6 +59,11 @@ class CallbackController extends Controller
     private $response;
 
     /**
+     * @var PayeverSdkService
+     */
+    private $sdkService;
+
+    /**
      * @param PayeverService $payeverService
      * @param FailureStatusHandler $failureStatusHandler
      * @param NotificationService $notificationService
@@ -62,7 +73,8 @@ class CallbackController extends Controller
         PayeverService $payeverService,
         FailureStatusHandler $failureStatusHandler,
         NotificationService $notificationService,
-        Request $request
+        Request $request,
+        PayeverSdkService $sdkService
     ) {
         parent::__construct();
 
@@ -70,6 +82,7 @@ class CallbackController extends Controller
         $this->failureStatusHandler = $failureStatusHandler;
         $this->notificationService = $notificationService;
         $this->request = $request;
+        $this->sdkService = $sdkService;
         $this->response = pluginApp(Response::class);
     }
 
@@ -156,6 +169,7 @@ class CallbackController extends Controller
             return $twig->render('Payever::Checkout.Pending', [
                 'data' => $order->toArray(),
                 'statusUrl' => $routesHelper->getStatusURL([RoutesHelper::REQUEST_PAYMENT_ID => $paymentId]),
+                'isLoanTransaction' => $routesHelper->getStatusURL([RoutesHelper::REQUEST_PAYMENT_ID => $paymentId]),
             ]);
         } catch (\Exception $e) {
             $this->notificationService->error($e->getMessage());
@@ -258,5 +272,22 @@ class CallbackController extends Controller
         }
 
         return (string)$this->request->get(RoutesHelper::REQUEST_PAYMENT_ID);
+    }
+
+    /**
+     * @return bool
+     */
+    private function isSantanderMethod()
+    {
+        $paymentId = $this->getPaymentId();
+
+        try {
+            $retrievePayment = $this->sdkService->call('retrievePaymentRequest', ['payment_id' => $paymentId]);
+            $method = $retrievePayment['result']['paymentType'];
+        } catch (\Exception $e) {
+            return false;
+        }
+
+        return strpos($method, self::SANTANDER_PREFIX) !== false;
     }
 }

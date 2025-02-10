@@ -13,11 +13,13 @@
             <div class="col-12">
                 <h1 class="h2">{{ trans("Ceres::Template.orderConfirmationThanks") }}</h1>
                 <p>{{ trans("Payever::Frontend.pendingOrderReceived") }}</p>
+                {% if isLoanTransaction %}
                 <p>
                     {{ trans("Payever::Frontend.pendingOrderProcessed") }}
                     <br/>
                     {{ trans("Payever::Frontend.pendingOrderConfirmation") }}
                 </p>
+                {% endif %}
             </div>
         </div>
 

@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/constants.php';
 require_once __DIR__ . '/PayeverSdkProvider.php';
 
 use Payever\Sdk\Payments\Http\RequestEntity\SubmitPaymentRequestV3;
@@ -10,9 +11,6 @@ use Payever\Sdk\Payments\Http\MessageEntity\ChannelEntity;
 use Payever\Sdk\Payments\Http\MessageEntity\UrlsEntity;
 use Payever\Sdk\Payments\Http\MessageEntity\CustomerEntity;
 use Payever\Sdk\Payments\Enum\Status;
-
-const CUSTOMER_PERSON_ACCOUNT_TYPE = 'person';
-const CUSTOMER_ORGANIZATION_ACCOUNT_TYPE = 'organization';
 
 $payeverApi = new PayeverSdkProvider(SdkRestApi::getParam('sdkData'));
 
@@ -31,7 +29,10 @@ $customerEntity->setType(CUSTOMER_PERSON_ACCOUNT_TYPE)
     ->setEmail($params['email']);
 
 if (isset($params['company'])) {
+    // company require for "organization" type
     $customerEntity->setType(CUSTOMER_ORGANIZATION_ACCOUNT_TYPE);
+    $companyEntity = new CompanyEntity($params['company']);
+    $paymentRequest->setCompany($companyEntity);
 }
 
 $urlsEntity = new UrlsEntity;
@@ -69,19 +70,11 @@ $shippingOptionEntity->setName($params['shipping_title'])
     ->setTaxAmount(0)
     ->setTaxRate(0);
 
-if (isset($params['company'])) {
-    $companyEntity = new CompanyEntity();
-    if (!empty($params['company']['vat_id'])) {
-        $companyEntity->setTaxId($params['company']['vat_id']);
-    }
-    $companyEntity->setExternalId($params['company']['id']);
-    $paymentRequest->setCompany($companyEntity);
-}
 
 $paymentRequest->setShippingOption($shippingOptionEntity);
 
 if (!$paymentRequest->isValid()) {
-    throw new \Exception("Request not valid:", json_encode($paymentRequest->toArray()));
+    throw new \Exception("Request not valid:" . json_encode($paymentRequest->toArray()));
 }
 
 $result = $payeverApi
@@ -89,9 +82,5 @@ $result = $payeverApi
     ->submitPaymentRequestV3($paymentRequest)
     ->getResponseEntity()
     ->toArray();
-
-if (isset($result['result']) && $result['result']['status'] == Status::STATUS_DECLINED) {
-    throw new Exception('Creating payment has been declined');
-}
 
 return $result;

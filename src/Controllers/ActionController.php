@@ -30,6 +30,8 @@ class ActionController extends Controller
     const ACTION_SHIPPING_AMOUNT = "shipping_amount";
     const ACTION_REFUND_AMOUNT = "refund_amount";
     const ACTION_CANCEL_AMOUNT = "cancel_amount";
+    const ACTION_CLAIM = "claim";
+    const ACTION_CLAIM_UPLOAD = "claim_upload";
 
     const LOGGER_CODE = 'Payever::debug.actionsHandler';
 
@@ -72,6 +74,7 @@ class ActionController extends Controller
      * @param Request $request
      * @param OrderRepositoryContract $orderRepository
      * @param PayeverHelper $paymentHelper
+     * @param PaymentActionManager $paymentActionManager
      * @param PayeverService $paymentService
      * @param PaymentActionService $actionService
      */
@@ -156,6 +159,14 @@ class ActionController extends Controller
                 case self::ACTION_CANCEL_AMOUNT:
                     $this->actionService->cancelTransaction($order, $transactionId, $amount, $identifier);
                     break;
+                case self::ACTION_CLAIM:
+                    $isDisputed = (bool) $this->request->get('is_disputed');
+                    $this->actionService->claimTransaction($order, $transactionId, $isDisputed);
+                    break;
+                case self::ACTION_CLAIM_UPLOAD:
+                    $files = $this->request->get('claim_upload_files');
+                    $this->actionService->claimUploadTransaction($order, $transactionId, $files);
+                    break;
                 default:
                     $this->getLogger(__METHOD__ . ' [SKIP]')
                         ->setReferenceType('payeverLog')
@@ -167,6 +178,6 @@ class ActionController extends Controller
             $this->paymentHelper->unlock(PayeverHelper::ACTION_PREFIX . $transactionId);
         }
 
-        return $this->response->json('Action <' . $action . '> performed');
+        return $this->response->json(['status' => 'success', 'message' => 'Action <' . $action . '> performed']);
     }
 }

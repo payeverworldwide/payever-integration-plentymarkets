@@ -7,8 +7,10 @@ use IO\Services\OrderService;
 use Payever\Contracts\OrderTotalItemRepositoryContract;
 use Payever\Contracts\OrderTotalRepositoryContract;
 use Payever\Contracts\PendingPaymentRepositoryContract;
+use Payever\Helper\CompanySearchHelper;
 use Payever\Helper\PayeverHelper;
 use Payever\Helper\RoutesHelper;
+use Payever\Repositories\CustomerCompanyAddressRepository;
 use Payever\Traits\Logger;
 use Plenty\Modules\Account\Address\Contracts\AddressRepositoryContract;
 use Plenty\Modules\Account\Contact\Contracts\ContactRepositoryContract;
@@ -23,11 +25,14 @@ use Plenty\Modules\Payment\Contracts\PaymentRepositoryContract;
 use Plenty\Modules\Payment\Models\Payment;
 use Plenty\Modules\Payment\Models\PaymentProperty;
 use Plenty\Plugin\ConfigRepository;
+use Payever\Helper\StatusHelper;
 
 /**
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.TooManyFields)
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
+ * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
  */
 class PayeverService
 {
@@ -50,6 +55,8 @@ class PayeverService
     const ACTION_CANCEL = 'cancel';
     const ACTION_REFUND = 'refund';
     const ACTION_SHIPPING_GOODS = 'shipping_goods';
+    const ACTION_CLAIM = 'claim';
+    const ACTION_CLAIM_UPLOAD = 'claim_upload';
     const API_V2 = 2;
     const API_V3 = 3;
 
@@ -143,6 +150,12 @@ class PayeverService
      */
     private $routesHelper;
 
+    /** @var CustomerCompanyAddressRepository  */
+    private $customerCompanyAddressRepository;
+
+    /** @var CompanySearchHelper  */
+    private $companySearchHelper;
+
     /**
      * @param AccountService $accountService
      * @param CountryRepositoryContract $countryRepository
@@ -160,6 +173,8 @@ class PayeverService
      * @param PayeverHelper $paymentHelper
      * @param PaymentRepositoryContract $paymentContract
      * @param RoutesHelper $routesHelper
+     * @param CustomerCompanyAddressRepository $customerCompanyAddressRepository
+     * @param CompanySearchHelper $companySearchHelper
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
@@ -179,7 +194,9 @@ class PayeverService
         OrderTotalItemRepositoryContract $orderTotalItemRepository,
         PayeverHelper $paymentHelper,
         PaymentRepositoryContract $paymentContract,
-        RoutesHelper $routesHelper
+        RoutesHelper $routesHelper,
+        CustomerCompanyAddressRepository $customerCompanyAddressRepository,
+        CompanySearchHelper $companySearchHelper
     ) {
         $this->accountService = $accountService;
         $this->countryRepository = $countryRepository;
@@ -197,6 +214,8 @@ class PayeverService
         $this->paymentHelper = $paymentHelper;
         $this->paymentContract = $paymentContract;
         $this->routesHelper = $routesHelper;
+        $this->customerCompanyAddressRepository = $customerCompanyAddressRepository;
+        $this->companySearchHelper = $companySearchHelper;
     }
 
     /**
@@ -276,6 +295,7 @@ class PayeverService
             'zip' => $address->postalCode,
             'street' => $address->street . ' ' . $address->houseNumber,
             'country' => $country,
+            'company' => $address->companyName
         ];
     }
 
@@ -324,6 +344,12 @@ class PayeverService
 
                 $redirectUrl = $createPaymentResponse['redirect_url'];
                 // @codeCoverageIgnoreEnd
+            }
+
+            if ($this->isSubmitMethod($method)) {
+                $this->returnType = 'redirectUrl';
+
+                return $redirectUrl;
             }
 
             $checkoutMode = $this->isRedirectMethod($method)
@@ -383,10 +409,9 @@ HTML;
         Basket $basket,
         string $method,
         $orderId = null,
-        string $shippingProvider= '',
+        string $shippingProvider = '',
         string $shippingProfileName = ''
-    )
-    {
+    ) {
         $this->log(
             'info',
             __METHOD__,
@@ -398,7 +423,8 @@ HTML;
         $feeAmount = $this->getFeeAmount($basket->basketAmount, $method);
 
         $billingAddress = $this->getAddress($basket->customerInvoiceAddressId);
-        $shippingAddress = $this->getAddress($basket->customerShippingAddressId ?? $basket->customerInvoiceAddressId);
+        $shippingAddress = $this->getAddress($basket->customerShippingAddressId
+            ?? $basket->customerInvoiceAddressId);
 
         $email = $billingAddress['email'];
         if (!empty($contactId) && $contactId > 0) {
@@ -431,6 +457,23 @@ HTML;
 
         $paymentParameters['billing_address'] = $billingAddress;
         $paymentParameters['force_redirect'] = $this->isRedirectMethod($method);
+
+        if (!empty($billingAddress['company'])) {
+            // Set company details for company address type
+            $addressHash = $this->companySearchHelper->generateAddressHash(
+                $billingAddress['company'],
+                $billingAddress['email'],
+                $billingAddress['city'],
+                $billingAddress['zip']
+            );
+            $paymentParameters['company_address_hash'] = $addressHash;
+
+            $company = $this->customerCompanyAddressRepository->getByAddressHash($addressHash);
+
+            if (!empty($company)) {
+                $paymentParameters['company'] = json_decode($company->getCompany(), true);
+            }
+        }
 
         $this->log(
             'debug',
@@ -544,7 +587,8 @@ HTML;
             ['orderTotal' => $orderTotal]
         );
 
-        return $createPaymentResponse['redirect_url'] ?? null;
+        return $createPaymentResponse['redirect_url'] ??
+            $this->getRedirectUrlByThePaymentStatus($createPaymentResponse);
     }
 
     /**
@@ -583,7 +627,7 @@ HTML;
 
                 $basketItem = [
                     'name' => utf8_encode($itemText->first()->name1),
-					'price' => $basketItemPrice,
+                    'price' => $basketItemPrice,
                     'unit_price' => $basketItemPrice,
                     'total_amount' => $basketItemPrice * (int) $basketItem->quantity,
                     'quantity' => (int)$basketItem->quantity,
@@ -721,6 +765,42 @@ HTML;
                 'items' => $items,
                 'deliveryFee' => $deliveryFee,
                 'identifier' => $identifier,
+            ]
+        );
+    }
+
+    /**
+     * Claim the given payment
+     *
+     * @param string $transactionId
+     * @param bool $isDisputed
+     * @return bool|mixed
+     */
+    public function claimPayment(string $transactionId, bool $isDisputed)
+    {
+        return $this->sdkService->call(
+            'claimPaymentRequest',
+            [
+                'transaction_id' => $transactionId,
+                'is_disputed' => $isDisputed,
+            ]
+        );
+    }
+
+    /**
+     * Claim upload the given payment
+     *
+     * @param string $transactionId
+     * @param array $files
+     * @return bool|mixed
+     */
+    public function claimUploadPayment(string $transactionId, array $files)
+    {
+        return $this->sdkService->call(
+            'claimUploadPaymentRequest',
+            [
+                'transaction_id' => $transactionId,
+                'files' => $files,
             ]
         );
     }
@@ -875,21 +955,24 @@ HTML;
     }
 
     /**
-     * Get required actions: cancel, refund, shipping_goods
+     * Get required actions: cancel, refund, shipping_goods, claim, claim_upload
      * @param $orderId
      * @return array
      */
     public function getRequiredActions($orderId): array
     {
         $actions = $this->getActions($orderId);
+        $allowedActions = [
+            self::ACTION_CANCEL,
+            self::ACTION_REFUND,
+            self::ACTION_SHIPPING_GOODS,
+            self::ACTION_CLAIM,
+            self::ACTION_CLAIM_UPLOAD,
+        ];
 
         $requiredActions = [];
         foreach ($actions as $action) {
-            if (
-                $action['action'] === self::ACTION_CANCEL
-                || $action['action'] === self::ACTION_REFUND
-                || $action['action'] === self::ACTION_SHIPPING_GOODS
-            ) {
+            if (in_array($action['action'], $allowedActions)) {
                 $requiredActions[] = $action;
             }
         }
@@ -993,5 +1076,26 @@ HTML;
             'createPaymentV3Request',
             ['payment_parameters' => $paymentParameters]
         );
+    }
+
+    /**
+     * @param $createPaymentResponse
+     * @return string
+     */
+    private function getRedirectUrlByThePaymentStatus($createPaymentResponse)
+    {
+        $redirectUrl = $this->routesHelper->getSuccessURL();
+        $paymentStatus = $createPaymentResponse['result']['status'];
+        $paymentId = $createPaymentResponse['result']['id'];
+
+        if (StatusHelper::STATUS_DECLINED === $paymentStatus || StatusHelper::STATUS_FAILED === $paymentStatus) {
+            $redirectUrl = $this->routesHelper->getFailureURL();
+        }
+
+        if (StatusHelper::STATUS_CANCELLED === $paymentStatus) {
+            $redirectUrl = $this->routesHelper->getCancelURL();
+        }
+
+        return \str_replace('--PAYMENT-ID--', $paymentId, $redirectUrl);
     }
 }

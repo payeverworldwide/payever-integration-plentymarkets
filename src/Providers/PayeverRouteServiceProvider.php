@@ -2,6 +2,7 @@
 
 namespace Payever\Providers;
 
+use Payever\Controllers\CompanySearchController;
 use Payever\Controllers\ActionController;
 use Payever\Controllers\CallbackController;
 use Payever\Controllers\ConfigController;
@@ -49,6 +50,19 @@ class PayeverRouteServiceProvider extends RouteServiceProvider
         $router->get(self::CALLBACK_FAILURE_URL, CallbackController::class . '@checkoutFailure');
         $router->get(self::CALLBACK_CANCEL_URL, CallbackController::class . '@checkoutCancel');
         $router->get(self::CALLBACK_STATUS_URL, CallbackController::class . '@checkoutStatus');
+
+        // Register company search routes
+        $router->get(
+            'payment/payever/companySearch',
+            CompanySearchController::class . '@companySearch'
+        );
+
+        // Register company search routes
+        $router->post(
+            'payment/payever/company',
+            CompanySearchController::class . '@company'
+        );
+
 
         // Register payever payment urls
         $router->get(self::PAYMENT_IFRAME_URL, PaymentController::class . '@checkoutIframe');

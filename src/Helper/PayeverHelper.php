@@ -2,35 +2,37 @@
 
 namespace Payever\Helper;
 
+use Payever\Methods\AllianzTradePayPaymentMethod;
+use Payever\Methods\IdealPaymentMethod;
 use Payever\Methods\InstantPaymentMethod;
 use Payever\Methods\IvyPaymentMethod;
-use Payever\Methods\IdealPaymentMethod;
-use Payever\Methods\SantanderinstfiPaymentMethod;
-use Payever\Methods\ZiniaBnplPaymentMethod;
-use Payever\Methods\ZiniaBnplDePaymentMethod;
-use Payever\Methods\ZiniaInstallmentPaymentMethod;
-use Payever\Methods\ZiniaInstallmentDePaymentMethod;
-use Payever\Methods\ZiniaSliceThreePaymentMethod;
-use Payever\Methods\ZiniaSliceThreeDePaymentMethod;
 use Payever\Methods\PayexcreditcardPaymentMethod;
 use Payever\Methods\PayexfakturaPaymentMethod;
 use Payever\Methods\PaymillcreditcardPaymentMethod;
 use Payever\Methods\PaymilldirectdebitPaymentMethod;
 use Payever\Methods\PaypalPaymentMethod;
+use Payever\Methods\SantanderPaymentMethod;
 use Payever\Methods\SantanderfactoringdePaymentMethod;
 use Payever\Methods\SantanderinstatPaymentMethod;
+use Payever\Methods\SantanderinstbePaymentMethod;
 use Payever\Methods\SantanderinstdkPaymentMethod;
+use Payever\Methods\SantanderinstfiPaymentMethod;
 use Payever\Methods\SantanderinstnoPaymentMethod;
 use Payever\Methods\SantanderinstsePaymentMethod;
-use Payever\Methods\SantanderinstbePaymentMethod;
 use Payever\Methods\SantanderinvoicedePaymentMethod;
 use Payever\Methods\SantanderinvoicenoPaymentMethod;
-use Payever\Methods\SantanderPaymentMethod;
 use Payever\Methods\SofortPaymentMethod;
 use Payever\Methods\StripeDirectDebitPaymentMethod;
 use Payever\Methods\StripePaymentMethod;
 use Payever\Methods\SwedbankCreditCardPaymentMethod;
 use Payever\Methods\SwedbankInvoicePaymentMethod;
+use Payever\Methods\ZiniaBnplDePaymentMethod;
+use Payever\Methods\ZiniaBnplPaymentMethod;
+use Payever\Methods\ZiniaInstallmentDePaymentMethod;
+use Payever\Methods\ZiniaInstallmentPaymentMethod;
+use Payever\Methods\ZiniaLendingDePaymentMethod;
+use Payever\Methods\ZiniaSliceThreeDePaymentMethod;
+use Payever\Methods\ZiniaSliceThreePaymentMethod;
 use Payever\Repositories\PayeverConfigRepository;
 use Payever\Services\Lock\StorageLock;
 use Plenty\Modules\EventProcedures\Events\EventProceduresTriggered;
@@ -39,8 +41,8 @@ use Plenty\Modules\Order\Models\OrderType;
 use Plenty\Modules\Payment\Method\Contracts\PaymentMethodRepositoryContract;
 use Plenty\Modules\Payment\Models\Payment;
 use Plenty\Modules\Payment\Models\PaymentProperty;
-use Plenty\Plugin\Translation\Translator;
 use Plenty\Plugin\Log\Loggable;
+use Plenty\Plugin\Translation\Translator;
 
 /**
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -51,15 +53,18 @@ class PayeverHelper
     use Loggable;
 
     const PLUGIN_KEY = 'plenty_payever';
+    const PLUGIN_CONFIG_PREFIX = 'Payever.';
 
     const COMMAND_TIMESTAMP_KEY = 'command_timestamp';
     const SANDBOX_URL_CONFIG_KEY = 'sandbox_url';
     const LIVE_URL_CONFIG_KEY = 'live_url';
     const API_VERSION_KEY  = 'api_version';
 
-    const PLUGIN_VERSION = '3.2.0';
+    const PLUGIN_VERSION = '3.3.0';
 
     const ACTION_PREFIX = "action.";
+
+    const COMPANY_SEARCH_CONFIG_KEY  = 'is_company_search_on';
 
     /**
      * @var PaymentMethodRepositoryContract
@@ -193,6 +198,10 @@ class PayeverHelper
             'class' => ZiniaSliceThreeDePaymentMethod::class,
             'name' => 'Zinia Slice Three DE',
         ],
+        'ZINIA_LENDING_DE' => [
+            'class' => ZiniaLendingDePaymentMethod::class,
+            'name' => 'Zinia Lending',
+        ],
         'IVY' => [
             'class' => IvyPaymentMethod::class,
             'name' => 'Ivy',
@@ -200,7 +209,11 @@ class PayeverHelper
         'IDEAL' => [
             'class' => IdealPaymentMethod::class,
             'name' => 'Ideal',
-        ]
+        ],
+        'ALLIANZ_TRADE_B2B_BNPL' => [
+            'class' => AllianzTradePayPaymentMethod::class,
+            'name' => 'Allianz Trade pay',
+        ],
     ];
 
     /**
@@ -552,6 +565,11 @@ class PayeverHelper
         return $message;
     }
 
+    /**
+     * @SuppressWarnings(PHPMD.Superglobals)
+     *
+     * @return false|mixed
+     */
     public function getClientIP()
     {
         if (isset($_SERVER['HTTP_CLIENT_IP'])) {

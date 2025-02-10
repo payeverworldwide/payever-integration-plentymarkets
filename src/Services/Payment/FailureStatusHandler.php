@@ -74,6 +74,7 @@ class FailureStatusHandler
      *
      * @return string
      * @SuppressWarnings(PHPMD.StaticAccess)
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     public function getFailureUrl(string $paymentId): string
     {

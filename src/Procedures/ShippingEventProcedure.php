@@ -34,6 +34,7 @@ class ShippingEventProcedure
      * @param ParcelServicePresetRepositoryContract $parcelServicePresetRepository
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
      */
     public function run(
         EventProceduresTriggered $eventTriggered,

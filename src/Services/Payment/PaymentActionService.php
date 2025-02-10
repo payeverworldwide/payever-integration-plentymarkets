@@ -58,10 +58,14 @@ class PaymentActionService
     const ACTION_CANCEL = 'cancel';
     const ACTION_REFUND = 'refund';
     const ACTION_SHIPPING_GOODS = 'shipping_goods';
+    const ACTION_CLAIM = 'claim';
+    const ACTION_CLAIM_UPLOAD = 'claim_upload';
 
     const LOGGER_CANCEL_CODE = 'Payever::debug.paymentActionCancel';
     const LOGGER_REFUND_CODE = 'Payever::debug.paymentActionRefund';
     const LOGGER_SHIPPING_CODE = 'Payever::debug.paymentActionShipping';
+    const LOGGER_CLAIM_CODE = 'Payever::debug.paymentActionClaim';
+    const LOGGER_CLAIM_UPLOAD_CODE = 'Payever::debug.paymentActionClaimUpload';
 
     /**
      * @var PayeverService
@@ -519,6 +523,107 @@ class PaymentActionService
                 ]);
         } catch (\Exception $exception) {
             throw new \BadMethodCallException(sprintf('Cancel failed: %s', $exception->getMessage()));
+        }
+    }
+
+    public function claimTransaction(Order $order, $transactionId, $isDisputed): void
+    {
+        try {
+            $isAllowActionResponse = $this->paymentService
+                ->isActionAllowed($transactionId, self::ACTION_CLAIM);
+            if (!empty($isAllowActionResponse['error'])) {
+                $message = $this->paymentHelper->retrieveErrorMessageFromSdkResponse($isAllowActionResponse);
+                throw new \BadMethodCallException($message);
+            }
+
+            $this->getLogger(__METHOD__)
+                ->setReferenceType('payeverLog')
+                ->debug(self::LOGGER_CLAIM_CODE, [
+                    'transactionId' => $transactionId,
+                ]);
+
+            $claimResult = $this->paymentService->claimPayment($transactionId, $isDisputed);
+
+            if (!empty($claimResult['error'])) {
+                $message = $this->paymentHelper->retrieveErrorMessageFromSdkResponse($claimResult);
+                throw new \BadMethodCallException($message);
+            }
+
+            $this->getLogger(__METHOD__ . ' $claimResult')
+                ->setReferenceType('payeverLog')
+                ->debug(self::LOGGER_CLAIM_CODE, [
+                    'claimResult' => $claimResult,
+                ]);
+
+            $status = $claimResult['call']['status'];
+
+            if ($status !== 'success') {
+                return;
+            }
+
+            // Save in history
+            $actionHistory = $this->addActionHistory($order, 0, self::ACTION_CLAIM);
+
+            $this->getLogger(__METHOD__ . ' [CLAIM SUCCESS] ' . self::ACTION_CLAIM)
+                ->setReferenceType('payeverLog')
+                ->debug(self::LOGGER_CLAIM_CODE, [
+                    'actionHistory' => $actionHistory
+                ]);
+        } catch (\Exception $exception) {
+            throw new \BadMethodCallException(sprintf('Claim failed: %s', $exception->getMessage()));
+        }
+    }
+
+    public function claimUploadTransaction(Order $order, $transactionId, $files): void
+    {
+        try {
+            if (empty($files)) {
+                throw new \BadMethodCallException('Invoice files were not selected.');
+            }
+
+            $isAllowActionResponse = $this->paymentService
+                ->isActionAllowed($transactionId, self::ACTION_CLAIM_UPLOAD);
+            if (!empty($isAllowActionResponse['error'])) {
+                $message = $this->paymentHelper->retrieveErrorMessageFromSdkResponse($isAllowActionResponse);
+                throw new \BadMethodCallException($message);
+            }
+
+            $this->getLogger(__METHOD__)
+                ->setReferenceType('payeverLog')
+                ->debug(self::LOGGER_CLAIM_UPLOAD_CODE, [
+                    'transactionId' => $transactionId,
+                    'files' => $files,
+                ]);
+
+            $claimUploadResult = $this->paymentService->claimUploadPayment($transactionId, $files);
+
+            if (!empty($claimUploadResult['error'])) {
+                $message = $this->paymentHelper->retrieveErrorMessageFromSdkResponse($claimUploadResult);
+                throw new \BadMethodCallException($message);
+            }
+
+            $this->getLogger(__METHOD__ . ' $claimUploadResult')
+                ->setReferenceType('payeverLog')
+                ->debug(self::LOGGER_CLAIM_UPLOAD_CODE, [
+                    'claimUploadResult' => $claimUploadResult,
+                ]);
+
+            $status = $claimUploadResult['call']['status'];
+
+            if ($status !== 'success') {
+                return;
+            }
+
+            // Save in history
+            $actionHistory = $this->addActionHistory($order, 0, self::ACTION_CLAIM_UPLOAD);
+
+            $this->getLogger(__METHOD__ . ' [CLAIM UPLOAD SUCCESS] ' . self::ACTION_CLAIM_UPLOAD)
+                ->setReferenceType('payeverLog')
+                ->debug(self::LOGGER_CLAIM_UPLOAD_CODE, [
+                    'actionHistory' => $actionHistory
+                ]);
+        } catch (\Exception $exception) {
+            throw new \BadMethodCallException(sprintf('Claim upload failed: %s', $exception->getMessage()));
         }
     }
 

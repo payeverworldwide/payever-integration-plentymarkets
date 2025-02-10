@@ -1,0 +1,99 @@
+.payever-loading-animation {
+    display: inline-block;
+    position: relative;
+    width: 80px;
+    height: 50px;
+    vertical-align: middle;
+}
+.payever-loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    width:10px;
+    height: 10px;
+    background: rgba(0, 0, 0, 0.75);
+    -webkit-animation: loader-black 1.455s cubic-bezier(0.4, 0, 1, 1) 0s infinite normal both;
+    animation: loader-black 1.455s cubic-bezier(0.4, 0, 1, 1) 0s infinite normal both;
+    z-index: 1000;
+    border-radius: 50%;
+    -webkit-animation-delay: 0.485s;
+    animation-delay: 0.485s;
+    margin-top: -5px;
+    margin-left: -5px;
+}
+.payever-loader:after,
+.payever-loader:before {
+    background: rgba(0, 0, 0, 0.75);
+    -webkit-animation: loader-black 1.455s cubic-bezier(0.4, 0, 1, 1) 0s infinite normal both;
+    animation: loader-black 1.455s cubic-bezier(0.4, 0, 1, 1) 0s infinite normal both;
+    z-index: 1000;
+    border-radius: 50%;
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 10px;
+    height: 10px;
+}
+.payever-loader:after {
+    -webkit-animation-delay: 0.97s;
+    animation-delay: 0.97s;
+    left: 14px;
+}
+.payever-loader:before {
+    left: -14px;
+}
+
+@-webkit-keyframes loader-black {
+    0%,
+    to {
+        background: rgba(0, 0, 0, 0.6);
+    }
+    50% {
+        background: rgba(0, 0, 0, 0.1);
+    }
+}
+@keyframes loader-black {
+    0%,
+    to {
+        background: rgba(0, 0, 0, 0.6);
+    }
+    50% {
+        background: rgba(0, 0, 0, 0.1);
+    }
+}
+@-webkit-keyframes loader-white {
+    0%,
+    to {
+        background: hsla(0, 0%, 100%, 0.6);
+    }
+    50% {
+        background: hsla(0, 0%, 100%, 0.2);
+    }
+}
+@keyframes loader-white {
+    0%,
+    to {
+        background: hsla(0, 0%, 100%, 0.6);
+    }
+    50% {
+        background: hsla(0, 0%, 100%, 0.2);
+    }
+}
+@-webkit-keyframes spin {
+    to {
+        -webkit-transform: rotate(1turn);
+    }
+}
+
+@keyframes payever-loading-animation {
+    0% {
+        top: 8px;
+        height: 64px;
+    }
+    50%, 100% {
+        top: 24px;
+        height: 32px;
+    }
+}

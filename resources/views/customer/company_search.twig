@@ -1,0 +1,29 @@
+<div>
+    <script type="text/javascript" src="{{ plugin_path("Payever") }}/js/company_search.js"></script>
+    <script>
+        const payeverCompanySearchInit = function() {
+            const inputs = PayeverDomAccess.querySelectorAll(null, PayeverCompanySearch.options.selectorCompanyInput);
+            inputs.forEach(function(element) {
+                if (false === element.hasAttribute('payever-company-field')) {
+					console.log(element);
+					let PayeverCompanySearchInstance = Object.assign({}, PayeverCompanySearch);
+					PayeverCompanySearchInstance.init(element, {{ payeverSearchConfig | raw }});
+					element.setAttribute('payever-company-field', true);
+                }
+            })
+        };
+        document.addEventListener("DOMContentLoaded", function () {
+            try {
+                setInterval(payeverCompanySearchInit, 500);
+            } catch (e) {
+                console.log(e);
+            }
+        });
+    </script>
+    <script>
+        $('head').append('<link rel="stylesheet" href="{{ plugin_path("Payever") }}/css/loading-animation.css"/>');
+        $('head').append('<link rel="stylesheet" href="{{ plugin_path("Payever") }}/css/country-picker.css"/>');
+        $('head').append('<link rel="stylesheet" href="{{ plugin_path("Payever") }}/css/address-verify-modal.css"/>');
+        $('head').append('<link rel="stylesheet" href="{{ plugin_path("Payever") }}/css/address-autocomplete.css"/>');
+    </script>
+</div>

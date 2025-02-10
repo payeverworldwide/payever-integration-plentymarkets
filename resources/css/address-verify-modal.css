@@ -1,0 +1,65 @@
+.js-pseudo-modal-template-title-element {
+    width:100%;
+}
+
+.payever-company-verify-modal-title {
+    padding-left: 2rem;
+    text-align: center;
+}
+
+.payever-company-verify-modal {
+    text-align: center;
+}
+
+.payever-company-verify-modal .payever-company-suggest-edit {
+    display: none
+}
+
+.payever-company-verify-modal-loading {
+    text-align: center;
+}
+
+.payever-company-verify-modal-description {
+    margin-bottom: 1em;
+}
+
+.payever-company-verify-modal-useraddress {
+    margin-bottom: 2rem;
+}
+
+.payever-company-verify-modal-addresses {
+    max-width: 18.75rem;
+    margin: 0 auto;
+}
+
+.payever-company-verify-modal-useraddress-description,
+.payever-company-verify-modal-companysuggest-description {
+    font-weight: bold;
+    margin-bottom: 0.35rem;
+}
+
+.payever-company-verify-modal-useraddress-addresscontainer,
+.payever-company-verify-modal-companysuggest-addresscontainer {
+    font-weight: normal;
+}
+
+.payever-company-verify-modal-companysuggest-list {
+    max-height: 21.15rem;
+    background-color: #f1f1f1;
+    padding: 1rem;
+    border-radius: 0.125rem;
+    overflow-y: scroll;
+    list-style: none
+}
+
+.payever-company-verify-modal-companysuggest-list-item {
+    margin-bottom: 0.333rem;
+}
+
+.payever-company-verify-modal-address-button {
+    display: block;
+    line-height: 1.3em;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    font-weight: normal;
+}

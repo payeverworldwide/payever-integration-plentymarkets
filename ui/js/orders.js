@@ -89,6 +89,8 @@ $(document).ready(function () {
                                 ? `<button class="action-btn" data-order-id="${orderId}" data-action="${REFUND_ACTION}">Refund</button>` : ''}`
                         + `${isAllowedAction(actions, 'shipping_goods')
                                 ? `<button class="action-btn" data-order-id="${orderId}" data-action="${CAPTURE_ACTION}">Shipping</button>` : ''}`
+                        + `${isAllowedAction(actions, 'claim') || isAllowedAction(actions, 'claim_upload')
+                            ? `<button class="action-claim-btn" data-order-id="${orderId}">Claim</button>` : ''}`
                     + `</td>`
                 + `</tr>`
             )
@@ -96,7 +98,11 @@ $(document).ready(function () {
             tableBody.find(`.action-btn[data-order-id="${orderId}"]`).click(function () {
                 const action = $(this).attr('data-action')
                 showItemsModal(order, action)
-            })
+            });
+
+            tableBody.find(`.action-claim-btn[data-order-id="${orderId}"]`).click(function () {
+                showClaimModal(order, isAllowedAction(actions, 'claim'))
+            });
 
             if (tableBody.find(`tr[data-order-id="${orderId}"] .action-btn`).length === 0) {
                 tableBody.find(`tr[data-order-id="${orderId}"] .allowed-actions`).html('No actions available')
@@ -362,5 +368,109 @@ $(document).ready(function () {
 
     function hideItemsTable() {
         $('#items-modal #by-items-wrapper').hide()
+    }
+
+    function getBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+                resolve({
+                    name: file.name,
+                    type: file.type,
+                    content: reader.result,
+                });
+            }
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    function showClaimModal(order, isClaimAllowed) {
+        const modal = $('#claim-modal')
+        modal.css("display", "flex").hide().fadeIn();
+
+        if (isClaimAllowed) {
+            $('#claim-button').attr('disabled', false);
+        }
+
+        //Claim upload
+        $('#claim-upload-button').off('click').on('click', function (event) {
+            event.preventDefault();
+
+            const formData = new FormData();
+            formData.append('action', 'claim_upload');
+            formData.append('order_id', order.orderId);
+
+            if (!document.getElementById('claim-upload-files').files.length) {
+                $('#claim-upload-files').parents('.form-row').addClass('has-error');
+                return;
+            }
+
+            $('#claim-upload-files').parents('.form-row').removeClass('has-error');
+
+            const filesTransform = [];
+            $.each(
+                document.getElementById('claim-upload-files').files,
+                function (key, file) {
+                    filesTransform.push(getBase64(file));
+                }
+            );
+
+            Promise.all(filesTransform).then((files) => {
+                new $.ajax({
+                    url: '/order/payever/action',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        action: 'claim_upload',
+                        order_id: order.orderId,
+                        claim_upload_files: files,
+                    },
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader("Authorization","Bearer " + localStorage.getItem('accessToken'));
+
+                        toggleLoader(true);
+                    },
+                    success: function (response) {
+                        $('#claim-upload-files').val(null);
+                        $('#file-name').val(null);
+
+                        alert(response.message);
+                        if (response.status === 'success') {
+                            $('#claim-button').attr('disabled', false);
+                        }
+                    },
+                    complete: function () {
+                        toggleLoader(false);
+                    }
+                });
+            });
+        });
+
+        //Claim
+        $('#claim-button').off('click').on('click', function (event) {
+            new $.ajax({
+                url: '/order/payever/action',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    order_id: order.orderId,
+                    is_disputed: document.getElementById('claim_is_disputed').checked ? 1 : 0,
+                    action: 'claim',
+                },
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("Authorization","Bearer " + localStorage.getItem('accessToken'));
+
+                    toggleLoader(true);
+                },
+                success: function (response) {
+                    getOrders(getCurrentPage(), getItemsPerPage())
+                    modal.fadeOut();
+                },
+                complete: function () {
+                    toggleLoader(false);
+                }
+            });
+        });
     }
 })

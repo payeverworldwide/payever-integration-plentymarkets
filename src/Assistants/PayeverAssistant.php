@@ -2885,6 +2885,131 @@ class PayeverAssistant extends WizardProvider
                                 ],
                             ]
                         ],
+                        // Zinia Lending DE
+                        [
+                            'title' => 'Assistant.ZiniaLendingDETab',
+                            'description' => 'Assistant.ZiniaLendingDETab',
+                            'form' => [
+                                'zinia_lending_de.active' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverActiveLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'zinia_lending_de.title' => [
+                                    'type' => 'text',
+                                    'defaultValue' => 'Zinia Lending',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverTitleLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_lending_de.description' => [
+                                    'type' => 'text',
+                                    'defaultValue' => 'Pay in up to 72 Installments with Zinia by Santander, fast and paperless.', //phpcs:ignore
+                                    'options' => [
+                                        'name' => 'Assistant.payeverDescriptionLabel',
+                                        'required' => false,
+                                    ]
+                                ],
+                                'zinia_lending_de.redirect_method' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverRedirectMethod',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'zinia_lending_de.accept_fee' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAcceptFeeLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'zinia_lending_de.fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_lending_de.variable_fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverVariableFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_lending_de.min_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '100',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMinOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_lending_de.max_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '60000',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMaxOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'zinia_lending_de.allowed_countries' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['DE'],
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCountries',
+                                        'checkboxValues' => $this->getCountriesList(['DE']),
+                                    ]
+                                ],
+                                'zinia_lending_de.allowed_currencies' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['EUR'],
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCurrencies',
+                                        'checkboxValues' => $this->getCurrenciesList(['EUR']),
+                                    ]
+                                ],
+                            ]
+                        ],
                         // Swedbank Credit Card
                         [
                             'title' => 'Assistant.SwedbankCreditCardTab',
@@ -3326,6 +3451,177 @@ class PayeverAssistant extends WizardProvider
                                     ]
                                 ],
                                 'ivy.allowed_currencies' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['EUR'],
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCurrencies',
+                                        'checkboxValues' => $this->getCurrenciesList(['EUR']),
+                                    ]
+                                ],
+                            ]
+                        ],
+                        // Allianz Trade pay
+                        [
+                            'title' => 'Assistant.AllianzTab',
+                            'description' => 'Assistant.AllianzTab',
+                            'form' => [
+                                'allianz_trade_b2b_bnpl.active' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverActiveLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'allianz_trade_b2b_bnpl.title' => [
+                                    'type' => 'text',
+                                    'defaultValue' => 'Allianz Trade pay',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverTitleLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'allianz_trade_b2b_bnpl.description' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverDescriptionLabel',
+                                        'required' => false,
+                                    ]
+                                ],
+                                'allianz_trade_b2b_bnpl.redirect_method' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverRedirectMethod',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'allianz_trade_b2b_bnpl.is_submit_method' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverSubmitMethod',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'allianz_trade_b2b_bnpl.is_b2b_method' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverB2BMethod',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'allianz_trade_b2b_bnpl.business_type' => [
+                                    'type' => 'select',
+                                    'defaultValue' => 'b2b',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverBusinessType',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverB2BValue',
+                                                'value' => 'b2b'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'allianz_trade_b2b_bnpl.accept_fee' => [
+                                    'type' => 'select',
+                                    'defaultValue' => '1',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAcceptFeeLabel',
+                                        'required' => true,
+                                        'listBoxValues' => [
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue0',
+                                                'value' => '0'
+                                            ],
+                                            [
+                                                'caption' => 'Assistant.payeverPossibleValue1',
+                                                'value' => '1'
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                'allianz_trade_b2b_bnpl.fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'allianz_trade_b2b_bnpl.variable_fee' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '0',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverVariableFeeLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'allianz_trade_b2b_bnpl.min_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '99',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMinOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'allianz_trade_b2b_bnpl.max_order_total' => [
+                                    'type' => 'text',
+                                    'defaultValue' => '10000',
+                                    'options' => [
+                                        'name' => 'Assistant.payeverMaxOrderTotalLabel',
+                                        'required' => true,
+                                    ]
+                                ],
+                                'allianz_trade_b2b_bnpl.allowed_countries' => [
+                                    'type' => 'checkboxGroup',
+                                    'defaultValue' => ['DE','IT','FR','AT','NL','ES'],
+                                    'options' => [
+                                        'name' => 'Assistant.payeverAllowedCountries',
+                                        'checkboxValues' => $this->getCountriesList(['DE','IT','FR','AT','NL','ES']),
+                                    ]
+                                ],
+                                'allianz_trade_b2b_bnpl.allowed_currencies' => [
                                     'type' => 'checkboxGroup',
                                     'defaultValue' => ['EUR'],
                                     'options' => [

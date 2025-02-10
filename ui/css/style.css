@@ -1,28 +1,35 @@
 .payever-logo__wrap {
     margin-bottom: 20px
 }
+
 .payever-logo {
     height: 50px
 }
+
 .payever-btn {
-    width: 200px!important;
+    width: 200px !important;
     vertical-align: middle;
 }
+
 .payever-btn span {
     font-size: 18px;
     color: #fff;
     vertical-align: top;
 }
+
 .payever-btn.in-progress {
     opacity: 0.4;
     cursor: not-allowed;
 }
+
 .payever-message {
     padding: 5px;
 }
+
 .payever-message.is-success {
     color: green;
 }
+
 .payever-message.is-error {
     color: darkred;
 }
@@ -39,4 +46,177 @@
 
 .order-info tr td:first-child {
     font-weight: bold !important;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.form-row.buttons {
+    grid-template-columns: 1fr;
+    text-align: right;
+    border-top: 1px solid #e3e3e3;
+    padding-top: 20px;
+    margin-bottom: 0;
+}
+
+.form-label {
+    text-align: right;
+    font-weight: bold;
+    padding-right: 20px;
+}
+
+.form-button {
+    background: #636671;
+    border-color: #494c56;
+    color: #fff;
+    padding: 8px 12px;
+    font-weight: bold;
+    border-radius: 4px;
+    border-width: 1px;
+    cursor: pointer;
+}
+
+.form-button:hover {
+    background: #494c56;
+}
+
+.form-button:disabled {
+    background: #a9adb7;
+    cursor: not-allowed;
+}
+
+.form-check {
+    display: block;
+}
+
+.form-check-input {
+    width: 1em;
+    height: 1em;
+    margin: 0;
+    vertical-align: top;
+    background-color: #fff;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    appearance: none;
+    color-adjust: exact;
+    transition: all 0.2s ease-in-out;
+}
+
+.form-check-input[type="checkbox"] {
+    border-radius: 0.25em;
+}
+
+.form-check-input[type="radio"] {
+    border-radius: 50%;
+}
+
+.form-check-input:active {
+    filter: brightness(90%);
+}
+
+.form-check-input:focus {
+    border-color: #8fc8e7;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(30, 145, 207, 0.25);
+}
+
+.form-check-input:checked {
+    background-color: #636671;
+    border-color: #636671;
+}
+
+.form-check-input:checked[type="checkbox"] {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
+}
+
+.form-check-input:checked[type="radio"] {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='2' fill='%23fff'/%3e%3c/svg%3e");
+}
+
+.form-check-input[type="checkbox"]:indeterminate {
+    background-color:#636671;
+    border-color: #636671;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10h8'/%3e%3c/svg%3e");
+}
+
+.form-switch .form-check-input {
+    width: 45px;
+    height: 25px;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280, 0, 0, 0.25%29'/%3e%3c/svg%3e");
+    background-position: left center;
+    border-radius: 2em;
+    transition: background-position 0.15s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .form-switch .form-check-input {
+        transition: none;
+    }
+}
+
+.form-switch .form-check-input:focus {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%238fc8e7'/%3e%3c/svg%3e");
+}
+
+.form-switch .form-check-input:checked {
+    background-position: right center;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+}
+
+.custom-file {
+    position: relative;
+}
+
+.custom-file-input {
+    position: absolute;
+    opacity: 0;
+}
+
+.custom-file-input:focus~.custom-file-label {
+    border-color: #7cd5e7;
+    -webkit-box-shadow: none;
+    box-shadow: none
+}
+
+.custom-file-label {
+    background-color: #fff;
+    border: 1px solid #bbcdd2;
+    border-radius: 4px;
+    position: relative;
+    display: block;
+    padding: 9px 7px;
+    cursor: pointer;
+}
+
+.form-row.has-error .custom-file-label {
+    border-color: red;
+}
+
+.custom-file-label::after {
+    position: absolute;
+    z-index: 3;
+    padding: 9px 7px;
+    line-height: 1.5;
+    display: block;
+    content: "Browse";
+    border-color: #636671;
+    border-left: inherit;
+    border-radius: 0 4px 4px 0;
+    top: -1px;
+    right: -1px;
+    bottom: -1px;
+    height: auto;
+    font-weight: 600;
+    color: #fff;
+    background-color: #636671;
+}
+
+.custom-file .custom-file-input:focus~.custom-file-label {
+    border-color: #494c56;
 }

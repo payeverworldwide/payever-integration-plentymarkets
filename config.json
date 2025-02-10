@@ -227,6 +227,33 @@
           "options": {
             "defaultValue": ""
           }
+        },
+        "Config.SettingsTabB2BContainer": {
+          "type": "verticalContainer",
+          "label": "Config.payeverb2b",
+          "options": {
+            "containerEntries":
+            {
+              "is_company_search_on": {
+                "type": "selectBox",
+                "required": false,
+                "label": "Config.isCompanySearchOnLabel",
+                "options": {
+                  "defaultValue": "0",
+                  "selectBoxValues": [
+                    {
+                      "value": "0",
+                      "caption": "Config.payeverPossibleValue0"
+                    },
+                    {
+                      "value": "1",
+                      "caption": "Config.payeverPossibleValue1"
+                    }
+                  ]
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -2731,7 +2758,130 @@
           }
         }
       }
-    },              
+    },
+    "Config.ZiniaLendingDETab": {
+      "label": "Config.ZiniaLendingDETab",
+      "formFields": {
+        "zinia_lending_de.active": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverActiveLabel",
+          "options": {
+            "defaultValue": "0",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "zinia_lending_de.title": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverTitleLabel",
+          "options": {
+            "defaultValue": "Zinia Lending"
+          }
+        },
+        "zinia_lending_de.description": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverDescriptionLabel",
+          "options": {
+            "defaultValue": "Pay in up to 72 Installments with Zinia by Santander, fast and paperless."
+          }
+        },
+        "zinia_lending_de.redirect_method": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverRedirectMethod",
+          "options": {
+            "defaultValue": "0",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "zinia_lending_de.accept_fee": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverAcceptFeeLabel",
+          "options": {
+            "defaultValue": "1",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "zinia_lending_de.fee": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverFeeLabel",
+          "options": {
+            "defaultValue": "0"
+          }
+        },
+        "zinia_lending_de.variable_fee": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverVariableFeeLabel",
+          "options": {
+            "defaultValue": "0"
+          }
+        },
+        "zinia_lending_de.min_order_total": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverMinOrderTotalLabel",
+          "options": {
+            "defaultValue": "100"
+          }
+        },
+        "zinia_lending_de.max_order_total": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverMaxOrderTotalLabel",
+          "options": {
+            "defaultValue": "60000"
+          }
+        },
+        "zinia_lending_de.allowed_countries": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCountries",
+          "options": {
+            "defaultValue": "DE"
+          }
+        },
+        "zinia_lending_de.allowed_currencies": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCurrencies",
+          "options": {
+            "defaultValue": "EUR"
+          }
+        }
+      }
+    },
     "Config.SwedbankCreditCardTab": {
       "label": "Config.SwedbankCreditCardTab",
       "formFields": {
@@ -2942,8 +3092,6 @@
         }
       }
     },
-
-
     "Config.IvyTab": {
       "label": "Config.IvyTab",
       "formFields": {
@@ -3181,6 +3329,175 @@
           }
         },
         "ideal.allowed_currencies": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCurrencies",
+          "options": {
+            "defaultValue": "EUR"
+          }
+        }
+      }
+    },
+    "Config.AllianzTab": {
+      "label": "Config.AllianzTab",
+      "formFields": {
+        "allianz_trade_b2b_bnpl.active": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverActiveLabel",
+          "options": {
+            "defaultValue": "0",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "allianz_trade_b2b_bnpl.title": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverTitleLabel",
+          "options": {
+            "defaultValue": "Allianz Trade pay"
+          }
+        },
+        "allianz_trade_b2b_bnpl.description": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverDescriptionLabel",
+          "options": {
+            "defaultValue": ""
+          }
+        },
+        "allianz_trade_b2b_bnpl.redirect_method": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverRedirectMethod",
+          "options": {
+            "defaultValue": "0",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "allianz_trade_b2b_bnpl.is_submit_method": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverSubmitMethod",
+          "options": {
+            "defaultValue": "1",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "allianz_trade_b2b_bnpl.is_b2b_method": {
+          "type": "selectBox",
+          "required": true,
+          "label": "Config.payeverB2BMethod",
+          "options": {
+            "defaultValue": "1",
+            "selectBoxValues": [
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "allianz_trade_b2b_bnpl.business_type": {
+          "type": "selectBox",
+          "required": true,
+          "label": "Config.payeverBusinessType",
+          "options": {
+            "defaultValue": "b2b",
+            "selectBoxValues": [
+              {
+                "value": "b2b",
+                "caption": "Config.payeverB2BValue"
+              }
+            ]
+          }
+        },
+        "allianz_trade_b2b_bnpl.accept_fee": {
+          "type": "selectBox",
+          "required": false,
+          "label": "Config.payeverAcceptFeeLabel",
+          "options": {
+            "defaultValue": "0",
+            "selectBoxValues": [
+              {
+                "value": "0",
+                "caption": "Config.payeverPossibleValue0"
+              },
+              {
+                "value": "1",
+                "caption": "Config.payeverPossibleValue1"
+              }
+            ]
+          }
+        },
+        "allianz_trade_b2b_bnpl.fee": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverFeeLabel",
+          "options": {
+            "defaultValue": "0"
+          }
+        },
+        "allianz_trade_b2b_bnpl.variable_fee": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverVariableFeeLabel",
+          "options": {
+            "defaultValue": "0"
+          }
+        },
+        "allianz_trade_b2b_bnpl.min_order_total": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverMinOrderTotalLabel",
+          "options": {
+            "defaultValue": "99"
+          }
+        },
+        "allianz_trade_b2b_bnpl.max_order_total": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverMaxOrderTotalLabel",
+          "options": {
+            "defaultValue": "100000"
+          }
+        },
+        "allianz_trade_b2b_bnpl.allowed_countries": {
+          "type": "inputText",
+          "required": false,
+          "label": "Config.payeverAllowedCountries",
+          "options": {
+            "defaultValue": "DE,IT,FR,AT,NL,ES"
+          }
+        },
+        "allianz_trade_b2b_bnpl.allowed_currencies": {
           "type": "inputText",
           "required": false,
           "label": "Config.payeverAllowedCurrencies",

@@ -1,0 +1,57 @@
+
+.payever-company-autocomplete {
+    border: 1px solid #798490;
+    width: 100%;
+    z-index: 2000;
+    background-color: #fff;
+    box-shadow: 0 3px 6px 0 #798490;
+    border-radius: 0 0 3px 3px;
+    overflow-y: auto;
+    max-height: 410px;
+    display: none;
+    position: absolute;
+}
+
+.payever-company-autocomplete-items, .payever-company-autocomplete-item {
+    list-style: none;
+    margin: 0;
+    padding: 0
+}
+
+.payever-company-autocomplete-item-link {
+    padding: 10px 28px 10px 10px;
+    text-decoration: none;
+    color: #2b3136;
+    display: block;
+    position: relative
+}
+
+.payever-company-autocomplete-item-link:hover {
+    text-decoration: none;
+    background-color: #798490
+}
+
+.payever-company-autocomplete-item-link-secondary-text {
+    color: #0b539b
+}
+
+.payever-company-autocomplete-item-link-count {
+    white-space: nowrap
+}
+
+.payever-company-autocomplete-loading {
+    text-align: center
+}
+.payever-company-search {
+    position: relative;
+}
+.payever-company-container {
+    padding: 15px;
+    box-shadow: 0 0 5px #ccc;
+    display: inline-block;
+}
+
+.payever-company-container-edit {
+    margin-top: 10px;
+    display: block;
+}
